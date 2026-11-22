@@ -2,7 +2,7 @@
 
 QR + NFC table ordering for restaurants and pubs. Demo venue: **My Restaurant**.
 
-**Version:** `0.0.0` (zero / fresh start after ShopIt → QikTik rebrand)
+**Version:** `0.0.0`
 
 ## Languages
 
