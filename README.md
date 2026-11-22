@@ -2,6 +2,8 @@
 
 QR + NFC table ordering for restaurants and pubs. Demo venue: **My Restaurant**.
 
+**Version:** `0.0.0` (zero / fresh start after ShopIt → QikTik rebrand)
+
 ## Languages
 
 Guest & staff UI: **Arabic → Hebrew → English → Russian** (`ar` · `he` · `en` · `ru`). RTL for `ar` and `he`.
@@ -22,11 +24,15 @@ npm run dev
 | Role | URL |
 |------|-----|
 | Guest table 7 | http://localhost:3000/ar/t/t_table7demo2026 |
+| Guest pickup | http://localhost:3000/ar/pickup |
+| Staff pickup board | http://localhost:3000/pickup |
 | Kitchen | http://localhost:3000/kitchen?station=MAIN_KITCHEN |
 | Waiter | http://localhost:3000/waiter?section=INSIDE |
 | Admin | http://localhost:3000/admin |
 
-Phone on the same Wi‑Fi: use your PC LAN IP (see `NEXT_PUBLIC_MENU_BASE_URL` in `.env`), e.g. `http://10.0.0.30:3000/ar/t/t_table7demo2026`.
+Staff demo password: **`qiktik2026`**
+
+Phone on the same Wi‑Fi: use your PC LAN IP (see `NEXT_PUBLIC_MENU_BASE_URL` in `.env`), e.g. `http://10.0.0.91:3000/pickup`.
 
 Full steps: [docs/QUICKSTART.md](./docs/QUICKSTART.md)
 
