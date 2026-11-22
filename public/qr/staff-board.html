@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Staff pickup board — QikTik</title>
+    <!--
+      Canonical staff board (iPad / PC / phone):
+        http://10.0.0.91:3000/pickup
+      Guest placard stays: public/qr/pickup.html → /ar/pickup
+    -->
+    <style>
+      :root {
+        --ink: #0c110f;
+        --paper: #f4f6f4;
+        --accent: #f97316;
+        --muted: #5a6574;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "Segoe UI", system-ui, sans-serif;
+      }
+      .card {
+        width: min(420px, 100%);
+        text-align: center;
+        padding: 32px 28px;
+        border: 1px solid rgba(12, 17, 15, 0.12);
+        border-radius: 20px;
+        background: #fff;
+      }
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 700;
+      }
+      h1 {
+        margin: 10px 0 0;
+        font-size: 28px;
+        line-height: 1.15;
+      }
+      p {
+        margin: 12px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.45;
+      }
+      img {
+        display: block;
+        width: min(280px, 100%);
+        margin: 24px auto 0;
+        border-radius: 12px;
+      }
+      .url {
+        margin-top: 18px;
+        word-break: break-all;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      a.url { color: var(--accent); text-decoration: none; }
+      a.url:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="eyebrow">Staff · Floor</div>
+      <h1>Pickup board</h1>
+      <p>Same link on iPad, PC, and phone. Scan or open the URL, unlock with the staff password, tap once to enable sound.</p>
+      <img src="./pickup-board.png" width="512" height="512" alt="QR code for staff pickup board" />
+      <a class="url" href="http://10.0.0.91:3000/pickup">http://10.0.0.91:3000/pickup</a>
+    </div>
+  </body>
+</html>

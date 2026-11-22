@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מצגת שקופיות — המסעדה שלי × הזמנה דיגיטלית</title>
+  <style>
+    :root {
+      --brand: #f97316;
+      --brand-dark: #c2410c;
+      --brand-light: #fdba74;
+      --ink: #1c1917;
+      --muted: #78716c;
+      --bg: #1c1917;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", Tahoma, "Noto Sans Hebrew", Arial, sans-serif;
+      background: var(--bg);
+      color: white;
+      direction: rtl;
+    }
+    .deck { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+    .nav {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+      background: rgba(28,25,23,.92);
+      backdrop-filter: blur(8px);
+      padding: 0.75rem 0;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #44403c;
+    }
+    .nav button {
+      background: #292524;
+      color: #e7e5e4;
+      border: 1px solid #44403c;
+      border-radius: 999px;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .nav button.active, .nav button:hover {
+      background: var(--brand);
+      color: var(--ink);
+      border-color: var(--brand);
+      font-weight: 700;
+    }
+    .slide {
+      display: none;
+      min-height: 72vh;
+      background: linear-gradient(160deg, #1a1a1e 0%, #0e0e10 55%, #060607 100%);
+      border: 1px solid #44403c;
+      border-radius: 18px;
+      padding: 2.5rem 2.75rem;
+      box-shadow: 0 20px 50px rgba(0,0,0,.4);
+    }
+    .slide.active { display: block; animation: in .25s ease; }
+    @keyframes in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .eyebrow {
+      color: var(--brand-light);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.75rem;
+    }
+    h1 {
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      line-height: 1.35;
+      margin-bottom: 1rem;
+      max-width: 18ch;
+    }
+    h2 {
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      line-height: 1.35;
+      margin-bottom: 1.25rem;
+      color: #fafaf9;
+    }
+    .lead {
+      font-size: 1.15rem;
+      color: #d6d3d1;
+      line-height: 1.8;
+      max-width: 42ch;
+    }
+    .logo {
+      width: 140px; height: 140px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin: 1.25rem 0;
+    }
+    .logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid #44403c;
+      border-radius: 14px;
+      padding: 1.1rem 1.15rem;
+    }
+    .card h3 {
+      color: var(--brand-light);
+      font-size: 1.05rem;
+      margin-bottom: 0.55rem;
+    }
+    .card p, .card li {
+      color: #d6d3d1;
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+    .card ul { list-style: none; }
+    .card li { padding-right: 0.9rem; position: relative; margin-bottom: 0.35rem; }
+    .card li::before {
+      content: "";
+      position: absolute;
+      right: 0; top: 0.55rem;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--brand);
+    }
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 1.5rem;
+    }
+    .pill {
+      background: #292524;
+      border: 1px solid var(--brand);
+      color: var(--brand-light);
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .arrow { color: var(--brand); font-size: 1.2rem; }
+    .footer-note {
+      margin-top: 2rem;
+      color: #a8a29e;
+      font-size: 0.9rem;
+    }
+    .cta {
+      display: inline-block;
+      margin-top: 1.5rem;
+      background: var(--brand);
+      color: var(--ink);
+      font-weight: 800;
+      padding: 0.85rem 1.4rem;
+      border-radius: 12px;
+      font-size: 1.05rem;
+    }
+    .keys { text-align: center; color: #78716c; font-size: 0.85rem; margin-top: 1rem; }
+    @media (max-width: 800px) {
+      .grid, .grid-3 { grid-template-columns: 1fr; }
+      .slide { padding: 1.5rem; min-height: auto; }
+      h1 { max-width: none; }
+    }
+    @media print {
+      .nav, .keys { display: none; }
+      .slide { display: block !important; page-break-after: always; min-height: 90vh; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <div class="nav" id="nav"></div>
+
+    <section class="slide active" data-title="1 · שער">
+      <p class="eyebrow">מצגת לבעל המסעדה</p>
+      <div class="logo"><img src="logo.png" alt="המסעדה שלי" /></div>
+      <h1>הזמנה חכמה מהשולחן להמסעדה שלי</h1>
+      <p class="lead">
+        QR + NFC · תפריט ב־4 שפות · תחנות מטבח, בר ונרגילה · תשלום מיידי או בסוף
+      </p>
+      <p class="footer-note">מערכת הזמנות דיגיטלית שמותאמת להמסעדה שלי — לא תוכנה כללית כבדה</p>
+    </section>
+
+    <section class="slide" data-title="2 · הבעיה">
+      <p class="eyebrow">המציאות היום</p>
+      <h2>בעומס… כולם מחכים</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>האורח</h3>
+          <ul>
+            <li>מחכה למלצר שייקח הזמנה</li>
+            <li>קושי עם תפריט רב־לשוני</li>
+            <li>לא יודע איפה ההזמנה שלו</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>הצוות והבעלים</h3>
+          <ul>
+            <li>טעויות כתיבה והגשה לשולחן הלא נכון</li>
+            <li>לחץ על מלצרים בקיבולת גדולה</li>
+            <li>עדכון תפריט נייר יקר ואיטי</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="3 · הפתרון">
+      <p class="eyebrow">הפתרון</p>
+      <h2>מהשולחן למטבח בנגיעה אחת</h2>
+      <div class="flow">
+        <span class="pill">NFC / סריקת QR</span>
+        <span class="arrow">←</span>
+        <span class="pill">תפריט דיגיטלי</span>
+        <span class="arrow">←</span>
+        <span class="pill">הזמנה מהנייד</span>
+        <span class="arrow">←</span>
+        <span class="pill">מטבח · בר · נרגילה</span>
+      </div>
+      <div class="grid" style="margin-top:1.75rem;">
+        <div class="card">
+          <h3>בלי אפליקציה</h3>
+          <p>נפתח ישירות בדפדפן — אנדרואיד ואייפון</p>
+        </div>
+        <div class="card">
+          <h3>ארבע שפות</h3>
+          <p>ערבית · עברית · אנגלית · רוסית (עם תמיכה ב־RTL)</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="4 · יתרונות">
+      <p class="eyebrow">למה לקנות?</p>
+      <h2>ארבעה יתרונות לבעלים</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>יותר הכנסות</h3>
+          <p>סיבוב שולחנות מהיר יותר · הזמנות נוספות · מכירה טובה יותר של נרגילה ומשקאות</p>
+        </div>
+        <div class="card">
+          <h3>פחות לחץ על הצוות</h3>
+          <p>המלצר מגיש · 3 טאבלטים לאזורים + מנהל · התראות מוכנות</p>
+        </div>
+        <div class="card">
+          <h3>פחות טעויות</h3>
+          <p>ניתוב אוטומטי לתחנה · הערות ברורות · שולחן מזוהה בקישור</p>
+        </div>
+        <div class="card">
+          <h3>שליטה מלאה</h3>
+          <p>עדכון תפריט מיידי · ראייה לכל האזורים · דוחות בהמשך</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="5 · המסעדה שלי">
+      <p class="eyebrow">מותאם להמסעדה שלי</p>
+      <h2>התחנות והאזורים שלכם כמו שהם</h2>
+      <div class="grid grid-3">
+        <div class="card">
+          <h3>תחנות ייצור</h3>
+          <ul>
+            <li>מטבח ראשי — מסך + מדפסת</li>
+            <li>מטבח בשר — מסך + מדפסת</li>
+            <li>בר — מסך + מדפסת</li>
+            <li>נרגילה — מדפסת בלבד</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>אזורים</h3>
+          <ul>
+            <li>פנים</li>
+            <li>חוץ (עם נרגילה)</li>
+            <li>מרפסת (עם נרגילה)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>ציוד</h3>
+          <ul>
+            <li>3 טאבלטים לאזורים</li>
+            <li>1 טאבלט למנהל</li>
+            <li>מעמדי QR + NFC לכל שולחן</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="6 · האורח">
+      <p class="eyebrow">מה האורח רואה?</p>
+      <h2>מסע פשוט בנייד</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>המסכים</h3>
+          <ul>
+            <li>בחירת שפה (לוגו גדול)</li>
+            <li>רישום שולחן + סיסמה + תנאים</li>
+            <li>תפריט (פריטים לא זמינים מעומעמים)</li>
+            <li>עגלה · טיפ · תשלום · עזיבת שולחן</li>
+            <li>פתיחת נעילה בחזרה</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>תשלום</h3>
+          <ul>
+            <li>שלם עכשיו (כרטיס)</li>
+            <li>או הוסף לחשבון ושלם אחר כך</li>
+            <li>מזומן דרך המלצר לפי בקשה</li>
+          </ul>
+        </div>
+      </div>
+      <p class="footer-note">פרטי המסכים: mockups-restaurant-he.html</p>
+    </section>
+
+    <section class="slide" data-title="7 · אמינות">
+      <p class="eyebrow">כשהאינטרנט נופל</p>
+      <h2>השירות לא נעצר</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>עובד ברשת המסעדה</h3>
+          <p>עיון בתפריט · שליחת הזמנה · מסך מטבח · מלצר · הדפסה</p>
+        </div>
+        <div class="card">
+          <h3>נעצר זמנית רק</h3>
+          <p>תשלום בכרטיס אונליין — האורח רואה התראה ברורה ומשלם במזומן</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="8 · הצעד הבא">
+      <p class="eyebrow">איך מתחילים?</p>
+      <h2>ניסוי על שולחן אחד… ואז הרחבה</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>שלב 1</h3>
+          <p>שולחן ניסיון + תפריט המסעדה שלי + NFC/QR · מדידת מהירות הזמנה ותגובה</p>
+        </div>
+        <div class="card">
+          <h3>שלב 2</h3>
+          <p>כל השולחנות · תחנות מטבח ובר · טאבלטים לאזורים ולמנהל</p>
+        </div>
+      </div>
+      <div class="cta">מוכנים להדגמה חיה על שולחן אחד</div>
+      <p class="footer-note">דף סיכום להדפסה: pitch-he-onepage.html</p>
+    </section>
+
+    <p class="keys">← → או לחצו על כפתורי השקופיות · Ctrl+P לשמירת PDF</p>
+  </div>
+
+  <script>
+    const slides = [...document.querySelectorAll(".slide")];
+    const nav = document.getElementById("nav");
+    let i = 0;
+
+    slides.forEach((s, idx) => {
+      const b = document.createElement("button");
+      b.textContent = s.dataset.title;
+      b.onclick = () => show(idx);
+      nav.appendChild(b);
+    });
+
+    function show(n) {
+      i = (n + slides.length) % slides.length;
+      slides.forEach((s, idx) => s.classList.toggle("active", idx === i));
+      [...nav.children].forEach((b, idx) => b.classList.toggle("active", idx === i));
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft" || e.key === "PageDown" || e.key === " ") {
+        e.preventDefault();
+        show(i + 1);
+      }
+      if (e.key === "ArrowRight" || e.key === "PageUp") {
+        e.preventDefault();
+        show(i - 1);
+      }
+    });
+
+    show(0);
+  </script>
+</body>
+</html>

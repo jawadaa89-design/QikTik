@@ -1,0 +1,18 @@
+{
+  "mainKitchen": {
+    "type": "network",
+    "address": "192.168.1.101:9100"
+  },
+  "meatKitchen": {
+    "type": "network",
+    "address": "192.168.1.102:9100"
+  },
+  "bar": {
+    "type": "network",
+    "address": "192.168.1.103:9100"
+  },
+  "hookah": {
+    "type": "network",
+    "address": "192.168.1.104:9100"
+  }
+}

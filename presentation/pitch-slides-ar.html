@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>شرائح العرض — مطعمي × الطلب الرقمي</title>
+  <style>
+    :root {
+      --brand: #f97316;
+      --brand-dark: #c2410c;
+      --brand-light: #fdba74;
+      --ink: #1c1917;
+      --muted: #78716c;
+      --bg: #1c1917;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", Tahoma, "Noto Sans Arabic", Arial, sans-serif;
+      background: var(--bg);
+      color: white;
+      direction: rtl;
+    }
+    .deck { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+    .nav {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+      background: rgba(28,25,23,.92);
+      backdrop-filter: blur(8px);
+      padding: 0.75rem 0;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #44403c;
+    }
+    .nav button {
+      background: #292524;
+      color: #e7e5e4;
+      border: 1px solid #44403c;
+      border-radius: 999px;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .nav button.active, .nav button:hover {
+      background: var(--brand);
+      color: var(--ink);
+      border-color: var(--brand);
+      font-weight: 700;
+    }
+    .slide {
+      display: none;
+      min-height: 72vh;
+      background: linear-gradient(160deg, #1a1a1e 0%, #0e0e10 55%, #060607 100%);
+      border: 1px solid #44403c;
+      border-radius: 18px;
+      padding: 2.5rem 2.75rem;
+      box-shadow: 0 20px 50px rgba(0,0,0,.4);
+    }
+    .slide.active { display: block; animation: in .25s ease; }
+    @keyframes in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .eyebrow {
+      color: var(--brand-light);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.75rem;
+    }
+    h1 {
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      line-height: 1.35;
+      margin-bottom: 1rem;
+      max-width: 18ch;
+    }
+    h2 {
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      line-height: 1.35;
+      margin-bottom: 1.25rem;
+      color: #fafaf9;
+    }
+    .lead {
+      font-size: 1.15rem;
+      color: #d6d3d1;
+      line-height: 1.8;
+      max-width: 42ch;
+    }
+    .logo {
+      width: 140px; height: 140px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin: 1.25rem 0;
+    }
+    .logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid #44403c;
+      border-radius: 14px;
+      padding: 1.1rem 1.15rem;
+    }
+    .card h3 {
+      color: var(--brand-light);
+      font-size: 1.05rem;
+      margin-bottom: 0.55rem;
+    }
+    .card p, .card li {
+      color: #d6d3d1;
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+    .card ul { list-style: none; }
+    .card li { padding-right: 0.9rem; position: relative; margin-bottom: 0.35rem; }
+    .card li::before {
+      content: "";
+      position: absolute;
+      right: 0; top: 0.55rem;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--brand);
+    }
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 1.5rem;
+    }
+    .pill {
+      background: #292524;
+      border: 1px solid var(--brand);
+      color: var(--brand-light);
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .arrow { color: var(--brand); font-size: 1.2rem; }
+    .footer-note {
+      margin-top: 2rem;
+      color: #a8a29e;
+      font-size: 0.9rem;
+    }
+    .cta {
+      display: inline-block;
+      margin-top: 1.5rem;
+      background: var(--brand);
+      color: var(--ink);
+      font-weight: 800;
+      padding: 0.85rem 1.4rem;
+      border-radius: 12px;
+      font-size: 1.05rem;
+    }
+    .keys { text-align: center; color: #78716c; font-size: 0.85rem; margin-top: 1rem; }
+    @media (max-width: 800px) {
+      .grid, .grid-3 { grid-template-columns: 1fr; }
+      .slide { padding: 1.5rem; min-height: auto; }
+      h1 { max-width: none; }
+    }
+    @media print {
+      .nav, .keys { display: none; }
+      .slide { display: block !important; page-break-after: always; min-height: 90vh; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <div class="nav" id="nav"></div>
+
+    <!-- 1 -->
+    <section class="slide active" data-title="١ · الغلاف">
+      <p class="eyebrow">عرض تقديمي لصاحب المطعم</p>
+      <div class="logo"><img src="logo.png" alt="مطعمي" /></div>
+      <h1>طلب أذكى من الطاولة لمطعمي</h1>
+      <p class="lead">
+        QR + NFC · قائمة بأربع لغات · محطات مطبخ وبار وأرجيلة · دفع فوري أو لاحقاً
+      </p>
+      <p class="footer-note">نظام طلب رقمي مصمّم لمطعم ومقهى مطعمي — ليس برنامجاً عاماً ثقيلاً</p>
+    </section>
+
+    <!-- 2 -->
+    <section class="slide" data-title="٢ · المشكلة">
+      <p class="eyebrow">الواقع اليوم</p>
+      <h2>في الذروة… الكل ينتظر</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>الضيف</h3>
+          <ul>
+            <li>ينتظر النادل ليأخذ الطلب</li>
+            <li>صعوبة القائمة بلغات متعددة</li>
+            <li>لا يعرف أين وصل طلبه</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>الطاقم والمالك</h3>
+          <ul>
+            <li>أخطاء كتابة وتسليم للطاولة الخطأ</li>
+            <li>ضغط على النوادل في السعة الكبيرة</li>
+            <li>تحديث القائمة الورقية مكلف وبطيء</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section class="slide" data-title="٣ · الحل">
+      <p class="eyebrow">الحل</p>
+      <h2>من الطاولة إلى المطبخ بلمسة واحدة</h2>
+      <div class="flow">
+        <span class="pill">لمس NFC / مسح QR</span>
+        <span class="arrow">←</span>
+        <span class="pill">قائمة رقمية</span>
+        <span class="arrow">←</span>
+        <span class="pill">طلب من الجوال</span>
+        <span class="arrow">←</span>
+        <span class="pill">مطبخ · بار · أرجيلة</span>
+      </div>
+      <div class="grid" style="margin-top:1.75rem;">
+        <div class="card">
+          <h3>بدون تطبيق</h3>
+          <p>يفتح في المتصفح مباشرة — أندرويد وآيفون</p>
+        </div>
+        <div class="card">
+          <h3>أربع لغات</h3>
+          <p>عربي · عبري · إنجليزي · روسي (مع دعم اليمين لليسار)</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="slide" data-title="٤ · الفوائد">
+      <p class="eyebrow">لماذا تشتريه؟</p>
+      <h2>أربع فوائد للمالك</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>إيرادات أعلى</h3>
+          <p>دوران أسرع للطاولات · طلبات إضافية · بيع أفضل للأرجيلة والمشروبات</p>
+        </div>
+        <div class="card">
+          <h3>طاقم أقل ضغطاً</h3>
+          <p>النادل يخدم ويقدّم · ٣ أجهزة أقسام + مدير · تنبيهات جاهزية</p>
+        </div>
+        <div class="card">
+          <h3>أخطاء أقل</h3>
+          <p>توجيه تلقائي للمحطة · ملاحظات واضحة · طاولة محددة بالرابط</p>
+        </div>
+        <div class="card">
+          <h3>سيطرة كاملة</h3>
+          <p>إضافة/حذف أصناف · صور · لغات الطاقم · رؤية الأقسام</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section class="slide" data-title="٥ · مطعمي">
+      <p class="eyebrow">مصمّم لمطعمي</p>
+      <h2>محطاتكم وأقسامكم كما هي</h2>
+      <div class="grid grid-3">
+        <div class="card">
+          <h3>محطات الإنتاج</h3>
+          <ul>
+            <li>مطبخ رئيسي — شاشة + طابعة</li>
+            <li>مطبخ لحوم — شاشة + طابعة</li>
+            <li>بار — شاشة + طابعة</li>
+            <li>أرجيلة — طابعة فقط</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>الأقسام</h3>
+          <ul>
+            <li>داخل</li>
+            <li>خارج (مع أرجيلة)</li>
+            <li>تراس (مع أرجيلة)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>الأجهزة</h3>
+          <ul>
+            <li>٣ أجهزة لوحية للأقسام</li>
+            <li>١ جهاز مدير</li>
+            <li>حوامل QR + NFC لكل طاولة</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section class="slide" data-title="٦ · تجربة الضيف">
+      <p class="eyebrow">ماذا يرى الضيف؟</p>
+      <h2>رحلة بسيطة على الجوال</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>الشاشات</h3>
+          <ul>
+            <li>اختيار اللغة (شعار كبير)</li>
+            <li>تسجيل الطاولة + كلمة مرور + شروط</li>
+            <li>القائمة (أصناف غير متوفرة باهتة)</li>
+            <li>السلة · بقشيش · دفع · مغادرة الطاولة</li>
+            <li>فتح القفل عند العودة</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>الدفع</h3>
+          <ul>
+            <li>ادفع الآن (بطاقة)</li>
+            <li>أو أضف للحساب وادفع لاحقاً</li>
+            <li>نقد عبر النادل عند الطلب</li>
+          </ul>
+        </div>
+      </div>
+      <p class="footer-note">التفاصيل المرئية في ملف الشاشات: mockups-restaurant-ar.html</p>
+    </section>
+
+    <!-- 7 -->
+    <section class="slide" data-title="٧ · الموثوقية">
+      <p class="eyebrow">عندما ينقطع الإنترنت</p>
+      <h2>الخدمة لا تتوقف</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>يعمل على شبكة المطعم</h3>
+          <p>تصفح القائمة · إرسال الطلب · شاشة المطبخ · النادل · الطباعة</p>
+        </div>
+        <div class="card">
+          <h3>يتوقف مؤقتاً فقط</h3>
+          <p>الدفع بالبطاقة عبر الإنترنت — الضيف يرى تنبيهاً واضحاً ويدفع نقداً</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 -->
+    <section class="slide" data-title="٨ · الخطوة التالية">
+      <p class="eyebrow">كيف نبدأ؟</p>
+      <h2>تجربة طاولة واحدة… ثم التوسع</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>المرحلة ١</h3>
+          <p>طاولة تجريبية + قائمة مطعمي + NFC/QR · قياس سرعة الطلب وردّ الفعل</p>
+        </div>
+        <div class="card">
+          <h3>المرحلة ٢</h3>
+          <p>كل الطاولات · محطات المطبخ والبار · أجهزة الأقسام والمدير</p>
+        </div>
+      </div>
+      <div class="cta">جاهزون لعرض حي على طاولة واحدة</div>
+      <p class="footer-note">صفحة الملخص للطباعة: pitch-ar-onepage.html</p>
+    </section>
+
+    <p class="keys">← → أو انقر أرقام الشرائح · Ctrl+P لحفظ PDF</p>
+  </div>
+
+  <script>
+    const slides = [...document.querySelectorAll(".slide")];
+    const nav = document.getElementById("nav");
+    let i = 0;
+
+    slides.forEach((s, idx) => {
+      const b = document.createElement("button");
+      b.textContent = s.dataset.title;
+      b.onclick = () => show(idx);
+      nav.appendChild(b);
+    });
+
+    function show(n) {
+      i = (n + slides.length) % slides.length;
+      slides.forEach((s, idx) => s.classList.toggle("active", idx === i));
+      [...nav.children].forEach((b, idx) => b.classList.toggle("active", idx === i));
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft" || e.key === "PageDown" || e.key === " ") {
+        e.preventDefault();
+        show(i + 1);
+      }
+      if (e.key === "ArrowRight" || e.key === "PageUp") {
+        e.preventDefault();
+        show(i - 1);
+      }
+    });
+
+    show(0);
+  </script>
+</body>
+</html>

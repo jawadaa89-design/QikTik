@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QikTik × My Restaurant — Architecture & Design</title>
+  <style>
+    :root {
+      --brand: #f97316;
+      --brand-dark: #c2410c;
+      --brand-light: #fdba74;
+      --ink: #f2efe8;
+      --muted: #a8a29e;
+      --panel: #1a1a1e;
+      --line: rgba(255, 255, 255, 0.12);
+      --bg: #0e0e10;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    @page { size: A4; margin: 8mm; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #2a2a2e;
+      color: var(--ink);
+      padding: 1.25rem;
+    }
+    .sheet {
+      width: 210mm;
+      min-height: 297mm;
+      max-width: 100%;
+      margin: 0 auto;
+      background:
+        linear-gradient(125deg, transparent 0%, rgba(200, 205, 214, 0.05) 30%, transparent 45%),
+        linear-gradient(180deg, #121214 0%, #0a0a0c 100%);
+      padding: 10mm 11mm 9mm;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+      border: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    .top {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      border-bottom: 2px solid var(--brand);
+      padding-bottom: 0.65rem;
+    }
+    .logo {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      ring: 2px solid var(--brand);
+      box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.35);
+    }
+    .logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .top h1 {
+      font-size: 1.28rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    .top p {
+      margin-top: 0.2rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .badge {
+      display: inline-block;
+      margin-top: 0.3rem;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #0c100e;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      padding: 0.18rem 0.55rem;
+      border-radius: 999px;
+    }
+    h2 {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--brand-light);
+      margin-bottom: 0.4rem;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 0.65rem;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.45rem;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.55rem 0.65rem;
+    }
+    .card p, .card li {
+      font-size: 0.7rem;
+      color: #d6d3d1;
+      line-height: 1.45;
+    }
+    .card ul { list-style: none; }
+    .card li {
+      position: relative;
+      padding-left: 0.7rem;
+      margin-bottom: 0.18rem;
+    }
+    .card li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.4rem;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--brand);
+    }
+    /* Architecture diagram */
+    .arch {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      align-items: stretch;
+    }
+    .arch-row {
+      display: flex;
+      gap: 0.4rem;
+      justify-content: center;
+      align-items: stretch;
+      flex-wrap: wrap;
+    }
+    .node {
+      flex: 1;
+      min-width: 72px;
+      text-align: center;
+      border-radius: 8px;
+      padding: 0.4rem 0.35rem;
+      font-size: 0.62rem;
+      font-weight: 700;
+      line-height: 1.3;
+      border: 1px solid var(--line);
+      background: var(--panel);
+    }
+    .node small {
+      display: block;
+      font-weight: 500;
+      color: var(--muted);
+      font-size: 0.55rem;
+      margin-top: 0.12rem;
+    }
+    .node.guest { border-color: rgba(249, 115, 22, 0.45); }
+    .node.core {
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.22), rgba(194, 65, 12, 0.12));
+      border-color: var(--brand);
+      color: #fff;
+    }
+    .node.staff { border-color: rgba(95, 173, 134, 0.4); }
+    .node.infra { border-color: rgba(168, 162, 158, 0.35); }
+    .arrow {
+      text-align: center;
+      color: var(--brand);
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      line-height: 1;
+    }
+    .swatch-row {
+      display: flex;
+      gap: 0.35rem;
+      margin-top: 0.35rem;
+      flex-wrap: wrap;
+    }
+    .swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+    }
+    .chip {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 700;
+      padding: 0.18rem 0.45rem;
+      border-radius: 6px;
+      background: rgba(249, 115, 22, 0.12);
+      border: 1px solid rgba(249, 115, 22, 0.35);
+      color: var(--brand-light);
+      margin: 0.12rem 0.12rem 0 0;
+    }
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.35rem 0.75rem;
+    }
+    .tech-grid dt {
+      font-size: 0.62rem;
+      font-weight: 800;
+      color: var(--brand-light);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .tech-grid dd {
+      font-size: 0.68rem;
+      color: #d6d3d1;
+      margin-bottom: 0.25rem;
+    }
+    .footer {
+      margin-top: auto;
+      padding-top: 0.45rem;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.62rem;
+      color: var(--muted);
+    }
+    .footer strong { color: var(--brand-light); }
+    @media print {
+      body { background: #0a0a0c; padding: 0; }
+      .sheet {
+        box-shadow: none;
+        border: none;
+        width: auto;
+        min-height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <article class="sheet">
+    <header class="top">
+      <div class="logo"><img src="logo.png" alt="My Restaurant" /></div>
+      <div>
+        <h1>QikTik × My Restaurant — Architecture & Design</h1>
+        <p>QR + NFC table ordering · single-venue restaurant system · ₪ ILS</p>
+        <span class="badge">1-page technical overview · Aug 2026</span>
+      </div>
+    </header>
+
+    <section>
+      <h2>System architecture</h2>
+      <div class="card arch">
+        <div class="arch-row">
+          <div class="node guest">Guest phone<small>NFC / QR → /{locale}/t/{token}</small></div>
+          <div class="node staff">Kitchen KDS<small>/kitchen?station=</small></div>
+          <div class="node staff">Waiter tablet<small>/waiter?section=</small></div>
+          <div class="node staff">Admin<small>/admin</small></div>
+        </div>
+        <div class="arrow">▼ HTTPS / LAN · REST API · SSE live events</div>
+        <div class="arch-row">
+          <div class="node core">Next.js 15 App<small>Guest + Staff UI · /api/v1/*</small></div>
+        </div>
+        <div class="arrow">▼ Prisma ORM</div>
+        <div class="arch-row">
+          <div class="node infra">SQLite (demo)<small>→ PostgreSQL in production</small></div>
+          <div class="node infra">Edge server<small>:4000 print · :4001 socket.io</small></div>
+          <div class="node infra">Stripe<small>card pay (optional)</small></div>
+          <div class="node infra">Thermal printers<small>4 stations ESC/POS</small></div>
+        </div>
+        <div class="arrow">▼ optional cloud sync when online</div>
+        <div class="arch-row">
+          <div class="node infra">Cloud backup<small>Admin + managed DB</small></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid-2">
+      <section class="card">
+        <h2>Design system</h2>
+        <p><strong style="color:#fff">Metallic black</strong> surfaces with cool silver sheen; accent <strong style="color:var(--brand)">orange #f97316</strong> (buttons, highlights). Circular venue logo only — no text under logo. Guest shell max-width phone layout; staff screens landscape-friendly.</p>
+        <div class="swatch-row">
+          <div class="swatch" style="background:#0e0e10" title="bg"></div>
+          <div class="swatch" style="background:#1a1a1e" title="panel"></div>
+          <div class="swatch" style="background:#f97316" title="brand"></div>
+          <div class="swatch" style="background:#fdba74" title="brand light"></div>
+          <div class="swatch" style="background:#f2efe8" title="ink"></div>
+          <div class="swatch" style="background:#5fad86" title="ready"></div>
+          <div class="swatch" style="background:#d47272" title="alert"></div>
+        </div>
+        <p style="margin-top:0.4rem">Typography: <strong style="color:#fff">Cairo</strong> (UI) · <strong style="color:#fff">Fraunces</strong> (display) · full RTL for Arabic &amp; Hebrew.</p>
+      </section>
+
+      <section class="card">
+        <h2>Languages</h2>
+        <p>Guest + staff UI order:</p>
+        <p style="margin:0.35rem 0">
+          <span class="chip">1 · ar Arabic</span>
+          <span class="chip">2 · he Hebrew</span>
+          <span class="chip">3 · en English</span>
+          <span class="chip">4 · ru Russian</span>
+        </p>
+        <ul>
+          <li>Guest: language picker → registration switcher</li>
+          <li>Menu / item text via next-intl + DB translations</li>
+          <li>Staff apps: Kitchen · Waiter · Admin switchers</li>
+          <li>Admin menu edit locale independent of UI lang</li>
+        </ul>
+      </section>
+    </div>
+
+    <section>
+      <h2>Main components</h2>
+      <div class="grid-4">
+        <div class="card">
+          <p style="font-weight:800;color:#fff;font-size:0.75rem;margin-bottom:0.3rem">Guest</p>
+          <ul>
+            <li>Language · Register · Unlock</li>
+            <li>Menu · Cart · Orders</li>
+            <li>Tip · Pay · Leave table</li>
+            <li>Call waiter / request bill</li>
+          </ul>
+        </div>
+        <div class="card">
+          <p style="font-weight:800;color:#fff;font-size:0.75rem;margin-bottom:0.3rem">Kitchen</p>
+          <ul>
+            <li>Station KDS columns</li>
+            <li>Tap status advance</li>
+            <li>Drag-and-drop cards</li>
+            <li>MAIN / MEAT / BAR</li>
+          </ul>
+        </div>
+        <div class="card">
+          <p style="font-weight:800;color:#fff;font-size:0.75rem;margin-bottom:0.3rem">Waiter</p>
+          <ul>
+            <li>Section floor map</li>
+            <li>Cash / card + tip</li>
+            <li>Bill history</li>
+            <li>Reset guest passcode</li>
+          </ul>
+        </div>
+        <div class="card">
+          <p style="font-weight:800;color:#fff;font-size:0.75rem;margin-bottom:0.3rem">Admin</p>
+          <ul>
+            <li>Dashboard live feed</li>
+            <li>Menu add / edit / remove</li>
+            <li>Photo upload</li>
+            <li>Tables + guest URLs</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid-2">
+      <section class="card">
+        <h2>Domain model (core)</h2>
+        <ul>
+          <li><strong style="color:#fff">Venue</strong> → Tables (token, section) · Menu categories/items</li>
+          <li><strong style="color:#fff">Session</strong> → guest passcode · marketing opt-in · orders</li>
+          <li><strong style="color:#fff">Order / OrderItem</strong> → route to station · status pipeline</li>
+          <li><strong style="color:#fff">Payment</strong> · WaiterAlert · SyncLog</li>
+          <li>Stations: MAIN_KITCHEN · MEAT_KITCHEN · BAR · HOOKAH</li>
+          <li>Sections: INSIDE · OUTSIDE · TERRACE</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Technologies</h2>
+        <dl class="tech-grid">
+          <div>
+            <dt>Frontend</dt>
+            <dd>React 19 · Next.js 15 · Tailwind CSS 4</dd>
+          </div>
+          <div>
+            <dt>Language</dt>
+            <dd>TypeScript 5 · Zod validation</dd>
+          </div>
+          <div>
+            <dt>i18n</dt>
+            <dd>next-intl · JSON + staff.ts messages</dd>
+          </div>
+          <div>
+            <dt>Data</dt>
+            <dd>Prisma 6 · SQLite / PostgreSQL</dd>
+          </div>
+          <div>
+            <dt>Realtime</dt>
+            <dd>SSE (/api/v1/events) · Socket.io edge</dd>
+          </div>
+          <div>
+            <dt>Payments</dt>
+            <dd>Stripe PaymentIntents (optional)</dd>
+          </div>
+          <div>
+            <dt>Hardware</dt>
+            <dd>NTAG215 NFC · QR · ESC/POS printers</dd>
+          </div>
+          <div>
+            <dt>Tooling</dt>
+            <dd>Turbopack · ESLint · tsx seed/edge</dd>
+          </div>
+        </dl>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>Request flow (happy path)</h2>
+      <p style="font-size:0.72rem;line-height:1.55;color:#d6d3d1">
+        <strong style="color:var(--brand-light)">NFC/QR</strong> → language → register (terms + table password) → browse menu → cart →
+        <strong style="color:#fff">POST /api/v1/tables/:token/orders</strong> → kitchen ticket by
+        <strong style="color:#fff">MenuItem.route</strong> → waiter serves / cash-card → tip → close session ·
+        live updates via <strong style="color:#fff">SSE</strong> to guest &amp; staff.
+      </p>
+    </section>
+
+    <footer class="footer">
+      <span>Demo: <strong>/ar/t/t_table7demo2026</strong></span>
+      <span>Repo: <strong>QikTik</strong></span>
+      <span>Print: <strong>Ctrl+P → Save as PDF</strong></span>
+    </footer>
+  </article>
+</body>
+</html>

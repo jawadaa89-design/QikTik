@@ -1,0 +1,42 @@
+import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+import os from "os";
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
+function lanHosts(): string[] {
+  const hosts = new Set<string>(["127.0.0.1", "localhost"]);
+  const nets = os.networkInterfaces();
+  for (const entries of Object.values(nets)) {
+    if (!entries) continue;
+    for (const net of entries) {
+      const family = String(net.family);
+      if ((family === "IPv4" || family === "4") && !net.internal) {
+        hosts.add(net.address);
+      }
+    }
+  }
+  return [...hosts];
+}
+
+const nextConfig: NextConfig = {
+  // Allow phone/LAN access in dev (hosts refresh when Next restarts)
+  allowedDevOrigins: lanHosts(),
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "2mb",
+    },
+  },
+  // One staff board URL for iPad / PC / phone → SSR live board
+  async redirects() {
+    return [
+      {
+        source: "/pickup",
+        destination: "/pickup/live",
+        permanent: false,
+      },
+    ];
+  },
+};
+
+export default withNextIntl(nextConfig);

@@ -1,0 +1,41 @@
+Continue the QikTik project — generic core demo venue **My Restaurant**.
+
+CRITICAL — do NOT rebuild from scratch. The project already exists. Read these first:
+
+1. docs/CURSOR_HANDOFF.md          ← current status + file inventory
+2. docs/QUICKSTART.md              ← demo URLs + guest/staff flows
+3. docs/STATIONS.md                ← stations / sections / tablets
+4. docs/ARCHITECTURE.md            ← offline + NFC NTAG215 guide
+5. docs/API.md                     ← live API surface
+6. prisma/schema.prisma
+7. prisma/seed.ts
+8. presentation/README.md
+
+Presentations (open in browser; need presentation/logo.png):
+- pitch-ar-onepage.html / pitch-he-onepage.html
+- pitch-slides-ar.html / pitch-slides-he.html
+- mockups-restaurant-ar.html / mockups-restaurant-he.html
+
+Product decisions (locked):
+- Single venue, ₪ ILS
+- Demo venue name: My Restaurant · slug: my-restaurant
+- Languages order: ar → he → en → ru
+- Theme: metallic black + orange #f97316
+- Stations: MAIN_KITCHEN, MEAT_KITCHEN, BAR, HOOKAH (printer only)
+- Sections: INSIDE, OUTSIDE, TERRACE
+- Guest: table passcode register/unlock; terms mandatory; marketing optional
+- Logo: circular logo.png only (venue mark; QikTik product mark is separate)
+- Local DB: SQLite file:./dev.db ; seed token t_table7demo2026 → table 7
+- Guest URL: /{locale}/t/t_table7demo2026
+
+Already working (after npm install + db:push + db:seed + npm run dev):
+- Guest language → register → menu/cart/orders → tip/pay → unlock/leave
+- Kitchen KDS (tap + drag-and-drop) with station filter
+- Waiter floor, bill history, tips, passcode reset, close
+- Admin dashboard, menu add/edit/remove + photo upload, tables
+- Staff multi-language UI; SSE live events; optional Stripe; edge scaffold
+
+Deferred: staff login gate, full menu seed/photos, production edge + NFC fleet, public HTTPS, loyalty v2.
+
+What I want next:
+[PASTE YOUR TASK HERE]

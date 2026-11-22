@@ -1,0 +1,35 @@
+{
+  "id": "/",
+  "name": "My Restaurant Pickup",
+  "short_name": "QikTik Pickup",
+  "description": "Guest pickup waiting notifications for My Restaurant / QikTik",
+  "start_url": "./ar/pickup",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#1a1612",
+  "theme_color": "#c4a35a",
+  "orientation": "portrait-primary",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/qiktik-mark.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/qiktik-mark.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,484 @@
+// QikTik — full database schema
+// Multi-venue ready (resolve via slug); designed for edge sync + future loyalty
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Production / SaaS: PostgreSQL. Local: docker compose up -d (see docker-compose.yml).
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  WAITER
+  KITCHEN
+}
+
+enum TableStatus {
+  FREE
+  ACTIVE
+  BILL_REQUESTED
+  DISABLED
+}
+
+enum SessionStatus {
+  OPEN
+  BILL_REQUESTED
+  CLOSED
+}
+
+enum OrderPaymentMode {
+  PAY_NOW
+  ADD_TO_TAB
+}
+
+enum OrderStatus {
+  PENDING
+  SENT_TO_KITCHEN
+  IN_PROGRESS
+  COMPLETE
+  CANCELLED
+}
+
+enum OrderItemStatus {
+  RECEIVED
+  PREPARING
+  READY
+  SERVED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CARD
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum StationRoute {
+  MAIN_KITCHEN
+  MEAT_KITCHEN
+  BAR
+  HOOKAH
+}
+
+enum DiningSection {
+  INSIDE
+  OUTSIDE
+  TERRACE
+}
+
+enum SyncOperation {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum SyncEntityType {
+  MENU_ITEM
+  MENU_CATEGORY
+  ORDER
+  ORDER_ITEM
+  SESSION
+  PAYMENT
+  TABLE
+}
+
+enum PickupTicketStatus {
+  WAITING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+/** Registration-page “call waiter” (no order ticket) — separate from pickup food queue. */
+enum PickupAssistanceStatus {
+  OPEN
+  ACKNOWLEDGED
+  DONE
+}
+
+// ─── Venue & config ──────────────────────────────────────────────────────────
+
+model Venue {
+  id                String   @id @default(cuid())
+  name              String
+  slug              String   @unique
+  currency          String   @default("EUR")
+  defaultLocale     String   @default("en") @map("default_locale")
+  // SQLite: store locale list as JSON (e.g. ["ar","en","he","ru"])
+  enabledLocales    Json     @default("[\"en\", \"ar\", \"he\", \"ru\"]") @map("enabled_locales")
+  serviceChargePct  Decimal? @map("service_charge_pct")
+  taxIncluded       Boolean  @default(true) @map("tax_included")
+  stripeAccountId   String?  @map("stripe_account_id")
+  edgeServerUrl     String?  @map("edge_server_url")
+  /** Table ordering (guest cart + waiter/kitchen order flow). Digital menu is always on. */
+  orderingEnabled   Boolean  @default(true) @map("ordering_enabled")
+  /** Guest pickup registration + staff pickup queue. */
+  pickupEnabled     Boolean  @default(true) @map("pickup_enabled")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  tables        Table[]
+  categories    MenuCategory[]
+  users         User[]
+  sessions      Session[]
+  syncLogs      SyncLog[]
+  pickupTickets         PickupTicket[]
+  pickupAssistanceCalls PickupAssistanceCall[]
+
+  @@map("venues")
+}
+
+// ─── Staff ───────────────────────────────────────────────────────────────────
+
+model User {
+  id           String         @id @default(cuid())
+  venueId      String         @map("venue_id")
+  email        String
+  name         String
+  role         UserRole
+  section      DiningSection? @map("section") // null = manager/admin (all sections)
+  passwordHash String         @map("password_hash")
+  active       Boolean        @default(true)
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  venue            Venue     @relation(fields: [venueId], references: [id])
+  recordedPayments Payment[] @relation("RecordedBy")
+
+  @@unique([venueId, email])
+  @@map("users")
+}
+
+// ─── Tables & NFC/QR ─────────────────────────────────────────────────────────
+
+model Table {
+  id        String        @id @default(cuid())
+  venueId   String        @map("venue_id")
+  number    Int
+  section   DiningSection @default(INSIDE)
+  token     String        @unique // opaque URL token, e.g. t_8f3k2m
+  nfcTagId  String?       @map("nfc_tag_id")
+  status    TableStatus   @default(FREE)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  venue    Venue     @relation(fields: [venueId], references: [id])
+  sessions Session[]
+
+  @@unique([venueId, number])
+  @@index([venueId, section])
+  @@map("tables")
+}
+
+// ─── Menu (multi-language) ───────────────────────────────────────────────────
+
+model MenuCategory {
+  id        String   @id @default(cuid())
+  venueId   String   @map("venue_id")
+  parentId  String?  @map("parent_id")
+  sortOrder Int      @default(0) @map("sort_order")
+  imageUrl  String?  @map("image_url")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  venue        Venue                     @relation(fields: [venueId], references: [id])
+  parent       MenuCategory?             @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children     MenuCategory[]            @relation("CategoryTree")
+  translations MenuCategoryTranslation[]
+  items        MenuItem[]
+
+  @@index([venueId, parentId])
+  @@map("menu_categories")
+}
+
+model MenuCategoryTranslation {
+  id         String @id @default(cuid())
+  categoryId String @map("category_id")
+  locale     String // en | ar | he | ru
+  name       String
+
+  category MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, locale])
+  @@map("menu_category_translations")
+}
+
+model MenuItem {
+  id         String       @id @default(cuid())
+  categoryId String       @map("category_id")
+  sku        String?
+  price      Decimal
+  imageUrl   String?      @map("image_url")
+  // SQLite: store allergen list as JSON array
+  allergens  Json         @default("[]")
+  route      StationRoute @default(MAIN_KITCHEN)
+  available  Boolean      @default(true)
+  hidden     Boolean      @default(false)
+  sortOrder  Int          @default(0) @map("sort_order")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+
+  category     MenuCategory           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  translations MenuItemTranslation[]
+  additionals  MenuItemAdditional[]
+  orderItems   OrderItem[]
+
+  @@map("menu_items")
+}
+
+model MenuItemTranslation {
+  id          String @id @default(cuid())
+  itemId      String @map("item_id")
+  locale      String
+  name        String
+  description String?
+
+  item MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, locale])
+  @@map("menu_item_translations")
+}
+
+model MenuItemAdditional {
+  id        String   @id @default(cuid())
+  itemId    String   @map("item_id")
+  price     Decimal
+  sortOrder Int      @default(0) @map("sort_order")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  item         MenuItem                        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  translations MenuItemAdditionalTranslation[]
+
+  @@index([itemId])
+  @@map("menu_item_additionals")
+}
+
+model MenuItemAdditionalTranslation {
+  id           String @id @default(cuid())
+  additionalId String @map("additional_id")
+  locale       String
+  name         String
+
+  additional MenuItemAdditional @relation(fields: [additionalId], references: [id], onDelete: Cascade)
+
+  @@unique([additionalId, locale])
+  @@map("menu_item_additional_translations")
+}
+
+// ─── Sessions & orders ───────────────────────────────────────────────────────
+
+model Session {
+  id           String        @id @default(cuid())
+  venueId      String        @map("venue_id")
+  tableId      String        @map("table_id")
+  status       SessionStatus @default(OPEN)
+  locale       String        @default("en")
+  memberId     String?       @map("member_id") // v2 loyalty
+  guestName    String?       @map("guest_name")
+  guestPhone   String?       @map("guest_phone")
+  passcodeHash String?       @map("passcode_hash")
+  /** Tip guest chose when requesting cash bill; null = not specified yet */
+  requestedTip Decimal?      @map("requested_tip")
+  /** Number of guests at the table — set by waiter; required before close */
+  partySize    Int?          @map("party_size")
+  /** Guest opted in to ads / promotions */
+  marketingOptIn Boolean      @default(false) @map("marketing_opt_in")
+  openedAt     DateTime      @default(now()) @map("opened_at")
+  closedAt     DateTime?     @map("closed_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  venue    Venue     @relation(fields: [venueId], references: [id])
+  table    Table     @relation(fields: [tableId], references: [id])
+  member   Member?   @relation(fields: [memberId], references: [id])
+  orders   Order[]
+  payments Payment[]
+
+  @@index([tableId, status])
+  @@map("sessions")
+}
+
+model Order {
+  id          String           @id @default(cuid())
+  sessionId   String           @map("session_id")
+  orderNumber Int              @map("order_number")
+  paymentMode OrderPaymentMode @map("payment_mode")
+  status      OrderStatus      @default(PENDING)
+  subtotal    Decimal
+  notes       String?
+  submittedAt DateTime?        @map("submitted_at")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  session Session     @relation(fields: [sessionId], references: [id])
+  items   OrderItem[]
+  payment Payment?
+
+  @@index([sessionId])
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String          @id @default(cuid())
+  orderId    String          @map("order_id")
+  menuItemId String          @map("menu_item_id")
+  quantity   Int             @default(1)
+  unitPrice  Decimal         @map("unit_price")
+  notes      String?
+  /** Guest marked this line as takeaway / to-go */
+  takeaway   Boolean         @default(false)
+  /** Snapshot of selected extras: [{ id, name, price }] */
+  extras     Json?
+  status     OrderItemStatus @default(RECEIVED)
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+// ─── Payments ────────────────────────────────────────────────────────────────
+
+model Payment {
+  id              String        @id @default(cuid())
+  sessionId       String        @map("session_id")
+  orderId         String?       @unique @map("order_id")
+  amount          Decimal
+  tipAmount       Decimal?      @map("tip_amount")
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  stripePaymentId String?       @map("stripe_payment_id")
+  recordedById    String?       @map("recorded_by_id")
+  paidAt          DateTime?     @map("paid_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  session    Session @relation(fields: [sessionId], references: [id])
+  order      Order?  @relation(fields: [orderId], references: [id])
+  recordedBy User?   @relation("RecordedBy", fields: [recordedById], references: [id])
+
+  @@index([sessionId])
+  @@map("payments")
+}
+
+// ─── Loyalty (v2 — schema ready) ─────────────────────────────────────────────
+
+model Member {
+  id            String   @id @default(cuid())
+  phone         String?  @unique
+  email         String?  @unique
+  name          String?
+  pointsBalance Int      @default(0) @map("points_balance")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  sessions Session[]
+
+  @@map("members")
+}
+
+// ─── Offline sync ────────────────────────────────────────────────────────────
+
+model SyncLog {
+  id         String         @id @default(cuid())
+  venueId    String         @map("venue_id")
+  entityType SyncEntityType @map("entity_type")
+  entityId   String         @map("entity_id")
+  operation  SyncOperation
+  payload    Json
+  syncedAt   DateTime?      @map("synced_at")
+  createdAt  DateTime       @default(now()) @map("created_at")
+
+  venue Venue @relation(fields: [venueId], references: [id])
+
+  @@index([venueId, syncedAt])
+  @@index([entityType, entityId])
+  @@map("sync_logs")
+}
+
+// ─── Waiter alerts ───────────────────────────────────────────────────────────
+
+model WaiterAlert {
+  id        String   @id @default(cuid())
+  tableId   String   @map("table_id")
+  sessionId String?  @map("session_id")
+  type      String   // WAITER_CALLED | ORDER_READY | BILL_REQUESTED | PARTY_SIZE
+  message   String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([read, createdAt])
+  @@map("waiter_alerts")
+}
+
+// ─── Pickup / order-ready notifications (POS-agnostic MVP) ───────────────────
+// Guests register name (+ optional phone); server assigns a short orderRef for
+// staff board + guest reconnect. Future POS can still POST an orderRef.
+// Active uniqueness: at most one WAITING/READY ticket per (venueId, orderRef).
+
+model PickupTicket {
+  id           String             @id @default(cuid())
+  venueId      String             @map("venue_id")
+  customerName String             @map("customer_name")
+  phone        String?
+  /** Short auto-assigned ticket # (or future POS ref) — shown to guest + staff */
+  orderRef     String?            @map("order_ref")
+  /** Unused legacy column — kept nullable; no longer collected or returned by APIs */
+  pickupCode   String?            @map("pickup_code")
+  status       PickupTicketStatus @default(WAITING)
+  readyAt      DateTime?          @map("ready_at")
+  /**
+   * Guest Web Push subscription JSON (PushSubscription + optional locale).
+   * Used to notify when the waiting tab is backgrounded or closed (PWA).
+   */
+  pushSubscription String?        @map("push_subscription")
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+
+  venue Venue @relation(fields: [venueId], references: [id])
+
+  @@index([venueId, status, createdAt])
+  @@index([venueId, orderRef])
+  @@map("pickup_tickets")
+}
+
+/**
+ * Guest “call waiter” from pickup landing (name + optional comment, no food ticket).
+ * Lives in a dedicated staff “Waiter calls” queue — never WAITING/READY order tickets.
+ */
+model PickupAssistanceCall {
+  id           String                 @id @default(cuid())
+  venueId      String                 @map("venue_id")
+  customerName String                 @map("customer_name")
+  /** Auto-assigned assistance code (e.g. W-12) for the staff board */
+  orderRef     String                 @map("order_ref")
+  comment      String?
+  status       PickupAssistanceStatus @default(OPEN)
+  createdAt    DateTime               @default(now()) @map("created_at")
+  updatedAt    DateTime               @updatedAt @map("updated_at")
+
+  venue Venue @relation(fields: [venueId], references: [id])
+
+  @@index([venueId, status, createdAt])
+  @@index([venueId, orderRef])
+  @@map("pickup_assistance_calls")
+}

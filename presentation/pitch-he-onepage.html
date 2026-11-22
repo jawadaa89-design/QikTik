@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>דף אחד — מערכת הזמנות דיגיטלית להמסעדה שלי</title>
+  <style>
+    :root {
+      --brand: #f97316;
+      --brand-dark: #c2410c;
+      --brand-light: #fdba74;
+      --ink: #1c1917;
+      --muted: #57534e;
+      --line: #e7e5e4;
+      --paper: #fffef9;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    @page { size: A4; margin: 12mm; }
+    body {
+      font-family: "Segoe UI", Tahoma, "Noto Sans Hebrew", Arial, sans-serif;
+      background: #44403c;
+      color: var(--ink);
+      direction: rtl;
+      padding: 1.5rem;
+    }
+    .sheet {
+      width: 210mm;
+      min-height: 297mm;
+      max-width: 100%;
+      margin: 0 auto;
+      background: var(--paper);
+      padding: 14mm 14mm 12mm;
+      box-shadow: 0 12px 40px rgba(0,0,0,.35);
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      border-bottom: 2px solid var(--brand);
+      padding-bottom: 0.75rem;
+    }
+    .logo {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .top-text h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      line-height: 1.35;
+      color: var(--ink);
+    }
+    .top-text p {
+      margin-top: 0.25rem;
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .badge {
+      display: inline-block;
+      margin-top: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--brand-dark);
+      background: var(--brand-light);
+      border: 1px solid var(--brand);
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+    }
+    .hook {
+      background: linear-gradient(135deg, #1c1917 0%, #292524 100%);
+      color: #fafaf9;
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-size: 0.98rem;
+      line-height: 1.7;
+      border-right: 4px solid var(--brand);
+    }
+    .hook strong { color: var(--brand-light); }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.7rem 0.8rem;
+      background: white;
+    }
+    .card h2 {
+      font-size: 0.95rem;
+      color: var(--brand-dark);
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .card ul {
+      list-style: none;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .card li {
+      position: relative;
+      padding-right: 0.85rem;
+      margin-bottom: 0.2rem;
+    }
+    .card li::before {
+      content: "●";
+      position: absolute;
+      right: 0;
+      color: var(--brand);
+      font-size: 0.55rem;
+      top: 0.35rem;
+    }
+    .full {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.7rem 0.85rem;
+      background: #fffdf5;
+    }
+    .full h2 {
+      font-size: 0.95rem;
+      color: var(--brand-dark);
+      margin-bottom: 0.4rem;
+    }
+    .cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .cols div {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0.55rem 0.6rem;
+    }
+    .cols strong { display: block; color: var(--ink); margin-bottom: 0.15rem; font-size: 0.84rem; }
+    .close {
+      margin-top: auto;
+      text-align: center;
+      padding-top: 0.6rem;
+      border-top: 1px solid var(--line);
+    }
+    .close p {
+      font-size: 1.02rem;
+      font-weight: 700;
+      line-height: 1.65;
+      color: var(--ink);
+    }
+    .close .sub {
+      margin-top: 0.35rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .print-hint {
+      text-align: center;
+      color: #a8a29e;
+      font-size: 0.85rem;
+      margin-top: 1rem;
+    }
+    @media print {
+      body { background: white; padding: 0; }
+      .sheet { box-shadow: none; width: auto; min-height: auto; }
+      .print-hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <article class="sheet">
+    <header class="top">
+      <div class="top-text">
+        <h1>הזמנה מהשולחן<br>עבור המסעדה שלי</h1>
+        <p>QR + NFC · תפריט דיגיטלי ב־4 שפות · מטבח · בר · נרגילה</p>
+        <span class="badge">דף אחד — מצגת לבעל המסעדה</span>
+      </div>
+      <div class="logo"><img src="logo.png" alt="המסעדה שלי" /></div>
+    </header>
+
+    <p class="hook">
+      <strong>במשפט אחד:</strong>
+      האורח מזמין מהר יותר, המטבח מקבל פתק ברור, המלצר מגיש טוב יותר, ואתם מוכרים יותר —
+      בערבית, עברית, אנגלית ורוסית — עם הלוגו של המסעדה שלי על כל שולחן.
+    </p>
+
+    <div class="grid">
+      <section class="card">
+        <h2>1) יותר הכנסות</h2>
+        <ul>
+          <li>הזמנה מהירה בלי המתנה למלצר — עוד סבבי משקאות ואוכל</li>
+          <li>תפריט דיגיטלי מעודד תוספות (קינוחים · משקאות · נרגילה)</li>
+          <li>הזמנות מגיעות מיד לתחנה הנכונה (מטבח ראשי · בשר · בר · נרגילה)</li>
+          <li>אורחים בשפות שונות מזמינים בביטחון במקום לוותר</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>2) פחות לחץ על הצוות</h2>
+        <ul>
+          <li>המלצר מגיש ומשרת — לא רושם הזמנות ביד</li>
+          <li>3 טאבלטים לאזורים + טאבלט למנהל (לא מכשיר לכל מלצר)</li>
+          <li>התראות כשההזמנה מוכנה — פחות הליכות בין שולחנות</li>
+          <li>הקלה בשעות העומס (קיבולת ~250–300)</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>3) פחות טעויות ובזבוז</h2>
+        <ul>
+          <li>הזמנה דיגיטלית — בלי כתב יד לא ברור</li>
+          <li>הערות האורח (אלרגיה / בלי קרח) נכתבות בדיוק</li>
+          <li>לכל שולחן קישור ייחודי — פחות הגשה לשולחן הלא נכון</li>
+          <li>נרגילה מודפסת רק בתחנה שלה (חוץ + מרפסת)</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>4) חוויית אורח טובה יותר</h2>
+        <ul>
+          <li>הצמדה ל־NFC או סריקת QR — תפריט מיידי בלי אפליקציה</li>
+          <li>מעקב אחרי סטטוס: התקבל ← בהכנה ← מוכן</li>
+          <li>תשלום עכשיו או בסוף (כרטיס או מזומן דרך המלצר)</li>
+          <li>עובד בפנים · בחוץ · במרפסת</li>
+        </ul>
+      </section>
+    </div>
+
+    <section class="full">
+      <h2>5) שליטה לבעלים + אמינות תפעול</h2>
+      <div class="cols">
+        <div>
+          <strong>להנהלה</strong>
+          עדכון מחירים ומנות שאזלו בדקות · בלי הדפסת תפריטים מחדש · טאבלט המנהל רואה את כל האזורים
+        </div>
+        <div>
+          <strong>כשהאינטרנט נופל</strong>
+          ההזמנות ממשיכות ברשת המסעדה · תשלום בכרטיס נעצר זמנית · מזומן/חשבון נשארים זמינים
+        </div>
+        <div>
+          <strong>ההשקעה</strong>
+          מעמדים + מדבקות NFC + טאבלטים + מדפסות + שרת קטן — לא החלפת כל הקופה
+        </div>
+      </div>
+    </section>
+
+    <footer class="close">
+      <p>
+        השקעה קטנה מול בזבוז הזמנות שגויות, שולחנות איטיים והדפסת תפריטים —
+        ומחזירה את עצמה בסיבוב שולחנות גבוה יותר ובסבבי משקאות ונרגילה.
+      </p>
+      <p class="sub">הצעד הבא: ניסוי חי על שולחן אחד · ואז הרחבה לכל השולחנות</p>
+    </footer>
+  </article>
+
+  <p class="print-hint">הדפסה או PDF: Ctrl+P · יש לפתוח ליד <code>logo.png</code></p>
+</body>
+</html>

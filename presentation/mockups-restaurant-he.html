@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QikTik — המסעדה שלי</title>
+  <style>
+    :root {
+      --brand: #f97316;
+      --brand-dark: #c2410c;
+      --brand-light: #fdba74;
+      --gold-gradient: linear-gradient(135deg, #f97316 0%, #c2410c 100%);
+      --orange: #ea580c;
+      --stone-50: #fafaf9;
+      --stone-100: #f5f5f4;
+      --stone-200: #e7e5e4;
+      --stone-400: #a8a29e;
+      --stone-500: #78716c;
+      --stone-700: #44403c;
+      --stone-900: #1c1917;
+      --green: #16a34a;
+      --red: #dc2626;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", Tahoma, "Noto Sans Hebrew", Arial, sans-serif;
+      background: #1c1917;
+      color: #f2efe8;
+      padding: 2rem;
+      direction: rtl;
+    }
+    .cover {
+      text-align: center;
+      color: white;
+      padding: 3rem 1rem 4rem;
+      max-width: 800px;
+      margin: 0 auto 3rem;
+    }
+    .cover h1 { font-size: 1.4rem; font-weight: 600; margin-bottom: 1rem; color: #a8a29e; letter-spacing: 0.15em; text-transform: uppercase; }
+    .cover p { color: #d6d3d1; font-size: 1rem; line-height: 1.8; }
+    .cover .badge {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 0.5rem 1.2rem;
+      background: transparent;
+      border: 1px solid var(--brand);
+      color: var(--brand-light);
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    /* לוגו המסעדה שלי — logo.png (עיגול בלבד, השם בתוך התמונה) */
+    .logo-circle {
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      margin: 0 auto;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+      padding: 0;
+      background: transparent;
+      border: none;
+    }
+    .logo-circle--xl { width: 160px; height: 160px; margin-bottom: 1rem; }
+    .logo-circle--lg { width: 120px; height: 120px; }
+    .logo-circle--md { width: 80px; height: 80px; }
+    .logo-circle--sm { width: 40px; height: 40px; }
+    .logo-circle img { width: 100%; height: 100%; display: block; object-fit: cover; }
+    .section-title {
+      color: white;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 3rem 0 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--brand);
+      max-width: 1400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .screen-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+    .screen-label { color: #d6d3d1; font-size: 0.85rem; font-weight: 600; text-align: center; }
+    .phone {
+      width: 280px; height: 580px;
+      background: #0e0e10;
+      border-radius: 32px;
+      border: 8px solid #1c1917;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      direction: rtl;
+    }
+    .phone.landscape { width: 520px; height: 320px; border-radius: 20px; }
+    .phone-notch {
+      height: 28px; background: #1c1917;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .phone-notch span { width: 80px; height: 6px; background: #44403c; border-radius: 3px; }
+    .screen-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; font-size: 11px; }
+     .hdr { padding: 10px 12px; background: #141416; border-bottom: 1px solid var(--stone-200); }
+    .hdr-row { display: flex; justify-content: space-between; align-items: center; }
+    .hdr h2 { font-size: 13px; font-weight: 700; }
+    .hdr p { font-size: 10px; color: var(--stone-500); }
+    .lang-pill { font-size: 9px; padding: 3px 8px; border: 1px solid var(--stone-200); border-radius: 6px; }
+    .search { margin-top: 8px; padding: 6px 10px; background: #1a1a1e; border-radius: 8px; color: var(--stone-400); font-size: 10px; text-align: right; }
+    .content { flex: 1; overflow: hidden; padding: 10px 12px; }
+    .btn-brand { background: var(--brand); color: #1c1917; border: none; border-radius: 10px; padding: 10px; font-weight: 700; font-size: 11px; width: 100%; text-align: center; }
+    .btn-outline { background: white; color: var(--brand-dark); border: 1.5px solid var(--brand); border-radius: 10px; padding: 9px; font-weight: 600; font-size: 11px; width: 100%; text-align: center; }
+    .card { background: #1a1a1e; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 8px; margin-bottom: 6px; }
+    .chips { display: flex; gap: 4px; overflow: hidden; margin-bottom: 8px; flex-direction: row-reverse; }
+    .chip { padding: 4px 10px; border-radius: 999px; font-size: 9px; font-weight: 600; white-space: nowrap; background: #1a1a1e; color: var(--stone-500); }
+    .chip.active { background: var(--brand); color: #1c1917; }
+    .item-row { display: flex; gap: 8px; align-items: flex-start; flex-direction: row-reverse; }
+    .item-img { width: 48px; height: 48px; background: #fdf8ee; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; border: 1px solid #f5e6c8; }
+    .item-info { flex: 1; text-align: right; }
+    .item-name { font-weight: 600; font-size: 11px; }
+    .item-desc { font-size: 9px; color: var(--stone-500); margin-top: 2px; }
+    .item-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; flex-direction: row-reverse; }
+    .price { font-weight: 700; color: var(--brand-dark); font-size: 11px; }
+    .add-btn { background: var(--brand); color: #1c1917; border: none; border-radius: 6px; padding: 3px 10px; font-size: 9px; font-weight: 700; }
+    .bottom-nav { display: flex; border-top: 1px solid var(--stone-200); background: white; padding: 6px 0; }
+    .nav-item { flex: 1; text-align: center; font-size: 8px; color: var(--stone-500); }
+    .nav-item.active { color: var(--brand); font-weight: 700; }
+    .nav-icon { font-size: 16px; display: block; margin-bottom: 2px; }
+    .progress-step { display: flex; gap: 2px; margin: 6px 0; flex-direction: row-reverse; }
+    .step-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--stone-200); }
+    .step-bar.done { background: var(--brand); }
+    .step-labels { display: flex; justify-content: space-between; font-size: 7px; color: var(--stone-400); flex-direction: row-reverse; }
+    .step-labels .active { color: var(--brand); font-weight: 600; }
+    .lang-btn { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #1a1a1e; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; margin-bottom: 6px; font-weight: 500; flex-direction: row-reverse; justify-content: flex-end; }
+    .hdr-brand { text-align: right; display: flex; align-items: center; gap: 8px; flex-direction: row-reverse; }
+    .hdr-brand p { font-size: 10px; color: var(--stone-500); margin: 0; }
+    .table-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .table-cell { aspect-ratio: 1; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; border: 1px solid var(--stone-200); background: white; }
+    .table-cell.free { background: #1a1a1e; color: var(--stone-400); }
+    .table-cell.active { background: #dcfce7; border-color: #86efac; }
+    .table-cell.bill { background: #fee2e2; border-color: #fca5a5; }
+    .table-cell.ready { background: #fef9c3; border-color: #fde047; }
+    .kds-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; font-size: 8px; height: 100%; direction: rtl; }
+    .kds-col { background: #1a1a1e; border-radius: 6px; padding: 4px; text-align: right; }
+    .kds-col h4 { font-size: 8px; font-weight: 700; margin-bottom: 4px; text-align: center; }
+    .order-card { background: white; border-radius: 6px; padding: 5px; margin-bottom: 4px; border-right: 3px solid var(--brand); text-align: right; }
+    .order-card.new { border-right-color: var(--green); }
+    .order-card.warn { border-right-color: var(--red); }
+    .admin-layout { display: flex; height: 100%; font-size: 9px; direction: rtl; }
+    .admin-sidebar { width: 72px; background: var(--stone-900); color: white; padding: 8px 4px; text-align: right; }
+    .admin-sidebar div { padding: 5px 4px; border-radius: 4px; margin-bottom: 2px; font-size: 8px; }
+    .admin-sidebar .sel { background: var(--brand); }
+    .admin-main { flex: 1; padding: 8px; background: #0a0a0c; text-align: right; }
+    .stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; margin-bottom: 8px; }
+    .stat { background: #1a1a1e; border: 1px solid rgba(255,255,255,.1); border-radius: 6px; padding: 6px; text-align: center; }
+    .stat .val { font-size: 13px; font-weight: 800; color: var(--brand); }
+    .stat .lbl { font-size: 7px; color: var(--stone-500); }
+    .banner-offline { background: #fef3c7; color: #92400e; padding: 6px 10px; font-size: 8px; text-align: center; }
+    .stand { width: 200px; background: white; border-radius: 12px; padding: 20px; text-align: center; border: 2px solid #f5e6c8; direction: rtl; }
+    .print-hint { text-align: center; color: #a8a29e; font-size: 0.85rem; margin: 3rem auto; max-width: 600px; line-height: 1.8; }
+    @media print {
+      body { background: white; }
+      .cover { color: black; }
+      .cover p, .screen-label, .section-title { color: #444; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- המסעדה שלי -->
+  <script>
+    const RESTAURANT = { table: 7, currency: "₪" };
+    function restaurantLogo(size) {
+      const cls = size ? ` logo-circle--${size}` : "";
+      return `<div class="logo-circle${cls}"><img src="logo.png" alt="המסעדה שלי" /></div>`;
+    }
+  </script>
+
+  <div class="cover">
+    <h1>QikTik ×</h1>
+    <div class="logo-circle logo-circle--xl"><img src="logo.png" alt="המסעדה שלי" /></div>
+    <p>
+      מערכת הזמנת אוכל מהשולחן באמצעות QR ו-NFC<br>
+      תפריט דיגיטלי · הזמנה מהנייד · מסך מטבח · תשלום מיידי או מאוחר<br>
+      ערבית · עברית · אנגלית · רוסית
+    </p>
+    <span class="badge">מצגת — רקע מתכתי שחור · כתום · מחירים ₪</span>
+  </div>
+
+  <p class="print-hint">
+    פתחו קובץ זה ב-Chrome או Edge · צלמו מסך · או לחצו <strong>Ctrl+P</strong> לשמירת PDF
+  </p>
+
+  <!-- אפליקציית האורח -->
+  <h2 class="section-title">אפליקציית האורח (נייד)</h2>
+  <div class="grid">
+
+    <!-- G1 -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body" style="padding:16px 16px 20px;">
+          <div class="logo-circle logo-circle--xl" style="margin:8px auto 0;"><img src="logo.png" alt="המסעדה שלי" /></div>
+          <p style="text-align:center; color:var(--brand); margin:14px 0 6px; font-weight:700; letter-spacing:0.12em; font-size:10px;">שולחן 7</p>
+          <p style="font-size:11px; color:var(--stone-400); text-align:center; margin-bottom:12px;">בחרו שפה</p>
+          <div class="lang-btn" style="opacity:0.7;"><span>🇸🇦</span> العربية</div>
+          <div class="lang-btn"><span>🇮🇱</span> עברית</div>
+          <div class="lang-btn" style="opacity:0.7;"><span>🇬🇧</span> English</div>
+          <div class="lang-btn" style="opacity:0.7;"><span>🇷🇺</span> Русский</div>
+          <p style="text-align:center; font-size:8px; color:var(--stone-400); margin-top:14px;">געו ב-NFC או סרקו QR על המעמד</p>
+        </div>
+      </div>
+      <span class="screen-label">מסך 1 — בחירת שפה</span>
+    </div>
+
+    <!-- G1b Register -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body" style="padding:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:9px;color:var(--brand);font-weight:700;letter-spacing:0.12em;">שולחן 7</span>
+            <span class="chip active" style="font-size:8px;">🌐 עברית ▾</span>
+          </div>
+          <div class="logo-circle logo-circle--sm" style="margin:0 auto 8px;"><img src="logo.png" alt="" /></div>
+          <p style="text-align:center;font-weight:700;font-size:14px;margin-bottom:4px;">ברוכים הבאים</p>
+          <p style="text-align:center;font-size:8px;color:var(--stone-400);margin-bottom:10px;">צרו סיסמה לשולחן זה</p>
+          <div class="card" style="font-size:8px;margin-bottom:6px;">שם</div>
+          <div class="card" style="font-size:8px;margin-bottom:6px;">טלפון</div>
+          <div class="card" style="font-size:8px;margin-bottom:6px;">סיסמת השולחן</div>
+          <div class="card" style="font-size:8px;margin-bottom:6px;border-color:var(--brand);">☑ מאשר/ת את התנאים *</div>
+          <div class="card" style="font-size:8px;margin-bottom:10px;">☑ הצעות שיווקיות (אופציונלי)</div>
+          <div class="btn-brand">המשך</div>
+        </div>
+      </div>
+      <span class="screen-label">מסך 1ב — הרשמה + החלפת שפה</span>
+    </div>
+
+    <!-- G2 Menu -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="hdr">
+            <div class="hdr-row">
+              <span class="lang-pill">🌐 עברית ▾</span>
+              <div class="hdr-brand">
+                <div class="logo-circle logo-circle--sm"><img src="logo.png" alt="" /></div>
+                <p>שולחן 7</p>
+              </div>
+            </div>
+            <div class="search">חפשו בתפריט...</div>
+          </div>
+          <div class="content">
+            <div class="chips">
+              <span class="chip">🍰 קינוחים</span>
+              <span class="chip">🍸 משקאות</span>
+              <span class="chip active">🍖 מנות עיקריות</span>
+              <span class="chip">🥗 סלטי המסעדה שלי</span>
+            </div>
+            <p style="font-size:9px; font-weight:700; color:var(--stone-500); margin-bottom:6px; text-align:right;">הכי מוזמן היום</p>
+            <div class="card item-row">
+              <div class="item-img">🍢</div>
+              <div class="item-info">
+                <div class="item-name">קבב המסעדה שלי</div>
+                <div class="item-desc">קבב צלוי על גחלים — חתימת המסעדה</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪90</span></div>
+              </div>
+            </div>
+            <div class="card item-row">
+              <div class="item-img">🥗</div>
+              <div class="item-info">
+                <div class="item-name">סלט המסעדה שלי</div>
+                <div class="item-desc">קלמרי מטוגן, טבעות בצל, חסה, עגבניות שרי</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪72</span></div>
+              </div>
+            </div>
+            <div class="card item-row">
+              <div class="item-img">🍔</div>
+              <div class="item-info">
+                <div class="item-name">המבורגר המסעדה שלי</div>
+                <div class="item-desc">220 גרם בקר צלוי</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪65</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><span class="nav-icon">🛒</span>סל <span style="background:var(--brand);color:white;border-radius:50%;padding:0 4px;font-size:7px;">3</span></div>
+            <div class="nav-item"><span class="nav-icon">📋</span>הזמנות</div>
+            <div class="nav-item active"><span class="nav-icon">🏠</span>תפריט</div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך 2 — תפריט ראשי</span>
+    </div>
+
+    <!-- G3 Salads -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="hdr">
+            <div class="hdr-row"><span class="lang-pill">עברית</span><span style="color:var(--brand)">סלטי המסעדה שלי →</span></div>
+          </div>
+          <div class="content">
+            <div class="card" style="background:#1a1a1e;border-color:rgba(249,115,22,.35);font-size:8px;text-align:right;margin-bottom:8px;">
+              <strong>מגוון סלטים (12 סוגים + פיתה)</strong><br>
+              עם מנה עיקרית: ₪50 · ילד: ₪25 · ללא מנה עיקרית: ₪70
+            </div>
+            <div class="card item-row">
+              <div class="item-img">🥗</div>
+              <div class="item-info">
+                <div class="item-name">טאבולה</div>
+                <div class="item-desc">פטרוזיליה, בורגול, עגבניות, לימון</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪52</span></div>
+              </div>
+            </div>
+            <div class="card item-row">
+              <div class="item-img">🥗</div>
+              <div class="item-info">
+                <div class="item-name">פתוש</div>
+                <div class="item-desc">ירקות טריים, לחם קלוי, דבש רימון</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪58</span></div>
+              </div>
+            </div>
+            <div class="card item-row">
+              <div class="item-img">🧀</div>
+              <div class="item-info">
+                <div class="item-name">סלט חלומי</div>
+                <div class="item-desc">גבינת חלומי מטוגנת, פטריות ופלפל על מיטת ירקות</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪65</span></div>
+              </div>
+            </div>
+            <div class="card item-row">
+              <div class="item-img">🥗</div>
+              <div class="item-info">
+                <div class="item-name">סלט קיסר</div>
+                <div class="item-desc">עוף צלוי, חסה, בטטה, פרמזן</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪68</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך 3 — סלטי המסעדה שלי</span>
+    </div>
+
+    <!-- G3b Mains -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="hdr">
+            <div class="hdr-row"><span class="lang-pill">עברית</span><span style="color:var(--brand)">בשרים →</span></div>
+          </div>
+          <div class="content">
+            <p style="font-size:9px;font-weight:700;color:var(--brand-dark);text-align:right;margin-bottom:6px;">בשרים</p>
+            <div class="card item-row">
+              <div class="item-img">🍢</div>
+              <div class="item-info">
+                <div class="item-name">קבב המסעדה שלי</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪90</span></div>
+              </div>
+            </div>
+            <div class="card item-row">
+              <div class="item-img">🥩</div>
+              <div class="item-info">
+                <div class="item-name">כנפי טלה על שיפוד</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪110</span></div>
+              </div>
+            </div>
+            <div class="card item-row">
+              <div class="item-img">🥩</div>
+              <div class="item-info">
+                <div class="item-name">T-bone (צלעות טלה)</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪160</span></div>
+              </div>
+            </div>
+            <p style="font-size:9px;font-weight:700;color:var(--brand-dark);text-align:right;margin:8px 0 6px;">אנטריקוט</p>
+            <div class="card item-row">
+              <div class="item-img">🥩</div>
+              <div class="item-info">
+                <div class="item-name">סטייק אנטריקוט צלוי (350 גרם)</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪169</span></div>
+              </div>
+            </div>
+            <div class="card item-row">
+              <div class="item-img">🥩</div>
+              <div class="item-info">
+                <div class="item-name">אנטריקוט המסעדה שלי</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪185</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך 3ב — מנות עיקריות (בשרים)</span>
+    </div>
+
+    <!-- G3c Appetizers -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="hdr">
+            <div class="hdr-row"><span class="lang-pill">עברית</span><span style="color:var(--brand)">מנות ראשונות →</span></div>
+          </div>
+          <div class="content">
+            <div class="card item-row">
+              <div class="item-img">🦑</div>
+              <div class="item-info">
+                <div class="item-name">קלמרי על לבנה</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪75</span></div>
+              </div>
+            </div>
+            <div class="card item-row">
+              <div class="item-img">🧀</div>
+              <div class="item-info">
+                <div class="item-name">מגש גבינות</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪72</span></div>
+              </div>
+            </div>
+            <div class="card item-row">
+              <div class="item-img">🥩</div>
+              <div class="item-info">
+                <div class="item-name">מחבת לשון בקר</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪69</span></div>
+              </div>
+            </div>
+            <div class="card item-row">
+              <div class="item-img">🫘</div>
+              <div class="item-info">
+                <div class="item-name">חומוס עם בשר</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪65</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך 3ג — מנות ראשונות</span>
+    </div>
+
+    <!-- G3d Desserts & drinks -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="hdr">
+            <div class="hdr-row"><span class="lang-pill">עברית</span><span style="color:var(--brand)">קינוחים ומשקאות →</span></div>
+          </div>
+          <div class="content">
+            <p style="font-size:9px;font-weight:700;color:var(--brand-dark);text-align:right;margin-bottom:6px;">קינוחים</p>
+            <div class="card item-row">
+              <div class="item-img">🍰</div>
+              <div class="item-info">
+                <div class="item-name">כנאפה</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪42</span></div>
+              </div>
+            </div>
+            <div class="card item-row">
+              <div class="item-img">🍫</div>
+              <div class="item-info">
+                <div class="item-name">סופלה שוקולד עם גלידה</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪48</span></div>
+              </div>
+            </div>
+            <p style="font-size:9px;font-weight:700;color:var(--brand-dark);text-align:right;margin:8px 0 6px;">קוקטיילים</p>
+            <div class="card item-row">
+              <div class="item-img">🍹</div>
+              <div class="item-info">
+                <div class="item-name">מוחיטו</div>
+                <div class="item-desc">רום, לימון, נענע, סודה</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪49</span></div>
+              </div>
+            </div>
+            <p style="font-size:9px;font-weight:700;color:var(--brand-dark);text-align:right;margin:8px 0 6px;">ערק</p>
+            <div class="card" style="font-size:8px;text-align:right;">
+              ערק המסעדה שלי · כוס ₪30 · 200 מ"ל ₪95 · 350 מ"ל ₪130
+            </div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך 3ד — קינוחים ומשקאות</span>
+    </div>
+
+    <!-- G3e Breakfast -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="hdr">
+            <div class="hdr-row"><span class="lang-pill">עברית</span><span style="color:var(--brand)">ארוחת בוקר →</span></div>
+          </div>
+          <div class="content">
+            <div class="card item-row">
+              <div class="item-img">🍳</div>
+              <div class="item-info">
+                <div class="item-name">ארוחת בוקר המסעדה שלי (אדם / שניים)</div>
+                <div class="item-desc">ביצים, סלט ירקות, מנות ראשונות, לחם הבית, משקה</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪85 / ₪145</span></div>
+              </div>
+            </div>
+            <div class="card item-row">
+              <div class="item-img">🍗</div>
+              <div class="item-info">
+                <div class="item-name">חזה עוף צלוי</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪68</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך 3ה — ארוחת בוקר ועוף</span>
+    </div>
+
+    <!-- G4 Item detail -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div style="height:110px; background:#fdf8ee; display:flex; align-items:center; justify-content:center; font-size:48px;">🍢</div>
+          <div class="content">
+            <h2 style="font-size:15px; text-align:right;">קבב המסעדה שלי</h2>
+            <p class="price" style="font-size:14px; margin:4px 0; text-align:right;">₪90</p>
+            <p style="font-size:9px; color:var(--stone-500); line-height:1.6; text-align:right;">קבב בקר טרי צלוי על גחלים, מוגש עם אורז או סלט לפי בחירה. מחתימות המסעדה שלי.</p>
+            <p style="font-size:8px; margin-top:6px; text-align:right;">קטגוריה: מנות עיקריות · בשרים</p>
+            <p style="font-size:9px; font-weight:600; margin-top:10px; text-align:right;">הערות מיוחדות</p>
+            <div style="border:1px solid var(--stone-200); border-radius:8px; padding:6px; font-size:9px; color:var(--stone-400); margin:4px 0 10px; text-align:right;">ללא בצל, רוטב חריף...</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-direction:row-reverse; justify-content:flex-end;">
+              <button style="width:28px;height:28px;border-radius:6px;border:1px solid var(--stone-200);background:white;">+</button>
+              <span>1</span>
+              <button style="width:28px;height:28px;border-radius:6px;border:1px solid var(--stone-200);background:white;">−</button>
+              <span style="font-size:9px;">כמות</span>
+            </div>
+            <div class="btn-brand">הוסף לסל — ₪90</div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך 4 — פרטי מנה</span>
+    </div>
+
+    <!-- G5 Cart -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="hdr"><h2>הסל שלך</h2><span style="color:var(--brand);font-size:10px;">→ חזרה</span></div>
+          <div class="content">
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;flex-direction:row-reverse"><span class="price">₪90</span><span class="item-name">קבב המסעדה שלי</span></div>
+            </div>
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;flex-direction:row-reverse"><span class="price">₪72</span><span class="item-name">סלט המסעדה שלי</span></div>
+            </div>
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;flex-direction:row-reverse"><span class="price">₪49</span><span class="item-name">מוחיטו</span></div>
+            </div>
+            <div style="border-top:1px solid var(--stone-200);padding-top:8px;margin-top:8px;">
+              <div style="display:flex;justify-content:space-between;font-size:9px;flex-direction:row-reverse;"><span>₪21.1</span><span>דמי שירות 10%</span></div>
+              <div style="display:flex;justify-content:space-between;font-weight:700;font-size:13px;margin-top:4px;flex-direction:row-reverse;"><span class="price">₪232.1</span><span>סה"כ</span></div>
+            </div>
+            <p style="font-size:9px;font-weight:600;margin:12px 0 6px;text-align:right;">איך תרצו לשלם?</p>
+            <div class="card" style="text-align:right;border-color:var(--brand);">● הוסף לחשבון השולחן (שלמו מאוחר)</div>
+            <div class="card" style="text-align:right;">○ שלמו עכשיו בכרטיס</div>
+            <div style="margin-top:10px;" class="btn-brand">שלח הזמנה — ₪232.1</div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך 5 — סל ותשלום</span>
+    </div>
+
+    <!-- G6 Progress -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="hdr">
+            <h2 style="text-align:right;">הזמנה #1042 · שולחן 7</h2>
+            <p style="color:var(--green);text-align:right;">✓ ההזמנה נשלחה למטבח</p>
+          </div>
+          <div class="content">
+            <div class="card">
+              <div class="item-name" style="text-align:right;">קבב המסעדה שלי</div>
+              <div class="progress-step"><div class="step-bar done"></div><div class="step-bar done"></div><div class="step-bar"></div><div class="step-bar"></div></div>
+              <div class="step-labels"><span>הגשה</span><span>מוכן</span><span class="active">הכנה</span><span class="active">התקבל</span></div>
+            </div>
+            <div class="card">
+              <div class="item-name" style="text-align:right;">מוחיטו</div>
+              <div class="progress-step"><div class="step-bar done"></div><div class="step-bar done"></div><div class="step-bar done"></div><div class="step-bar"></div></div>
+              <div class="step-labels"><span>הגשה</span><span style="color:var(--green);font-weight:600;">מוכן ✓</span><span>הכנה</span><span>התקבל</span></div>
+            </div>
+            <div class="card" style="background:var(--stone-100);">
+              <div style="display:flex;justify-content:space-between;font-size:9px;flex-direction:row-reverse;"><span>₪62</span><span>חשבון השולחן (לא שולם)</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:9px;margin-top:4px;flex-direction:row-reverse;"><span>₪162</span><span>שולם בסשן זה</span></div>
+            </div>
+            <div class="btn-outline" style="margin-bottom:6px;">הזמינו עוד</div>
+            <div class="btn-brand" style="margin-bottom:6px;">שלמו יתרה ₪62</div>
+            <div class="btn-outline">קראו למלצר 🔔</div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך 6 — מעקב הזמנה (חי)</span>
+    </div>
+
+    <!-- G7 Orders history -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="hdr"><h2 style="text-align:right;">ההזמנות שלכם · שולחן 7</h2></div>
+          <div class="content">
+            <div class="card">
+              <div style="font-size:8px;color:var(--stone-400);text-align:right;">היום · #1042 · 20:15</div>
+              <div class="item-name" style="text-align:right;">קבב המסעדה שלי, מוחיטו</div>
+              <div style="font-size:9px;color:var(--green);text-align:right;">שולם ✓</div>
+            </div>
+            <div class="card">
+              <div style="font-size:8px;color:var(--stone-400);text-align:right;">#1041 · 19:50</div>
+              <div class="item-name" style="text-align:right;">חומוס עם בשר</div>
+              <div style="font-size:9px;color:var(--orange);text-align:right;">על החשבון · ₪65</div>
+            </div>
+            <div class="card" style="background:var(--stone-100);margin-top:12px;">
+              <div style="display:flex;justify-content:space-between;font-weight:700;flex-direction:row-reverse;"><span class="price">₪62</span><span>יתרה</span></div>
+            </div>
+            <div class="btn-brand" style="margin-top:10px;">בקשו חשבונית</div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><span class="nav-icon">🛒</span>סל</div>
+            <div class="nav-item active"><span class="nav-icon">📋</span>הזמנות</div>
+            <div class="nav-item"><span class="nav-icon">🏠</span>תפריט</div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך 7 — היסטוריית הזמנות</span>
+    </div>
+
+    <!-- G8 Payment -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="hdr"><h2>תשלום</h2></div>
+          <div class="content">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;flex-direction:row-reverse;"><span class="price">₪62</span><span>יתרה</span></div>
+            <p style="font-size:9px;font-weight:600;margin-bottom:6px;text-align:right;">טיפ (אופציונלי)</p>
+            <div class="chips" style="flex-direction:row-reverse;"><span class="chip">ללא</span><span class="chip">מותאם</span><span class="chip active">12%</span><span class="chip">10%</span></div>
+            <div style="display:flex;justify-content:space-between;font-weight:700;font-size:13px;margin:12px 0;flex-direction:row-reverse;"><span class="price">₪69.4</span><span>סה"כ</span></div>
+            <div class="card" style="font-size:9px;text-align:right;">💳 מספר כרטיס<br>MM/YY &nbsp; CVC</div>
+            <p style="font-size:8px;color:var(--stone-500);text-align:center;margin:8px 0;">או שלמו במזומן למלצר</p>
+            <div class="btn-brand">שלמו ₪69.4</div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך 8 — תשלום בכרטיס</span>
+    </div>
+
+    <!-- G9 Thank you -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body" style="justify-content:center;align-items:center;padding:24px;text-align:center;">
+          <div style="font-size:48px;margin-bottom:16px;color:var(--green);">✓</div>
+          <h2 style="font-size:16px;color:var(--green);margin-bottom:8px;">התשלום בוצע — תודה שביקרתם!</h2>
+          <p style="color:var(--stone-500);font-size:10px;">שולחן 7 · הסשן הסתיים</p>
+          <p style="font-size:18px;font-weight:800;color:var(--brand);margin:16px 0;">₪232</p>
+          <div class="btn-outline" style="margin-bottom:8px;">הורד קבלה</div>
+          <p style="font-size:8px;color:var(--stone-400);margin-top:16px;">סרקו QR שוב לסשן חדש</p>
+        </div>
+      </div>
+      <span class="screen-label">מסך 9 — תודה / סגירת סשן</span>
+    </div>
+
+    <!-- Offline -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="banner-offline">⚠ תשלום בכרטיס לא זמין. ניתן להזמין ולשלם במזומן למלצר.</div>
+          <div class="hdr">
+            <div class="hdr-row">
+              <span class="lang-pill">עברית</span>
+              <div class="hdr-brand">
+                <div class="logo-circle logo-circle--sm"><img src="logo.png" alt="" /></div>
+                <p>שולחן 7 · מצב לא מקוון</p>
+              </div>
+            </div>
+          </div>
+          <div class="content">
+            <div class="card item-row">
+              <div class="item-img">🫘</div>
+              <div class="item-info">
+                <div class="item-name">חומוס הבית</div>
+                <div class="item-bottom"><button class="add-btn">הוסף</button><span class="price">₪35</span></div>
+              </div>
+            </div>
+            <p style="font-size:8px;color:var(--stone-400);text-align:center;margin-top:20px;">התפריט וההזמנה פועלים ברשת המסעדה</p>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מצב לא מקוון (ללא אינטרנט)</span>
+    </div>
+
+  </div>
+
+  <!-- מטבח -->
+  <h2 class="section-title">מסך המטבח</h2>
+  <div class="grid">
+    <div class="screen-wrap">
+      <div class="phone landscape">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="hdr" style="padding:6px 10px;">
+            <div class="hdr-row">
+              <span style="font-size:9px;">20:32 · 🔔 צליל פעיל</span>
+              <strong style="font-size:11px;">מטבח · הזמנות חיות</strong>
+            </div>
+          </div>
+          <div class="content" style="padding:6px;">
+            <div class="kds-grid">
+              <div class="kds-col"><h4>הוגש</h4><div class="order-card" style="opacity:0.5;"><strong>ש5</strong><br>הושלם</div></div>
+              <div class="kds-col"><h4>מוכן (2)</h4>
+                <div class="order-card warn"><strong>ש3 · 12 ד</strong><br>1× מעורב צלוי<br><span style="color:var(--red);">מלצר!</span></div>
+              </div>
+              <div class="kds-col"><h4>בהכנה (4)</h4>
+                <div class="order-card"><strong>ש7 · 2 ד</strong><br>1× קבב המסעדה שלי <em>בינוני</em><br>1× ערק המסעדה שלי → בר<br><span style="color:var(--brand);">[מוכן]</span></div>
+              </div>
+              <div class="kds-col"><h4>חדש (2)</h4>
+                <div class="order-card new"><strong>ש7 · 0 ד</strong><br>#1042<br>1× אנטריקוט המסעדה שלי</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך מ1 — לוח הזמנות מטבח</span>
+    </div>
+
+    <!-- K2 -->
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="hdr"><h2 style="text-align:right;">שולחן 7 · #1042</h2><p style="text-align:right;">מהנייד של האורח · 20:15</p></div>
+          <div class="content">
+            <div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-direction:row-reverse;">
+              <div style="text-align:right;"><div class="item-name">קבב המסעדה שלי</div><div style="font-size:8px;color:var(--red);">⚠ בינוני</div></div>
+              <div style="display:flex;gap:4px;"><span class="chip active">הכנה</span><span class="chip">מוכן</span></div>
+            </div>
+            <div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-direction:row-reverse;">
+              <div style="text-align:right;"><div class="item-name">ערק המסעדה שלי</div><div style="font-size:8px;color:var(--brand);">→ בר</div></div>
+              <div style="display:flex;gap:4px;"><span class="chip">הכנה</span><span class="chip active">מוכן</span></div>
+            </div>
+            <div class="btn-brand" style="margin-top:8px;">סמן הכל בהכנה</div>
+            <div class="btn-outline" style="margin-top:6px;">הדפס שוב כרטיס 🖨</div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך מ2 — פרטי הזמנה</span>
+    </div>
+
+  </div>
+
+  <!-- מלצר -->
+  <h2 class="section-title">אפליקציית המלצר</h2>
+  <div class="grid">
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="hdr"><div class="hdr-row"><span style="font-size:8px;">יציאה</span><div style="text-align:right"><h2>מלצר · אחמד</h2></div></div></div>
+          <div class="content">
+            <div class="table-grid">
+              <div class="table-cell free">ש1<br>ריק</div>
+              <div class="table-cell active">ש2<br>🟢</div>
+              <div class="table-cell ready">ש3<br>🟡</div>
+              <div class="table-cell bill">ש4<br>🔴</div>
+              <div class="table-cell active">ש5<br>🟢</div>
+              <div class="table-cell free">ש6<br>ריק</div>
+              <div class="table-cell ready">ש7<br>🟡</div>
+              <div class="table-cell active">ש8<br>🟢</div>
+            </div>
+            <p style="font-size:8px;color:var(--stone-400);margin:8px 0;text-align:right;">🟢 מזמין · 🟡 מוכן · 🔴 חשבון</p>
+            <div class="btn-outline">+ פתח שולחן ידנית</div>
+            <div class="card" style="margin-top:8px;background:#fef3c7;text-align:right;"><strong>התראות (3)</strong><br><span style="font-size:8px;">🔔 ש7 קרא למלצר · 🍽 ש3 מוכן · 💰 ש4 חשבון</span></div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך ו1 — מפת שולחנות</span>
+    </div>
+
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="hdr"><span style="color:var(--brand);font-size:10px;">→ חזרה</span><h2 style="text-align:right;margin-top:4px;">שולחן 7 🔔</h2><p style="text-align:right;">סשן 45 דק' · חשבון ₪62</p></div>
+          <div class="content">
+            <div class="card" style="text-align:right;"><div style="font-size:8px;color:var(--stone-400);">הזמנה #1042</div><div class="item-name">קבב המסעדה שלי (הכנה)</div><div style="font-size:9px;color:var(--green);">מוחיטו (מוכן) ← הגישו!</div></div>
+            <div class="card" style="text-align:right;"><div style="font-size:8px;color:var(--stone-400);">הזמנה #1041 · על החשבון</div><div>חומוס עם בשר — ₪65</div></div>
+            <div class="btn-outline" style="margin-bottom:4px;">סמן כהוגש</div>
+            <div class="btn-outline" style="margin-bottom:4px;">הוסף פריט ידנית</div>
+            <div class="btn-brand" style="margin-bottom:4px;">רשום תשלום מזומן ₪62</div>
+            <div class="btn-outline">סגור שולחן</div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך ו2 — פרטי שולחן</span>
+    </div>
+
+    <div class="screen-wrap">
+      <div class="phone">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body">
+          <div class="hdr"><h2 style="text-align:right;">רישום מזומן · שולחן 7</h2></div>
+          <div class="content" style="padding-top:20px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:16px;flex-direction:row-reverse;"><span class="price" style="font-size:16px;">₪62</span><span>סכום לתשלום</span></div>
+            <p style="font-size:9px;font-weight:600;text-align:right;">התקבל</p>
+            <div class="card" style="font-size:16px;font-weight:700;padding:12px;text-align:right;">₪ 70.00</div>
+            <div style="display:flex;justify-content:space-between;margin:12px 0;flex-direction:row-reverse;"><span>₪8</span><span>עודף</span></div>
+            <div class="card" style="font-size:9px;text-align:right;">☑ סגור סשן לאחר תשלום</div>
+            <div class="btn-brand" style="margin-top:16px;">אשר תשלום מזומן</div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך ו3 — תשלום מזומן</span>
+    </div>
+
+  </div>
+
+  <!-- ניהול -->
+  <h2 class="section-title">לוח ניהול</h2>
+  <div class="grid">
+    <div class="screen-wrap">
+      <div class="phone landscape">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body admin-layout">
+          <div class="admin-sidebar">
+            <div class="sel">לוח</div><div>תפריט</div><div>שולחנות</div><div>הזמנות</div><div>הגדרות</div>
+          </div>
+          <div class="admin-main">
+            <strong>היום — 13 ביולי 2026</strong>
+            <div class="stat-row" style="margin-top:8px;">
+              <div class="stat"><div class="val">₪8,420</div><div class="lbl">הכנסות</div></div>
+              <div class="stat"><div class="val">124</div><div class="lbl">הזמנות</div></div>
+              <div class="stat"><div class="val">9</div><div class="lbl">שולחנות פתוחים</div></div>
+              <div class="stat"><div class="val">₪68</div><div class="lbl">ממוצע חשבון</div></div>
+            </div>
+            <p style="font-size:8px;font-weight:700;color:var(--stone-500);">פעילות חיה</p>
+            <div class="card" style="font-size:8px;">20:32 ש7 הזמנה חדשה #1042 · ₪232</div>
+            <p style="font-size:7px;color:var(--green);">● מחובר · מדפסת OK</p>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך א1 — לוח בקרה</span>
+    </div>
+
+    <div class="screen-wrap">
+      <div class="phone landscape">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body admin-layout">
+          <div class="admin-sidebar">
+            <div>לוח</div><div class="sel">תפריט</div><div>שולחנות</div>
+          </div>
+          <div class="admin-main">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <strong>תפריט</strong>
+              <div style="display:flex;gap:3px;"><span class="chip active">AR</span><span class="chip">HE</span><span class="chip">EN</span><span class="chip">RU</span></div>
+            </div>
+            <p style="font-size:8px;color:var(--stone-400);margin:6px 0 4px;">בשרים <span class="btn-brand" style="width:auto;display:inline-block;padding:2px 8px;font-size:7px;margin-left:6px;">+ הוספת פריט</span></p>
+            <div class="card" style="font-size:8px;">
+              קבב המסעדה שלי · ₪90 · MAIN_KITCHEN
+              <div style="display:flex;gap:6px;margin-top:6px;">
+                <span style="color:var(--green);font-weight:700;">On</span>
+                <span style="color:var(--brand);">עריכה</span>
+                <span style="color:var(--red);">הסרה</span>
+              </div>
+            </div>
+            <div class="card" style="font-size:8px;border-color:var(--brand);margin-top:6px;">
+              <strong>פריט חדש · בשרים</strong><br>
+              שם · תיאור · מחיר · מסלול מטבח<br>
+              <span class="btn-brand" style="width:auto;display:inline-block;padding:3px 8px;font-size:7px;margin-top:4px;">יצירה</span>
+            </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך א2 — תפריט: הוספה / עריכה / הסרה</span>
+    </div>
+
+    <div class="screen-wrap">
+      <div class="phone landscape">
+        <div class="phone-notch"><span></span></div>
+        <div class="screen-body admin-layout">
+          <div class="admin-sidebar">
+            <div>לוח</div><div>תפריט</div><div class="sel">שולחנות</div>
+          </div>
+          <div class="admin-main">
+            <strong>שולחנות ו-QR / NFC</strong>
+            <div class="card" style="font-size:8px;margin-top:6px;">
+              ש7 · פעיל · חשבון ₪62<br>
+              <div style="display:flex;gap:8px;margin-top:6px;align-items:center;flex-direction:row-reverse;">
+                <div style="width:48px;height:48px;background:var(--stone-900);border-radius:4px;display:flex;align-items:center;justify-content:center;color:white;font-size:6px;">QR</div>
+                <div>קישור: localhost:3000/ar/t/t_table7demo2026<br>NFC: NTAG215 מתוכנת<br>[הורד PDF מעמד]</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span class="screen-label">מסך א3 — שולחנות + מעמדי QR</span>
+    </div>
+
+  </div>
+
+  <!-- מעמד שולחן -->
+  <h2 class="section-title">מעמד שולחן (QR + NFC)</h2>
+  <div class="grid">
+    <div class="screen-wrap">
+      <div class="stand">
+        <div class="logo-circle logo-circle--md" style="margin-bottom:12px;"><img src="logo.png" alt="המסעדה שלי" /></div>
+        <div style="width:100px;height:100px;background:var(--stone-900);margin:12px auto;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:9px;">QR CODE</div>
+        <div style="width:56px;height:56px;border:2px dashed var(--brand);border-radius:50%;margin:8px auto;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--brand);">גע<br>NFC</div>
+        <strong style="font-size:16px;">שולחן 7</strong>
+        <p style="font-size:8px;color:var(--stone-400);margin-top:8px;">סרוק · גע · הזמן</p>
+        <p style="font-size:7px;color:var(--stone-400);margin-top:4px;">Scan · Tap · Order</p>
+      </div>
+      <span class="screen-label">מעמד QR + NFC מודפס</span>
+    </div>
+  </div>
+
+  <p class="print-hint" style="margin-top:3rem;">
+    QikTik · מצגת בלעדית ל<strong>המסעדה שלי</strong>
+  </p>
+
+</body>
+</html>
