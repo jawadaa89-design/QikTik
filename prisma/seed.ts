@@ -383,10 +383,19 @@ async function main() {
   /** Restore menu + tables on the existing venue without wiping pickup tickets. */
   if (process.env.SEED_MENU_ONLY === "1") {
     const venue =
+      (await prisma.venue.findUnique({ where: { slug: "myrestaurant" } })) ||
       (await prisma.venue.findUnique({ where: { slug: "my-restaurant" } })) ||
       (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
     if (!venue) {
       throw new Error("No venue found — run a full seed first (npm run db:seed)");
+    }
+
+    if (venue.slug !== "myrestaurant") {
+      await prisma.venue.update({
+        where: { id: venue.id },
+        data: { slug: "myrestaurant" },
+      });
+      venue.slug = "myrestaurant";
     }
 
     await prisma.menuCategory.deleteMany({ where: { venueId: venue.id } });
@@ -398,10 +407,10 @@ async function main() {
       where: { category: { venueId: venue.id } },
     });
     console.log("\n✓ Menu + tables restored (pickup data kept)");
-    console.log(`  Venue:   ${venue.name}`);
+    console.log(`  Venue:   ${venue.name} (${venue.slug})`);
     console.log(`  Tables:  ${tableCount}`);
     console.log(`  Menu:    ${itemCount} items`);
-    console.log(`  Browse:  http://localhost:3000/ar/menu\n`);
+    console.log(`  Browse:  http://localhost:3000/r/myrestaurant/ar/menu\n`);
     return;
   }
 
@@ -422,7 +431,7 @@ async function main() {
   const venue = await prisma.venue.create({
     data: {
       name: "My Restaurant",
-      slug: "my-restaurant",
+      slug: "myrestaurant",
       currency: "ILS",
       defaultLocale: "ar",
       enabledLocales: ["ar", "en", "he", "ru"],
@@ -455,11 +464,11 @@ async function main() {
   console.log(`  Tables:  ${tableCount} (Inside/Outside/Terrace)`);
   console.log(`  Menu:    ${itemCount} items`);
   console.log(`  Demo:    Table 7 → ${DEMO_TOKEN}`);
-  console.log("\n  Guest:   http://localhost:3000/ar/t/" + DEMO_TOKEN);
-  console.log("  Browse:  http://localhost:3000/ar/menu");
-  console.log("  Kitchen: http://localhost:3000/kitchen?station=MAIN_KITCHEN");
-  console.log("  Waiter:  http://localhost:3000/waiter?section=INSIDE");
-  console.log("  Admin:   http://localhost:3000/admin");
+  console.log("\n  Guest:   http://localhost:3000/r/myrestaurant/ar/t/" + DEMO_TOKEN);
+  console.log("  Browse:  http://localhost:3000/r/myrestaurant/ar/menu");
+  console.log("  Kitchen: http://localhost:3000/r/myrestaurant/kitchen?station=MAIN_KITCHEN");
+  console.log("  Waiter:  http://localhost:3000/r/myrestaurant/waiter?section=INSIDE");
+  console.log("  Admin:   http://localhost:3000/r/myrestaurant/admin");
   console.log("  Staff password (demo): qiktik2026\n");
 }
 

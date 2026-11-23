@@ -9,14 +9,14 @@ import { DigitalMenuLink } from "@/components/DigitalMenuLink";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
 import { registerPickupServiceWorker } from "@/lib/guest-push";
-import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
+import { useVenueSlug } from "@/components/VenueProvider";
 
 const venueName = process.env.NEXT_PUBLIC_VENUE_NAME ?? "My Restaurant";
-const VENUE_SLUG = DEFAULT_VENUE_SLUG;
 
 export default function PickupLandingPage() {
   const t = useTranslations("pickup");
   const locale = useLocale();
+  const venueSlug = useVenueSlug();
 
   useEffect(() => {
     void registerPickupServiceWorker();
@@ -59,7 +59,7 @@ export default function PickupLandingPage() {
         body: JSON.stringify({
           customerName: trimmedName,
           comment: callComment.trim() || undefined,
-          venueSlug: VENUE_SLUG,
+          venueSlug,
         }),
       });
       const data = await res.json().catch(() => null);
@@ -117,7 +117,7 @@ export default function PickupLandingPage() {
           {venueName}
         </h1>
         <div className="mt-16 flex w-full max-w-md flex-col items-center space-y-3">
-          <DigitalMenuLink locale={locale} label={t("digitalMenu")} />
+          <DigitalMenuLink locale={locale} venueSlug={venueSlug} label={t("digitalMenu")} />
 
           <Link
             href={`/${locale}/pickup/register`}

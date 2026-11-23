@@ -1,12 +1,21 @@
 import "../globals.css";
 import { FeaturesProvider } from "@/components/FeaturesProvider";
 import { StaffAuthGate } from "@/components/StaffAuthGate";
+import { VenueProvider } from "@/components/VenueProvider";
+import { venueSlugFromCookies } from "@/lib/venue-cookie.server";
+import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
 
 export const metadata = {
   title: "QikTik Admin",
 };
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const venueSlug = (await venueSlugFromCookies()) || DEFAULT_VENUE_SLUG;
+
   return (
     <html lang="ar" suppressHydrationWarning>
       <head>
@@ -18,9 +27,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         />
       </head>
       <body className="antialiased">
-        <FeaturesProvider fetchOnMount>
-          <StaffAuthGate>{children}</StaffAuthGate>
-        </FeaturesProvider>
+        <VenueProvider venueSlug={venueSlug}>
+          <FeaturesProvider fetchOnMount venueSlug={venueSlug}>
+            <StaffAuthGate>{children}</StaffAuthGate>
+          </FeaturesProvider>
+        </VenueProvider>
       </body>
     </html>
   );

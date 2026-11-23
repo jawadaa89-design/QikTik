@@ -5,6 +5,7 @@ import { guestDigitalMenuHref } from "@/lib/guest-menu-url";
 type Props = {
   locale: string;
   label: string;
+  venueSlug?: string;
   /** Compact app-icon tile (registration / waiting) vs compact panel CTA. */
   variant?: "prominent" | "panel";
   className?: string;
@@ -16,10 +17,11 @@ const MENU_TILE_IMAGE = "/menu/mixed-grill.jpg";
 export function DigitalMenuLink({
   locale,
   label,
+  venueSlug,
   variant = "prominent",
   className = "",
 }: Props) {
-  const href = guestDigitalMenuHref(locale);
+  const href = guestDigitalMenuHref(locale, venueSlug);
 
   if (variant === "panel") {
     return (

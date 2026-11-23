@@ -8,6 +8,17 @@ import {
 } from "@/lib/staff-auth";
 import { hasFeature } from "@/lib/features";
 import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
+import { VENUE_SLUG_COOKIE, VENUE_SLUG_HEADER } from "@/lib/venue-paths";
+
+function venueSlugFromReq(req: NextRequest): string {
+  const fromHeader = req.headers.get(VENUE_SLUG_HEADER)?.trim();
+  if (fromHeader) return fromHeader;
+  const fromQuery = req.nextUrl.searchParams.get("venue")?.trim();
+  if (fromQuery) return fromQuery;
+  const fromCookie = req.cookies.get(VENUE_SLUG_COOKIE)?.value?.trim();
+  if (fromCookie) return fromCookie;
+  return DEFAULT_VENUE_SLUG;
+}
 import {
   STAFF_LOCALE_KEY,
   isRtl,
@@ -507,11 +518,12 @@ export async function GET(req: NextRequest) {
     );
   }
   try {
-    const data = await loadCalls(DEFAULT_VENUE_SLUG);
+    const data = await loadCalls(venueSlugFromReq(req));
+    const slug = venueSlugFromReq(req);
     const boardPath = await combinedBoardPath(data.venue?.id);
     if (boardPath !== "/alerts/live") {
       const dest = new URL(
-        `${boardPath}?access_token=${encodeURIComponent(token)}`,
+        `/r/${slug}/pickup?access_token=${encodeURIComponent(token)}`,
         requestOrigin(req)
       );
       return NextResponse.redirect(dest, 303);
@@ -552,6 +564,9 @@ export async function POST(req: NextRequest) {
     }
     const token = createStaffSessionValue();
     const venue =
+      (await prisma.venue.findUnique({
+        where: { slug: venueSlugFromReq(req) },
+      })) ||
       (await prisma.venue.findUnique({ where: { slug: DEFAULT_VENUE_SLUG } })) ||
       (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
     const boardPath = await combinedBoardPath(venue?.id);

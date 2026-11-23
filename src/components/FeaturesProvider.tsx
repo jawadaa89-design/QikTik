@@ -33,6 +33,8 @@ type Props = {
   initialPackageId?: PackageId;
   /** When true, also fetch /api/v1/features on mount (staff pages). */
   fetchOnMount?: boolean;
+  /** Venue slug for ?venue= on feature fetch (multi-venue /r/{slug}). */
+  venueSlug?: string;
 };
 
 export function FeaturesProvider({
@@ -40,6 +42,7 @@ export function FeaturesProvider({
   initial,
   initialPackageId,
   fetchOnMount = false,
+  venueSlug,
 }: Props) {
   const [features, setFeatures] = useState<FeatureFlags>(
     initial ?? DEFAULT_FEATURES
@@ -55,7 +58,10 @@ export function FeaturesProvider({
     try {
       const ctrl = new AbortController();
       const kill = setTimeout(() => ctrl.abort(), 6000);
-      const res = await fetch("/api/v1/features", { signal: ctrl.signal });
+      const qs = venueSlug
+        ? `?venue=${encodeURIComponent(venueSlug)}`
+        : "";
+      const res = await fetch(`/api/v1/features${qs}`, { signal: ctrl.signal });
       clearTimeout(kill);
       if (res.ok) {
         const data = (await res.json()) as {
@@ -70,7 +76,7 @@ export function FeaturesProvider({
     } finally {
       setReady(true);
     }
-  }, []);
+  }, [venueSlug]);
 
   useEffect(() => {
     if (fetchOnMount || !initial) {

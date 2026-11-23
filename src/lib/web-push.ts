@@ -120,7 +120,10 @@ export async function sendPickupWebPush(opts: {
 
   const ticket = await prisma.pickupTicket.findUnique({
     where: { id: opts.ticketId },
-    select: { pushSubscription: true },
+    select: {
+      pushSubscription: true,
+      venue: { select: { slug: true } },
+    },
   });
   const stored = parseStoredSubscription(ticket?.pushSubscription);
   if (!stored) {
@@ -154,7 +157,8 @@ export async function sendPickupWebPush(opts: {
     second: "2-digit",
   });
   // Relative path — SW resolves against the origin that registered it (tunnel or LAN).
-  const url = `/${locale}/pickup/${opts.ticketId}`;
+  const venueSlug = ticket?.venue?.slug || "myrestaurant";
+  const url = `/r/${venueSlug}/${locale}/pickup/${opts.ticketId}`;
   const baseBody =
     opts.kind === "test"
       ? copy.body

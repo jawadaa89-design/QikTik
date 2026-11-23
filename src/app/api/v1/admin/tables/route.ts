@@ -6,6 +6,7 @@ import { z } from "zod";
 import { apiError } from "@/lib/validation";
 import { requireStaffSession } from "@/lib/staff-auth";
 import { requireVenue } from "@/lib/venue";
+import { venueTablePath } from "@/lib/venue-paths";
 
 export async function GET(req: NextRequest) {
   const denied = await requireStaffSession();
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
       token: t.token,
       nfcTagId: t.nfcTagId,
       status: t.status,
-      guestUrl: `${base}/${locale}/t/${t.token}`,
+      guestUrl: `${base}${venueTablePath(venue.slug, locale, t.token)}`,
       hasOpenSession: t.sessions.length > 0,
     })),
     baseUrl: base,

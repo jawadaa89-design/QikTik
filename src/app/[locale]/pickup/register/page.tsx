@@ -8,10 +8,9 @@ import { FormEvent, useState } from "react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
 import { primeGuestPickupAudio } from "@/lib/guest-pickup-alert-audio";
-import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
+import { useVenueSlug } from "@/components/VenueProvider";
 
 const venueName = process.env.NEXT_PUBLIC_VENUE_NAME ?? "My Restaurant";
-const VENUE_SLUG = DEFAULT_VENUE_SLUG;
 
 type Mode = "register" | "reconnect";
 
@@ -19,6 +18,7 @@ export default function PickupRegisterPage() {
   const t = useTranslations("pickup");
   const locale = useLocale();
   const router = useRouter();
+  const venueSlug = useVenueSlug();
 
   const [mode, setMode] = useState<Mode>("register");
   const [customerName, setCustomerName] = useState("");
@@ -56,7 +56,7 @@ export default function PickupRegisterPage() {
         body: JSON.stringify({
           customerName,
           phone: phone.trim() || undefined,
-          venueSlug: VENUE_SLUG,
+          venueSlug,
         }),
       });
       const data = await res.json();
@@ -103,7 +103,7 @@ export default function PickupRegisterPage() {
         body: JSON.stringify({
           customerName: trimmedName,
           orderRef: trimmedTicket || undefined,
-          venueSlug: VENUE_SLUG,
+          venueSlug,
         }),
       });
       const data = await res.json();

@@ -14,7 +14,10 @@ export function LanguageSwitcher({ className }: { className?: string }) {
 
   function switchLocale(newLocale: Locale) {
     const segments = pathname.split("/");
-    if (locales.includes(segments[1] as Locale)) {
+    // /r/{slug}/{locale}/… → locale is segment index 3 (1-based path parts: r, slug, locale)
+    if (segments[1] === "r" && segments[2] && locales.includes(segments[3] as Locale)) {
+      segments[3] = newLocale;
+    } else if (locales.includes(segments[1] as Locale)) {
       segments[1] = newLocale;
     } else {
       segments.splice(1, 0, newLocale);

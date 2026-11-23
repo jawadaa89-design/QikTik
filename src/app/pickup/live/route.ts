@@ -7,6 +7,17 @@ import {
   verifyStaffSessionValue,
 } from "@/lib/staff-auth";
 import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
+import { VENUE_SLUG_COOKIE, VENUE_SLUG_HEADER } from "@/lib/venue-paths";
+
+function venueSlugFromReq(req: NextRequest): string {
+  const fromHeader = req.headers.get(VENUE_SLUG_HEADER)?.trim();
+  if (fromHeader) return fromHeader;
+  const fromQuery = req.nextUrl.searchParams.get("venue")?.trim();
+  if (fromQuery) return fromQuery;
+  const fromCookie = req.cookies.get(VENUE_SLUG_COOKIE)?.value?.trim();
+  if (fromCookie) return fromCookie;
+  return DEFAULT_VENUE_SLUG;
+}
 import {
   STAFF_LOCALE_KEY,
   isRtl,
@@ -829,7 +840,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const data = await loadBoard(DEFAULT_VENUE_SLUG);
+    const data = await loadBoard(venueSlugFromReq(req));
     return new NextResponse(renderBoard(token, data), {
       headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
     });

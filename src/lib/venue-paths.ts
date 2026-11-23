@@ -1,0 +1,44 @@
+import { defaultLocale } from "@/i18n/config";
+import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
+
+/** Cookie + header used so rewrites keep the active restaurant slug. */
+export const VENUE_SLUG_COOKIE = "qiktik_venue_slug";
+export const VENUE_SLUG_HEADER = "x-venue-slug";
+
+export function normalizeVenueSlug(slug: string | null | undefined): string {
+  const s = slug?.trim().toLowerCase() || "";
+  return s || DEFAULT_VENUE_SLUG;
+}
+
+/** Guest paths under /r/{slug}/{locale}/… */
+export function venueGuestBase(venueSlug: string, locale: string): string {
+  return `/r/${normalizeVenueSlug(venueSlug)}/${locale}`;
+}
+
+export function venueMenuPath(venueSlug: string, locale: string): string {
+  return `${venueGuestBase(venueSlug, locale)}/menu`;
+}
+
+export function venuePickupPath(venueSlug: string, locale: string): string {
+  return `${venueGuestBase(venueSlug, locale)}/pickup`;
+}
+
+export function venueTablePath(
+  venueSlug: string,
+  locale: string,
+  token: string
+): string {
+  return `${venueGuestBase(venueSlug, locale)}/t/${token}`;
+}
+
+/** Staff boards under /r/{slug}/… */
+export function venueStaffPath(
+  venueSlug: string,
+  board: "admin" | "pickup" | "alerts" | "kitchen" | "waiter"
+): string {
+  return `/r/${normalizeVenueSlug(venueSlug)}/${board}`;
+}
+
+export function venueRootPath(venueSlug: string, locale = defaultLocale): string {
+  return venueMenuPath(venueSlug, locale);
+}

@@ -12,7 +12,7 @@ type Props = {
 export function QikTikLogo({ className, priority }: Props) {
   return (
     <Image
-      src="/qiktik-logo.png?v=2"
+      src="/qiktik-logo.png?v=3"
       alt="QikTik"
       width={110}
       height={40}

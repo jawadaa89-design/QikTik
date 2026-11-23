@@ -1,7 +1,10 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { VenueProvider } from "@/components/VenueProvider";
 import { locales, isRtl, type Locale } from "@/i18n/config";
+import { venueSlugFromCookies } from "@/lib/venue-cookie.server";
+import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
 
 type Props = {
   children: React.ReactNode;
@@ -19,6 +22,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale);
   const messages = await getMessages();
   const dir = isRtl(locale as Locale) ? "rtl" : "ltr";
+  const venueSlug = (await venueSlugFromCookies()) || DEFAULT_VENUE_SLUG;
 
   return (
     <html lang={locale} dir={dir}>
@@ -36,7 +40,9 @@ export default async function LocaleLayout({ children, params }: Props) {
         />
       </head>
       <body>
-        <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+        <VenueProvider venueSlug={venueSlug}>
+          <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+        </VenueProvider>
       </body>
     </html>
   );

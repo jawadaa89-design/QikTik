@@ -9,8 +9,10 @@ import {
 } from "@/components/StaffLanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
 import { useFeatures } from "@/components/FeaturesProvider";
+import { useVenueSlug } from "@/components/VenueProvider";
 import type { Locale } from "@/i18n/staff";
 import type { PackageId } from "@/lib/features";
+import { venueStaffPath } from "@/lib/venue-paths";
 
 type Tab = "dashboard" | "menu" | "tables" | "package";
 
@@ -131,6 +133,7 @@ export default function AdminPage() {
   const [menuLocale, setMenuLocale] = useState<Locale>("ar");
   const [copiedLink, setCopiedLink] = useState(false);
 
+  const venueSlug = useVenueSlug();
   const alertsOn = hasFeature("alerts");
   const orderingOn = hasFeature("ordering");
   const pickupOn = hasFeature("pickup");
@@ -696,21 +699,33 @@ export default function AdminPage() {
           </div>
           <div className="mt-10 space-y-2 border-t border-white/8 pt-4 text-xs text-ink-soft/40">
             {alertsOn ? (
-              <a href="/alerts" className="block hover:text-brass">
+              <a
+                href={venueStaffPath(venueSlug, "alerts")}
+                className="block hover:text-brass"
+              >
                 {t.linkAlerts}
               </a>
             ) : null}
             {hasFeature("pickup") ? (
-              <a href="/pickup" className="block hover:text-brass">
+              <a
+                href={venueStaffPath(venueSlug, "pickup")}
+                className="block hover:text-brass"
+              >
                 {t.linkPickup}
               </a>
             ) : null}
             {hasFeature("ordering") ? (
               <>
-                <a href="/kitchen" className="block hover:text-brass">
+                <a
+                  href={venueStaffPath(venueSlug, "kitchen")}
+                  className="block hover:text-brass"
+                >
                   {t.linkKitchen}
                 </a>
-                <a href="/waiter" className="block hover:text-brass">
+                <a
+                  href={venueStaffPath(venueSlug, "waiter")}
+                  className="block hover:text-brass"
+                >
                   {t.linkWaiter}
                 </a>
               </>

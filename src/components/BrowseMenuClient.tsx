@@ -8,7 +8,7 @@ import { CallWaiterBellIcon } from "@/components/CallWaiterBellIcon";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
 import { formatPrice } from "@/lib/utils";
-import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
+import { useVenueSlug } from "@/components/VenueProvider";
 import type { MenuCategory, MenuItem } from "@/lib/demo-data";
 import type { Locale } from "@/i18n/config";
 
@@ -33,6 +33,7 @@ export function BrowseMenuClient({
   const tPickup = useTranslations("pickup");
   const locale = useLocale() as Locale;
   const router = useRouter();
+  const venueSlug = useVenueSlug();
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id ?? "");
   const [activeSubId, setActiveSubId] = useState<string | "all">("all");
   const [search, setSearch] = useState("");
@@ -119,7 +120,7 @@ export function BrowseMenuClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tableNumber: num,
-          venueSlug: DEFAULT_VENUE_SLUG,
+          venueSlug,
           locale,
         }),
       });
@@ -178,7 +179,7 @@ export function BrowseMenuClient({
         body: JSON.stringify({
           customerName: trimmedName,
           comment: callComment.trim() || undefined,
-          venueSlug: DEFAULT_VENUE_SLUG,
+          venueSlug,
         }),
       });
       const data = await res.json().catch(() => null);

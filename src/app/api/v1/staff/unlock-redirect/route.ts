@@ -11,6 +11,18 @@ import {
 /** Map unlock "next" to a safe staff board path. */
 function resolveStaffDest(nextPath: string): string {
   const path = (nextPath || "/pickup").split("?")[0] || "/pickup";
+  // Preserve /r/{slug}/… staff destinations (multi-venue)
+  const venueMatch = path.match(/^\/r\/([^/]+)(\/.*)?$/);
+  if (venueMatch) {
+    const slug = venueMatch[1];
+    const rest = venueMatch[2] || "";
+    if (rest.startsWith("/kitchen")) return `/r/${slug}/kitchen`;
+    if (rest.startsWith("/waiter")) return `/r/${slug}/waiter`;
+    if (rest.startsWith("/admin")) return `/r/${slug}/admin`;
+    if (rest.startsWith("/alerts")) return `/r/${slug}/alerts`;
+    if (rest.startsWith("/pickup")) return `/r/${slug}/pickup`;
+    return `/r/${slug}/admin`;
+  }
   if (path.startsWith("/kitchen")) return "/kitchen";
   if (path.startsWith("/waiter")) return "/waiter";
   if (path.startsWith("/admin")) return "/admin";

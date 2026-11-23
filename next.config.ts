@@ -27,16 +27,8 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "2mb",
     },
   },
-  // One staff board URL for iPad / PC / phone → SSR live board
-  async redirects() {
-    return [
-      {
-        source: "/pickup",
-        destination: "/pickup/live",
-        permanent: false,
-      },
-    ];
-  },
+  // Staff /pickup entry is handled in middleware → /r/{slug}/pickup → rewrite /pickup
+  // (page.tsx still redirects /pickup → /pickup/live).
 };
 
 export default withNextIntl(nextConfig);

@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import type { Venue } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
+import { VENUE_SLUG_COOKIE, VENUE_SLUG_HEADER } from "@/lib/venue-paths";
 
 export { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
 
@@ -23,9 +24,16 @@ function slugFromRequest(req: NextRequest | Request): string | null {
     if (fromQuery) return fromQuery;
 
     const header =
-      req.headers.get("x-venue-slug")?.trim() ||
+      req.headers.get(VENUE_SLUG_HEADER)?.trim() ||
       req.headers.get("x-venue")?.trim();
     if (header) return header;
+
+    // Cookie set by /r/{slug} middleware rewrite
+    const cookieHeader = req.headers.get("cookie") || "";
+    const m = cookieHeader.match(
+      new RegExp(`(?:^|;\\s*)${VENUE_SLUG_COOKIE}=([^;]*)`)
+    );
+    if (m?.[1]) return decodeURIComponent(m[1]).trim();
   } catch {
     /* ignore malformed URL */
   }
@@ -52,6 +60,13 @@ export async function resolveVenue(
   if (slug) {
     const bySlug = await prisma.venue.findUnique({ where: { slug } });
     if (bySlug) return bySlug;
+    // Legacy seed used my-restaurant before prod demo slug myrestaurant
+    if (slug === "myrestaurant") {
+      const legacy = await prisma.venue.findUnique({
+        where: { slug: "my-restaurant" },
+      });
+      if (legacy) return legacy;
+    }
   }
 
   // Last resort for legacy single-venue demos

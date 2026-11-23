@@ -53,7 +53,8 @@ export async function POST(req: NextRequest) {
   }
 
   const locale = parsed.data.locale ?? process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "ar";
-  const path = `/${locale}/t/${table.token}`;
+  const { venueTablePath } = await import("@/lib/venue-paths");
+  const path = venueTablePath(venue.slug, locale, table.token);
 
   return Response.json({
     tableNumber: table.number,
