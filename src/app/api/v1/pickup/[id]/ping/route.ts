@@ -46,11 +46,17 @@ export async function POST(
   }
   lastPingByTicket.set(id, now);
 
+  // Bump updatedAt so guest polling (multi-instance) can treat it as a re-ping.
+  const touched = await prisma.pickupTicket.update({
+    where: { id },
+    data: { customerName: ticket.customerName },
+  });
+
   const payload = {
-    id: ticket.id,
-    customerName: ticket.customerName,
-    status: ticket.status,
-    orderRef: ticket.orderRef,
+    id: touched.id,
+    customerName: touched.customerName,
+    status: touched.status,
+    orderRef: touched.orderRef,
     at: new Date(now).toISOString(),
   };
 

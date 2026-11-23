@@ -71,12 +71,15 @@ type Ticket = {
   orderRef: string | null;
   status: "WAITING" | "READY" | "COMPLETED" | "CANCELLED";
   readyAt: string | null;
+  updatedAt?: string;
 };
 
 type PingPayload = {
   id: string;
   customerName: string;
   status?: string;
+  orderRef?: string | null;
+  at?: string;
 };
 
 type GuestAlertKind = "ping" | "ready";
@@ -144,28 +147,7 @@ export default function PickupWaitingPage() {
     pingHideTimer.current = window.setTimeout(() => setGuestAlert(null), 12_000);
   }, []);
 
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/v1/pickup/${ticketId}`);
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data?.error?.message ?? t("errorGeneric"));
-        return;
-      }
-      setTicket(data.ticket);
-      if (typeof data.hasPushSubscription === "boolean") {
-        setServerHasPush(data.hasPushSubscription);
-        if (data.hasPushSubscription) {
-          setNotifState("pushOn");
-        }
-      }
-      setError(null);
-    } catch {
-      setError(t("errorGeneric"));
-    } finally {
-      setLoading(false);
-    }
-  }, [ticketId, t]);
+  const lastUpdatedAtRef = useRef<string | null>(null);
 
   const handlePing = useCallback(
     (payload: PingPayload) => {
@@ -191,6 +173,49 @@ export default function PickupWaitingPage() {
     },
     [showGuestAlert, t, ticket?.customerName]
   );
+
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/v1/pickup/${ticketId}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data?.error?.message ?? t("errorGeneric"));
+        return;
+      }
+      const next = data.ticket as Ticket;
+      const prevUpdated = lastUpdatedAtRef.current;
+      lastUpdatedAtRef.current = next.updatedAt;
+      setTicket(next);
+      // After first READY notify, further updatedAt bumps are staff re-pings
+      // (SSE often misses across Vercel instances).
+      if (
+        notifiedReady.current &&
+        next.status === "READY" &&
+        prevUpdated &&
+        next.updatedAt &&
+        next.updatedAt !== prevUpdated
+      ) {
+        handlePing({
+          id: next.id,
+          customerName: next.customerName,
+          status: next.status,
+          orderRef: next.orderRef,
+          at: next.updatedAt,
+        });
+      }
+      if (typeof data.hasPushSubscription === "boolean") {
+        setServerHasPush(data.hasPushSubscription);
+        if (data.hasPushSubscription) {
+          setNotifState("pushOn");
+        }
+      }
+      setError(null);
+    } catch {
+      setError(t("errorGeneric"));
+    } finally {
+      setLoading(false);
+    }
+  }, [ticketId, t, handlePing]);
 
   useEffect(() => {
     load();

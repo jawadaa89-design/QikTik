@@ -267,6 +267,13 @@ function renderBoard(
       <button class="${cls}" type="submit" data-i18n="${i18nKey}">${esc(fallback)}</button>
     </form>`;
 
+  const pingAction = (id: string) => `
+    <form method="POST" action="">
+      <input type="hidden" name="access_token" value="${esc(token)}" />
+      <input type="hidden" name="ping_ticket_id" value="${esc(id)}" />
+      <button class="btn-ping" type="submit" data-i18n="ping">Ping</button>
+    </form>`;
+
   const assistAction = (id: string, status: string, i18nKey: string, fallback: string, cls: string) => `
     <form method="POST" action="">
       <input type="hidden" name="access_token" value="${esc(token)}" />
@@ -395,6 +402,7 @@ function renderBoard(
     }
     .btn-ready{background:linear-gradient(135deg,#4aa87a,#2f7a56);color:#fff}
     .btn-done{background:linear-gradient(135deg,#fb923c,#ea580c);color:#0c100e}
+    .btn-ping{background:linear-gradient(135deg,#38bdf8,#0284c8);color:#0c100e}
     .btn-ghost{background:rgba(255,255,255,.05);color:rgba(238,242,239,.8);border:1px solid rgba(255,255,255,.12)}
     .empty{
       padding:36px 16px;text-align:center;border-radius:14px;
@@ -508,7 +516,8 @@ function renderBoard(
                 .map((t) =>
                   ticketCard(
                     t,
-                    action(t.id, "COMPLETED", "markPickedUp", "Picked up", "btn-done"),
+                    pingAction(t.id) +
+                      action(t.id, "COMPLETED", "markPickedUp", "Picked up", "btn-done"),
                     "ready"
                   )
                 )
@@ -889,6 +898,7 @@ export async function POST(req: NextRequest) {
   const password = form ? String(form.get("password") ?? "") : "";
   const accessToken = form ? String(form.get("access_token") ?? "") : "";
   const ticketId = form ? String(form.get("ticket_id") ?? "") : "";
+  const pingTicketId = form ? String(form.get("ping_ticket_id") ?? "") : "";
   const status = form ? String(form.get("status") ?? "") : "";
   const assistanceId = form ? String(form.get("assistance_id") ?? "") : "";
   const assistanceStatus = form ? String(form.get("assistance_status") ?? "") : "";
@@ -943,7 +953,41 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    if (ticketId && ["READY", "COMPLETED", "CANCELLED", "WAITING"].includes(status)) {
+    if (pingTicketId) {
+      const { publish, RealtimeEvents } = await import("@/lib/realtime");
+      const existing = await prisma.pickupTicket.findUnique({
+        where: { id: pingTicketId },
+      });
+      if (
+        existing &&
+        existing.status !== "COMPLETED" &&
+        existing.status !== "CANCELLED"
+      ) {
+        // Touch row so guest poll can detect re-ping when SSE is on another instance.
+        const ticket = await prisma.pickupTicket.update({
+          where: { id: pingTicketId },
+          data: { customerName: existing.customerName },
+        });
+        const payload = {
+          id: ticket.id,
+          customerName: ticket.customerName,
+          status: ticket.status,
+          orderRef: ticket.orderRef,
+          at: new Date().toISOString(),
+        };
+        publish(RealtimeEvents.PICKUP_PING, payload);
+        try {
+          const { sendPickupWebPush } = await import("@/lib/web-push");
+          await sendPickupWebPush({
+            ticketId: ticket.id,
+            customerName: ticket.customerName,
+            kind: "ping",
+          });
+        } catch {
+          /* ignore push failures */
+        }
+      }
+    } else if (ticketId && ["READY", "COMPLETED", "CANCELLED", "WAITING"].includes(status)) {
       const { publish, RealtimeEvents } = await import("@/lib/realtime");
       const ticket = await prisma.pickupTicket.update({
         where: { id: ticketId },
@@ -957,6 +1001,9 @@ export async function POST(req: NextRequest) {
         status: ticket.status,
         customerName: ticket.customerName,
         orderRef: ticket.orderRef,
+        readyAt: ticket.readyAt?.toISOString() ?? null,
+        createdAt: ticket.createdAt.toISOString(),
+        updatedAt: ticket.updatedAt.toISOString(),
       });
       if (status === "READY") {
         try {
