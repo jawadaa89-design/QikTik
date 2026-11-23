@@ -19,6 +19,8 @@ type Props = {
   enableCallWaiter?: boolean;
   /** Menu+ordering: enter table number → register & order. */
   enableOrderAtTable?: boolean;
+  /** Hide items and show a coming-soon placeholder. */
+  comingSoon?: boolean;
 };
 
 /** Public digital menu — browse; optional call-waiter / order-by-table-number. */
@@ -27,6 +29,7 @@ export function BrowseMenuClient({
   categories,
   enableCallWaiter = false,
   enableOrderAtTable = false,
+  comingSoon = false,
 }: Props) {
   const t = useTranslations("common");
   const tMenu = useTranslations("menu");
@@ -392,135 +395,150 @@ export function BrowseMenuClient({
             </div>
           )}
 
-          <input
-            type="search"
-            placeholder={t("search")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="mt-5 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-ink placeholder:text-ink-soft/50 outline-none focus:border-brass/40"
-          />
+          {!comingSoon ? (
+            <input
+              type="search"
+              placeholder={t("search")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="mt-5 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-ink placeholder:text-ink-soft/50 outline-none focus:border-brass/40"
+            />
+          ) : null}
         </div>
       </header>
 
-      {categories.length > 0 ? (
-        <div className="sticky top-0 z-30 border-b border-white/5 bg-[#0c110f]/90 px-4 py-3 backdrop-blur-md">
-          <div className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {categories.map((cat) => {
-              const on = activeCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => selectCategory(cat.id)}
-                  className={`shrink-0 rounded-xl px-3.5 py-2 text-sm font-semibold transition ${
-                    on
-                      ? "bg-brass text-[#0c100e]"
-                      : "bg-white/[0.05] text-ink-soft hover:bg-white/[0.08]"
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              );
-            })}
-          </div>
-          {children.length > 0 && (
-            <div className="mt-2 flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <button
-                type="button"
-                onClick={() => setActiveSubId("all")}
-                className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                  activeSubId === "all"
-                    ? "bg-white/15 text-ink"
-                    : "text-ink-soft/70 hover:text-ink"
-                }`}
-              >
-                {t("all")}
-              </button>
-              {current && current.items.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setActiveSubId(current.id)}
-                  className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                    activeSubId === current.id
-                      ? "bg-white/15 text-ink"
-                      : "text-ink-soft/70 hover:text-ink"
-                  }`}
-                >
-                  {current.name}
-                </button>
-              )}
-              {children.map((sub) => (
-                <button
-                  key={sub.id}
-                  type="button"
-                  onClick={() => setActiveSubId(sub.id)}
-                  className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                    activeSubId === sub.id
-                      ? "bg-white/15 text-ink"
-                      : "text-ink-soft/70 hover:text-ink"
-                  }`}
-                >
-                  {sub.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : null}
-
-      <section className="flex flex-col gap-2.5 px-4 py-5">
-        {sections.map((section) => (
-          <div key={section.id} className="space-y-2.5">
-            <h2 className="pt-1 font-display text-xl font-semibold text-ink animate-rise">
-              {section.name}
-            </h2>
-            {section.items.map((item) => (
-              <article
-                key={item.id}
-                className="guest-panel flex gap-3 rounded-2xl p-3"
-              >
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-white/5">
-                  {item.imageUrl ? (
-                    <Image
-                      src={item.imageUrl}
-                      alt=""
-                      fill
-                      sizes="80px"
-                      className="object-cover"
-                    />
-                  ) : null}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold text-ink">{item.name}</h3>
-                  {item.description ? (
-                    <p className="mt-0.5 line-clamp-2 text-xs text-ink-soft/65">
-                      {item.description}
-                    </p>
-                  ) : null}
-                  <div className="mt-2 flex items-center justify-between gap-2">
-                    <span
-                      className={`font-display text-lg font-semibold ${
-                        item.available ? "text-brass" : "text-ink-soft/40"
+      {comingSoon ? (
+        <section className="flex flex-col items-center px-5 py-16 text-center">
+          <p className="font-display text-2xl font-semibold text-ink animate-rise">
+            {tMenu("comingSoon")}
+          </p>
+          <p className="mt-3 max-w-sm text-sm text-ink-soft/65 animate-rise">
+            {tMenu("comingSoonBody")}
+          </p>
+        </section>
+      ) : (
+        <>
+          {categories.length > 0 ? (
+            <div className="sticky top-0 z-30 border-b border-white/5 bg-[#0c110f]/90 px-4 py-3 backdrop-blur-md">
+              <div className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {categories.map((cat) => {
+                  const on = activeCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => selectCategory(cat.id)}
+                      className={`shrink-0 rounded-xl px-3.5 py-2 text-sm font-semibold transition ${
+                        on
+                          ? "bg-brass text-[#0c100e]"
+                          : "bg-white/[0.05] text-ink-soft hover:bg-white/[0.08]"
                       }`}
                     >
-                      {formatPrice(item.price)}
-                    </span>
-                    {!item.available ? (
-                      <span className="rounded-lg border border-alert/25 bg-alert/10 px-2.5 py-1.5 text-[11px] font-semibold text-alert">
-                        {tMenu("soldOut")}
-                      </span>
-                    ) : null}
-                  </div>
+                      {cat.name}
+                    </button>
+                  );
+                })}
+              </div>
+              {children.length > 0 && (
+                <div className="mt-2 flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <button
+                    type="button"
+                    onClick={() => setActiveSubId("all")}
+                    className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                      activeSubId === "all"
+                        ? "bg-white/15 text-ink"
+                        : "text-ink-soft/70 hover:text-ink"
+                    }`}
+                  >
+                    {t("all")}
+                  </button>
+                  {current && current.items.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveSubId(current.id)}
+                      className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                        activeSubId === current.id
+                          ? "bg-white/15 text-ink"
+                          : "text-ink-soft/70 hover:text-ink"
+                      }`}
+                    >
+                      {current.name}
+                    </button>
+                  )}
+                  {children.map((sub) => (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      onClick={() => setActiveSubId(sub.id)}
+                      className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                        activeSubId === sub.id
+                          ? "bg-white/15 text-ink"
+                          : "text-ink-soft/70 hover:text-ink"
+                      }`}
+                    >
+                      {sub.name}
+                    </button>
+                  ))}
                 </div>
-              </article>
+              )}
+            </div>
+          ) : null}
+
+          <section className="flex flex-col gap-2.5 px-4 py-5">
+            {sections.map((section) => (
+              <div key={section.id} className="space-y-2.5">
+                <h2 className="pt-1 font-display text-xl font-semibold text-ink animate-rise">
+                  {section.name}
+                </h2>
+                {section.items.map((item) => (
+                  <article
+                    key={item.id}
+                    className="guest-panel flex gap-3 rounded-2xl p-3"
+                  >
+                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-white/5">
+                      {item.imageUrl ? (
+                        <Image
+                          src={item.imageUrl}
+                          alt=""
+                          fill
+                          sizes="80px"
+                          className="object-cover"
+                        />
+                      ) : null}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-ink">{item.name}</h3>
+                      {item.description ? (
+                        <p className="mt-0.5 line-clamp-2 text-xs text-ink-soft/65">
+                          {item.description}
+                        </p>
+                      ) : null}
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <span
+                          className={`font-display text-lg font-semibold ${
+                            item.available ? "text-brass" : "text-ink-soft/40"
+                          }`}
+                        >
+                          {formatPrice(item.price)}
+                        </span>
+                        {!item.available ? (
+                          <span className="rounded-lg border border-alert/25 bg-alert/10 px-2.5 py-1.5 text-[11px] font-semibold text-alert">
+                            {tMenu("soldOut")}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
             ))}
-          </div>
-        ))}
-        {(categories.length === 0 ||
-          sections.every((s) => s.items.length === 0)) && (
-          <p className="py-10 text-center text-sm text-ink-soft/50">—</p>
-        )}
-      </section>
+            {(categories.length === 0 ||
+              sections.every((s) => s.items.length === 0)) && (
+              <p className="py-10 text-center text-sm text-ink-soft/50">—</p>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 }

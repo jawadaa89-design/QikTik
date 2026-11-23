@@ -40,6 +40,8 @@
     "tableDisabled": "هذه الطاولة غير متاحة",
     "continueToOrder": "متابعة",
     "orderAtTableError": "تعذر فتح الطاولة — حاول مرة أخرى",
+    "comingSoon": "قريباً",
+    "comingSoonBody": "القائمة الرقمية في الطريق. عد لاحقاً.",
     "filters": {
       "all": "الكل",
       "veg": "نباتي",

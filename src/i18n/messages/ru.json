@@ -40,6 +40,8 @@
     "tableDisabled": "Этот стол недоступен",
     "continueToOrder": "Продолжить",
     "orderAtTableError": "Не удалось открыть стол — попробуйте снова",
+    "comingSoon": "Скоро",
+    "comingSoonBody": "Цифровое меню скоро появится. Загляните позже.",
     "filters": {
       "all": "Все",
       "veg": "Вег",

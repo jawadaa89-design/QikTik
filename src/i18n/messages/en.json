@@ -40,6 +40,8 @@
     "tableDisabled": "This table is not available",
     "continueToOrder": "Continue",
     "orderAtTableError": "Could not open table — try again",
+    "comingSoon": "Coming soon",
+    "comingSoonBody": "Our digital menu is on the way. Check back shortly.",
     "filters": {
       "all": "All",
       "veg": "Veg",

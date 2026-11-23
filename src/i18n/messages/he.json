@@ -40,6 +40,8 @@
     "tableDisabled": "השולחן אינו זמין",
     "continueToOrder": "המשך",
     "orderAtTableError": "לא ניתן לפתוח את השולחן — נסו שוב",
+    "comingSoon": "בקרוב",
+    "comingSoonBody": "התפריט הדיגיטלי בדרך. חזרו בקרוב.",
     "filters": {
       "all": "הכל",
       "veg": "צמחוני",
