@@ -11,9 +11,8 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
-export function generateStaticParams() {
-  return locales.map((locale) => ({ locale }));
-}
+/** Venue data is per-request; avoid build-time DB prerender. */
+export const dynamic = "force-dynamic";
 
 export default async function LocaleLayout({ children, params }: Props) {
   const { locale } = await params;
