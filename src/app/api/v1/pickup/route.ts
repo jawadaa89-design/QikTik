@@ -67,13 +67,41 @@ export async function POST(req: NextRequest) {
   const blocked = await requireFeature("pickup", venue.id);
   if (blocked) return blocked;
 
+  const phone = parsed.data.phone?.trim() || null;
+  const nameKey = customerName.toLowerCase();
+
+  // Same name + still active → reopen that ticket (no duplicate board row).
+  const active = await prisma.pickupTicket.findMany({
+    where: {
+      venueId: venue.id,
+      status: { in: ["WAITING", "READY"] },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  const existing =
+    active.find((t) => t.customerName.trim().toLowerCase() === nameKey) ?? null;
+
+  if (existing) {
+    const ticket =
+      phone && phone !== (existing.phone ?? "")
+        ? await prisma.pickupTicket.update({
+            where: { id: existing.id },
+            data: { phone },
+          })
+        : existing;
+
+    const payload = serializeTicket(ticket);
+    publish(RealtimeEvents.PICKUP_UPDATED, payload);
+    return Response.json({ ticket: payload, reconnected: true });
+  }
+
   const orderRef = await allocatePickupTicketRef(venue.id);
 
   const ticket = await prisma.pickupTicket.create({
     data: {
       venueId: venue.id,
       customerName,
-      phone: parsed.data.phone?.trim() || null,
+      phone,
       orderRef,
       status: "WAITING",
     },
