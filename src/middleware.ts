@@ -95,6 +95,20 @@ export default function middleware(request: NextRequest) {
     return withVenueCookie(res, slug);
   }
 
+  // Internal live boards are posted to by form/fetch (redirect:manual). Redirecting
+  // them to /r/{slug}/… drops the POST body on iPad/Safari and Ready/Done never apply.
+  if (
+    (parts[0] === "pickup" && parts[1] === "live") ||
+    (parts[0] === "alerts" && parts[1] === "live")
+  ) {
+    const slug =
+      request.cookies.get(VENUE_SLUG_COOKIE)?.value?.trim() || DEFAULT_VENUE_SLUG;
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set(VENUE_SLUG_HEADER, slug);
+    const res = NextResponse.next({ request: { headers: requestHeaders } });
+    return withVenueCookie(res, slug);
+  }
+
   // Legacy staff roots → /r/{demo}/…
   if (parts[0] && STAFF_ROOTS.has(parts[0])) {
     const dest = `/r/${DEFAULT_VENUE_SLUG}${pathOnly}${request.nextUrl.search}`;

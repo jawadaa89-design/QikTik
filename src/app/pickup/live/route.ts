@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import {
   createStaffSessionValue,
   demoStaffPassword,
+  staffSessionCookieOptions,
   verifyStaffPassword,
   verifyStaffSessionValue,
 } from "@/lib/staff-auth";
@@ -233,7 +234,8 @@ function renderBoard(
   token: string,
   data: Awaited<ReturnType<typeof loadBoard>>
 ) {
-  const refreshUrl = `/pickup/live?access_token=${encodeURIComponent(token)}`;
+  // Prefer same-document URL so soft-refresh / POSTs stay on /r/{slug}/pickup.
+  const refreshUrl = `?access_token=${encodeURIComponent(token)}`;
   const { waiting, ready, assistance, venue } = data;
 
   const ticketCard = (
@@ -256,8 +258,9 @@ function renderBoard(
       <div class="actions">${actions}</div>
     </li>`;
 
+  // action="" posts to the current /r/{slug}/pickup URL (venue header intact).
   const action = (id: string, status: string, i18nKey: string, fallback: string, cls: string) => `
-    <form method="POST" action="/pickup/live">
+    <form method="POST" action="">
       <input type="hidden" name="access_token" value="${esc(token)}" />
       <input type="hidden" name="ticket_id" value="${esc(id)}" />
       <input type="hidden" name="status" value="${esc(status)}" />
@@ -265,7 +268,7 @@ function renderBoard(
     </form>`;
 
   const assistAction = (id: string, status: string, i18nKey: string, fallback: string, cls: string) => `
-    <form method="POST" action="/pickup/live">
+    <form method="POST" action="">
       <input type="hidden" name="access_token" value="${esc(token)}" />
       <input type="hidden" name="assistance_id" value="${esc(id)}" />
       <input type="hidden" name="assistance_status" value="${esc(status)}" />
@@ -767,13 +770,16 @@ function renderBoard(
     e.preventDefault();
     primeSound(true);
     var fd = new FormData(form);
-    fetch("/pickup/live", {
+    var postUrl = form.getAttribute("action") || window.location.pathname + window.location.search;
+    if (!postUrl) postUrl = window.location.pathname;
+    fetch(postUrl, {
       method: "POST",
       body: fd,
       credentials: "same-origin",
-      redirect: "manual"
+      redirect: "follow"
     })
-      .then(function () {
+      .then(function (r) {
+        if (!r.ok) throw new Error("post-failed");
         hideAlert();
         softRefresh();
         keepAudioAlive();
@@ -891,21 +897,22 @@ export async function POST(req: NextRequest) {
       req.nextUrl.host;
     const proto =
       req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "http";
-    const dest = new URL(`/pickup/live?access_token=${encodeURIComponent(token)}`, `${proto}://${host}`);
+    const slug = venueSlugFromReq(req);
+    const dest = new URL(
+      `/r/${slug}/pickup?access_token=${encodeURIComponent(token)}`,
+      `${proto}://${host}`
+    );
     const res = NextResponse.redirect(dest, 303);
-    res.cookies.set("qiktik_staff", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: false,
-      path: "/",
-      maxAge: 12 * 60 * 60,
-    });
+    const cookieOpts = staffSessionCookieOptions();
+    res.cookies.set("qiktik_staff", token, cookieOpts);
     res.cookies.set("qiktik_staff_token", token, {
+      ...cookieOpts,
       httpOnly: false,
-      sameSite: "lax",
-      secure: false,
+    });
+    res.cookies.set(VENUE_SLUG_COOKIE, slug, {
       path: "/",
-      maxAge: 12 * 60 * 60,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
     });
     return res;
   }
@@ -983,8 +990,9 @@ export async function POST(req: NextRequest) {
     req.nextUrl.host;
   const proto =
     req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "http";
+  const slug = venueSlugFromReq(req);
   const dest = new URL(
-    `/pickup/live?access_token=${encodeURIComponent(token)}`,
+    `/r/${slug}/pickup?access_token=${encodeURIComponent(token)}`,
     `${proto}://${host}`
   );
   return NextResponse.redirect(dest, 303);

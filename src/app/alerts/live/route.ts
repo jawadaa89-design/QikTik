@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import {
   createStaffSessionValue,
   demoStaffPassword,
+  staffSessionCookieOptions,
   verifyStaffPassword,
   verifyStaffSessionValue,
 } from "@/lib/staff-auth";
@@ -227,12 +228,12 @@ function renderBoard(
   token: string,
   data: Awaited<ReturnType<typeof loadCalls>>
 ) {
-  const refreshUrl = `/alerts/live?access_token=${encodeURIComponent(token)}`;
+  const refreshUrl = `?access_token=${encodeURIComponent(token)}`;
   const { assistance, venue } = data;
   const venueName = venue?.name || "My Restaurant";
 
   const assistAction = (id: string, status: string, i18nKey: string, fallback: string, cls: string) => `
-    <form method="POST" action="/alerts/live">
+    <form method="POST" action="">
       <input type="hidden" name="access_token" value="${esc(token)}" />
       <input type="hidden" name="assistance_id" value="${esc(id)}" />
       <input type="hidden" name="assistance_status" value="${esc(status)}" />
@@ -473,8 +474,19 @@ function renderBoard(
     if (form.querySelector('input[name="password"]')) return;
     e.preventDefault();
     primeSound(true);
-    fetch("/alerts/live", { method: "POST", body: new FormData(form), credentials: "same-origin", redirect: "manual" })
-      .then(function () { hideAlert(); softRefresh(); })
+    var postUrl = form.getAttribute("action") || window.location.pathname + window.location.search;
+    if (!postUrl) postUrl = window.location.pathname;
+    fetch(postUrl, {
+      method: "POST",
+      body: new FormData(form),
+      credentials: "same-origin",
+      redirect: "follow"
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error("post-failed");
+        hideAlert();
+        softRefresh();
+      })
       .catch(function () { form.submit(); });
   }, true);
   var refreshLink = document.getElementById("refresh-link");
@@ -570,24 +582,24 @@ export async function POST(req: NextRequest) {
       (await prisma.venue.findUnique({ where: { slug: DEFAULT_VENUE_SLUG } })) ||
       (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
     const boardPath = await combinedBoardPath(venue?.id);
+    const slug = venueSlugFromReq(req);
+    const publicBoard =
+      boardPath.includes("pickup") ? `/r/${slug}/pickup` : `/r/${slug}/alerts`;
     const dest = new URL(
-      `${boardPath}?access_token=${encodeURIComponent(token)}`,
+      `${publicBoard}?access_token=${encodeURIComponent(token)}`,
       requestOrigin(req)
     );
     const res = NextResponse.redirect(dest, 303);
-    res.cookies.set("qiktik_staff", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: false,
-      path: "/",
-      maxAge: 12 * 60 * 60,
-    });
+    const cookieOpts = staffSessionCookieOptions();
+    res.cookies.set("qiktik_staff", token, cookieOpts);
     res.cookies.set("qiktik_staff_token", token, {
+      ...cookieOpts,
       httpOnly: false,
-      sameSite: "lax",
-      secure: false,
+    });
+    res.cookies.set(VENUE_SLUG_COOKIE, slug, {
       path: "/",
-      maxAge: 12 * 60 * 60,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
     });
     return res;
   }
@@ -629,14 +641,18 @@ export async function POST(req: NextRequest) {
     /* show board anyway */
   }
 
-  const host =
-    req.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
-    req.headers.get("host") ||
-    req.nextUrl.host;
-  const proto =
-    req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "http";
+  const slug = venueSlugFromReq(req);
+  const venue =
+    (await prisma.venue.findUnique({ where: { slug } })) ||
+    (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
+  const boardPath = await combinedBoardPath(venue?.id);
+  const publicBoard =
+    boardPath.includes("pickup") ? `/r/${slug}/pickup` : `/r/${slug}/alerts`;
   return NextResponse.redirect(
-    new URL(`/alerts/live?access_token=${encodeURIComponent(token)}`, `${proto}://${host}`),
+    new URL(
+      `${publicBoard}?access_token=${encodeURIComponent(token)}`,
+      requestOrigin(req)
+    ),
     303
   );
 }

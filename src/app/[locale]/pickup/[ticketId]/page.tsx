@@ -194,7 +194,8 @@ export default function PickupWaitingPage() {
 
   useEffect(() => {
     load();
-    const timer = setInterval(load, 8000);
+    // Vercel SSE is per-instance — poll often so READY/ack still land without shared pub/sub.
+    const timer = setInterval(load, 2500);
     return () => clearInterval(timer);
   }, [load]);
 
