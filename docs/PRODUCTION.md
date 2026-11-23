@@ -1,10 +1,12 @@
-# QikTik production — qiktik.tech
+# QikTik production — app.qiktik.tech
+
+The marketing site stays on **qiktik.tech**. The app runs on a subdomain so root DNS is never changed.
 
 ## URL convention
 
 | Purpose | Path |
 |---------|------|
-| Demo venue root | `https://qiktik.tech/r/myrestaurant` |
+| Demo venue root | `https://app.qiktik.tech/r/myrestaurant` |
 | Menu | `/r/myrestaurant/ar/menu` |
 | Pickup guest | `/r/myrestaurant/ar/pickup` |
 | Table QR | `/r/myrestaurant/ar/t/{token}` |
@@ -19,18 +21,25 @@ Legacy `/{locale}/…` and `/admin` redirect into `/r/myrestaurant/…`.
 1. Import GitHub repo `jawadaa89-design/QikTik` into Vercel.
 2. Set production env (see `.env.example`):
    - `DATABASE_URL` — Neon connection string
-   - `NEXT_PUBLIC_MENU_BASE_URL=https://qiktik.tech`
+   - `NEXT_PUBLIC_MENU_BASE_URL=https://app.qiktik.tech`
    - `NEXT_PUBLIC_DEFAULT_VENUE_SLUG=myrestaurant`
    - `STAFF_COOKIE_SECURE=true`
    - `STAFF_DEMO_PASSWORD` — strong password (not the local demo)
    - `PLATFORM_ADMIN_PASSWORD` — for `/platform` venue creation
    - VAPID keys + `VAPID_SUBJECT=mailto:push@qiktik.tech`
-3. Add domain `qiktik.tech` in Vercel → DNS as instructed.
-4. After first deploy: `npx prisma db push` and `npm run db:seed` (or seed-menu) against Neon if needed.
-5. Smoke-test the demo URLs above; regenerate QR/NFC to `/r/myrestaurant/…`.
+3. In Vercel → **Domains**, add **`app.qiktik.tech` only** (do **not** add bare `qiktik.tech` — that would replace the existing website).
+4. In **GoDaddy** → DNS for `qiktik.tech`:
+   - Leave `@` and `www` unchanged (your current site).
+   - **Add** one record:
+     - **Type:** CNAME  
+     - **Name:** `app`  
+     - **Value:** `cname.vercel-dns.com` (or the exact value Vercel shows)  
+     - **TTL:** 1 Hour  
+5. After first deploy: `npx prisma db push` and `npm run db:seed` (or seed-menu) against Neon if needed.
+6. Smoke-test the demo URLs above; regenerate QR/NFC to `/r/myrestaurant/…` under `https://app.qiktik.tech`.
 
 ## Create another restaurant
 
-1. Open `https://qiktik.tech/platform`
+1. Open `https://app.qiktik.tech/platform`
 2. Enter platform password, name, slug, package
 3. Open `/r/{slug}/admin` and manage menu / package

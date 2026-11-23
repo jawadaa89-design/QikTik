@@ -70,7 +70,7 @@ export default function PlatformPage() {
       </h1>
       <p className="mt-2 text-sm text-ink-soft/65">
         New venues are available at{" "}
-        <code className="text-brass">/r/&#123;slug&#125;/…</code> on qiktik.tech.
+        <code className="text-brass">/r/&#123;slug&#125;/…</code> on app.qiktik.tech.
       </p>
 
       <form
@@ -112,7 +112,7 @@ export default function PlatformPage() {
             placeholder="myrestaurant"
           />
           <span className="mt-1 block text-xs text-ink-soft/45">
-            https://qiktik.tech/r/{slug || "…"}
+            https://app.qiktik.tech/r/{slug || "…"}
           </span>
         </label>
         <label className="block">
