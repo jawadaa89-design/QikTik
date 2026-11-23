@@ -333,6 +333,7 @@ function renderBoard(
     <p class="hint" id="board-hint" data-venue="${esc(venueName)}">${esc(venueName)} · live alerts</p>
   </header>
   <main>
+    <script type="application/json" id="open-calls-data">${openCallsJson}</script>
     <section class="panel">
       <div class="panel-head">
         <h2 data-i18n="assistanceSection">Waiter calls</h2>
@@ -455,16 +456,30 @@ function renderBoard(
   for (var i = 0; i < OPEN_CALLS.length; i++) { showAlert(OPEN_CALLS[i]); break; }
 
   function softRefresh() {
-    if (alertVisible) return;
     fetch(REFRESH_URL, { credentials: "same-origin", cache: "no-store" })
       .then(function (r) { return r.text(); })
       .then(function (html) {
         var doc = new DOMParser().parseFromString(html, "text/html");
         var newMain = doc.querySelector("main");
         var curMain = document.querySelector("main");
-        if (newMain && curMain) curMain.innerHTML = newMain.innerHTML;
-        if (typeof window.__qiktikApplyLocale === "function") {
-          window.__qiktikApplyLocale(window.__qiktikLocale || "ar");
+        var dataEl = doc.getElementById("open-calls-data");
+        var newCalls = [];
+        if (dataEl) {
+          try { newCalls = JSON.parse(dataEl.textContent || "[]"); } catch (e) { newCalls = []; }
+        }
+        if (newMain && curMain && !alertVisible) {
+          curMain.innerHTML = newMain.innerHTML;
+          if (typeof window.__qiktikApplyLocale === "function") {
+            window.__qiktikApplyLocale(window.__qiktikLocale || "ar");
+          }
+        }
+        if (!alertVisible) {
+          for (var i = 0; i < newCalls.length; i++) {
+            if (newCalls[i] && newCalls[i].id && !wasSeen(newCalls[i].id)) {
+              showAlert(newCalls[i]);
+              break;
+            }
+          }
         }
       }).catch(function () {});
   }
@@ -512,7 +527,7 @@ function renderBoard(
     } catch (e) {}
   }
   connectSSE();
-  setInterval(softRefresh, 4000);
+  setInterval(softRefresh, 2000);
 })();
   </script>
 </body>

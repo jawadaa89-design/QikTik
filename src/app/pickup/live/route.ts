@@ -474,6 +474,7 @@ function renderBoard(
     <p class="hint" id="board-hint" data-venue="${esc(venueName)}">${esc(venueName)} · live alerts + auto-refresh</p>
   </header>
   <main>
+    <script type="application/json" id="open-calls-data">${openCallsJson}</script>
     <div class="columns">
       <section class="panel waiting">
         <div class="panel-head">
@@ -744,18 +745,34 @@ function renderBoard(
     break;
   }
 
-  // Update queue HTML without full reload (full reload kills iOS AudioContext)
+  // Update queue HTML without full reload (full reload kills iOS AudioContext).
+  // Also surface new waiter calls here — Vercel SSE is per-instance, so soft
+  // refresh is the reliable path for the red full-screen alert in production.
   function softRefresh() {
-    if (alertVisible) return;
     fetch(REFRESH_URL, { credentials: "same-origin", cache: "no-store" })
       .then(function (r) { return r.text(); })
       .then(function (html) {
         var doc = new DOMParser().parseFromString(html, "text/html");
         var newMain = doc.querySelector("main");
         var curMain = document.querySelector("main");
-        if (newMain && curMain) curMain.innerHTML = newMain.innerHTML;
-        if (typeof window.__qiktikApplyLocale === "function") {
-          window.__qiktikApplyLocale(window.__qiktikLocale || (typeof window.__qiktikGetLocale === "function" ? window.__qiktikGetLocale() : "ar"));
+        var dataEl = doc.getElementById("open-calls-data");
+        var newCalls = [];
+        if (dataEl) {
+          try { newCalls = JSON.parse(dataEl.textContent || "[]"); } catch (e) { newCalls = []; }
+        }
+        if (newMain && curMain && !alertVisible) {
+          curMain.innerHTML = newMain.innerHTML;
+          if (typeof window.__qiktikApplyLocale === "function") {
+            window.__qiktikApplyLocale(window.__qiktikLocale || (typeof window.__qiktikGetLocale === "function" ? window.__qiktikGetLocale() : "ar"));
+          }
+        }
+        if (!alertVisible) {
+          for (var i = 0; i < newCalls.length; i++) {
+            if (newCalls[i] && newCalls[i].id && !wasSeen(newCalls[i].id)) {
+              showAlert(newCalls[i]);
+              break;
+            }
+          }
         }
       })
       .catch(function () {});
@@ -827,7 +844,7 @@ function renderBoard(
     } catch (e) {}
   }
   connectSSE();
-  setInterval(softRefresh, 4000);
+  setInterval(softRefresh, 2000);
 })();
   </script>
 </body>
