@@ -12,7 +12,7 @@ type Props = {
 export function FeatureDisabled({ title, body, adminLabel = "Admin" }: Props) {
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center px-5">
-      <QikTikLogo className="absolute right-4 top-4" />
+      <QikTikLogo className="absolute end-4 top-4" />
       <div className="guest-panel w-full max-w-md rounded-2xl p-6 text-center">
         <h1 className="font-display text-2xl font-semibold text-ink">{title}</h1>
         <p className="mt-2 text-sm text-ink-soft/70">{body}</p>

@@ -224,7 +224,7 @@ export function GuestAuthGate({ children }: { children: React.ReactNode }) {
         <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col">
           <div className="absolute -end-10 -top-8 h-40 w-40 rounded-full bg-brass/10 blur-3xl" />
           <div className="absolute -start-12 top-32 h-36 w-36 rounded-full bg-[#1a2a24] blur-3xl" />
-          <QikTikLogo className="absolute top-3 right-3 z-10" />
+          <QikTikLogo className="absolute top-3 end-3 z-10" />
 
           <div className="relative flex flex-col items-center pt-2 animate-rise">
             <Image
@@ -276,7 +276,7 @@ export function GuestAuthGate({ children }: { children: React.ReactNode }) {
     const afterReset = Boolean(auth.guestName);
     return (
       <div className="guest-shell relative flex min-h-dvh flex-col justify-center px-5 py-10">
-        <label className="absolute left-5 top-3 z-10 inline-flex shrink-0">
+        <label className="absolute start-5 top-3 z-10 inline-flex shrink-0">
           <span className="sr-only">{tLang("select")}</span>
           <select
             aria-label={tLang("select")}
@@ -294,7 +294,7 @@ export function GuestAuthGate({ children }: { children: React.ReactNode }) {
             ▾
           </span>
         </label>
-        <QikTikLogo className="absolute top-3 right-5 z-10" />
+        <QikTikLogo className="absolute top-3 end-5 z-10" />
         <div className="mx-auto mb-6 flex justify-center animate-rise">
           <Image
             src="/logo.png"
@@ -411,7 +411,7 @@ export function GuestAuthGate({ children }: { children: React.ReactNode }) {
   if (auth.showUnlockPrompt) {
     return (
       <div className="guest-shell relative flex min-h-dvh flex-col px-5 pb-10 pt-8">
-        <QikTikLogo className="absolute top-3 right-5 z-10" />
+        <QikTikLogo className="absolute top-3 end-5 z-10" />
         <div className="mx-auto mb-6 flex w-full max-w-md justify-center">
           <Image
             src="/logo.png"

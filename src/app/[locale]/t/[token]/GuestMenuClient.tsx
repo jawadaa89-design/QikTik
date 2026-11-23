@@ -118,8 +118,8 @@ export function GuestMenuClient({
         <div className="absolute -end-16 -top-20 h-56 w-56 rounded-full bg-brass/10 blur-3xl" />
         <div className="relative animate-rise">
           <div className="relative min-h-14">
-            <LanguageSwitcher className="absolute left-0 top-0 z-10 shrink-0" />
-            <QikTikLogo className="absolute right-0 top-0 z-10" />
+            <LanguageSwitcher className="absolute start-0 top-0 z-10 shrink-0" />
+            <QikTikLogo className="absolute end-0 top-0 z-10" />
           </div>
           <div className="mt-2 flex flex-col items-center text-center">
             <Image

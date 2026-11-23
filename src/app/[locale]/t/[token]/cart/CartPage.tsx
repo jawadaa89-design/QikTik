@@ -53,14 +53,14 @@ export default function CartPage({ locale, token }: Props) {
   return (
     <div className="guest-shell pb-24">
       <header className="px-5 pb-4 pt-6 animate-rise">
-        <div className="relative flex items-start gap-3 pr-28">
+        <div className="relative flex items-start gap-3 pe-28">
           <Link
             href={`/${locale}/t/${token}`}
             className="text-sm font-semibold text-brass hover:text-brass-glow"
           >
             ← {tCommon("back")}
           </Link>
-          <QikTikLogo className="absolute right-0 top-1" />
+          <QikTikLogo className="absolute end-0 top-1" />
         </div>
         <h1 className="mt-3 font-display text-3xl font-semibold text-ink">{t("title")}</h1>
         <p className="mt-1 text-sm text-ink-soft/60">

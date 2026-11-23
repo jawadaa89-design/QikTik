@@ -26,7 +26,7 @@ export default async function LocaleHome({ params }: Props) {
       <div className="relative overflow-hidden rounded-[1.75rem] border border-white/8 bg-[#121816] px-6 pb-10 pt-8 text-center animate-rise">
         <div className="absolute -start-8 -top-10 h-40 w-40 rounded-full bg-brass/15 blur-3xl" />
         <div className="absolute -bottom-12 -end-6 h-44 w-44 rounded-full bg-ready/10 blur-3xl" />
-        <QikTikLogo className="absolute top-3 right-3 z-10" />
+        <QikTikLogo className="absolute top-3 end-3 z-10" />
         <div className="relative flex flex-col items-center">
           <Image
             src="/logo.png"

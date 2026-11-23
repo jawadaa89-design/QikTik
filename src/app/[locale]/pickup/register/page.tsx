@@ -137,8 +137,8 @@ export default function PickupRegisterPage() {
   return (
     <main className="guest-shell relative flex min-h-dvh flex-col px-5 pb-10 pt-8">
       <div className="relative mb-2 min-h-10">
-        <LanguageSwitcher className="absolute left-0 top-0 z-10 shrink-0" />
-        <QikTikLogo className="absolute right-0 top-0 z-10" />
+        <LanguageSwitcher className="absolute start-0 top-0 z-10 shrink-0" />
+        <QikTikLogo className="absolute end-0 top-0 z-10" />
       </div>
       <div className="mx-auto mb-6 flex w-full max-w-md flex-col items-center">
         <Image

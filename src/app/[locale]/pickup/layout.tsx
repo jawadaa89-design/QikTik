@@ -20,7 +20,7 @@ export default async function PickupGuestLayout({ children, params }: Props) {
 
   return (
     <main className="guest-shell flex min-h-dvh flex-col items-center justify-center px-5 pb-10 pt-10">
-      <QikTikLogo className="absolute right-4 top-4" />
+      <QikTikLogo className="absolute end-4 top-4" />
       <div className="guest-panel w-full max-w-md rounded-2xl p-6 text-center">
         <h1 className="font-display text-2xl font-semibold text-ink">
           {t("featureDisabledTitle")}

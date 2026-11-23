@@ -333,7 +333,7 @@ export default function KitchenPage() {
 
   return (
     <div className={`min-h-dvh${locale === "he" ? " staff-locale-he" : ""}`}>
-      <header className="relative flex flex-wrap items-center gap-3 border-b border-white/10 px-4 py-5 pl-28 pr-28">
+      <header className="relative flex flex-wrap items-center gap-3 border-b border-white/10 px-4 py-5 ps-28 pe-28">
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#f97316]">{kt.floor}</p>
           <h1
@@ -349,9 +349,9 @@ export default function KitchenPage() {
           locale={locale}
           onChange={setStaffLocale}
           label={kt.language}
-          className="absolute left-4 top-5 z-10"
+          className="absolute start-4 top-5 z-10"
         />
-        <QikTikLogo className="absolute right-4 top-5" />
+        <QikTikLogo className="absolute end-4 top-5" />
         {hasFeature("pickup") ? (
           <a
             href="/pickup"

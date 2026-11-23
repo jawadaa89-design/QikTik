@@ -8,7 +8,7 @@ type Props = {
   priority?: boolean;
 };
 
-/** Compact QikTik product mark — place in the physical top-right corner, never as the main brand. */
+/** Compact QikTik product mark — pin with `absolute end-* top-*` (RTL-safe), never as the main brand. */
 export function QikTikLogo({ className, priority }: Props) {
   return (
     <Image

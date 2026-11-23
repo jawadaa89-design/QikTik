@@ -663,7 +663,7 @@ export default function AdminPage() {
 
   return (
     <div className="relative min-h-dvh">
-      <QikTikLogo className="absolute right-4 top-4 z-20 hidden md:block" />
+      <QikTikLogo className="absolute end-4 top-4 z-20 hidden md:block" />
       <div className="flex min-h-dvh">
         <aside className="hidden w-56 shrink-0 border-e border-white/8 bg-[#0a0f0d] p-5 md:block">
           <div>
@@ -719,12 +719,12 @@ export default function AdminPage() {
         </aside>
 
         <main className="flex-1 p-4 md:p-8">
-          <div className="relative mb-5 flex flex-wrap items-center gap-2 pl-24 pr-24 md:hidden">
+          <div className="relative mb-5 flex flex-wrap items-center gap-2 ps-24 pe-24 md:hidden">
             <StaffLanguageSwitcher
               locale={locale}
               onChange={setStaffLocale}
               label={t.language}
-              className="absolute left-0 top-0.5 z-10"
+              className="absolute start-0 top-0.5 z-10"
             />
             {nav.map(([id, label]) => (
               <button
@@ -737,7 +737,7 @@ export default function AdminPage() {
                 {label}
               </button>
             ))}
-            <QikTikLogo className="absolute right-0 top-0.5" />
+            <QikTikLogo className="absolute end-0 top-0.5" />
           </div>
 
           {tab === "dashboard" && dash && (

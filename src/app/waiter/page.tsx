@@ -857,8 +857,8 @@ export default function WaiterPage() {
         />
       )}
       <header className="border-b border-white/8 bg-[#0c110f]/90 px-4 py-4 backdrop-blur-md">
-        <div className="relative flex items-start gap-3 pl-28 pr-28">
-          <div className="min-w-0">
+        <div className="relative flex items-start gap-3 ps-28 pe-28">
+            <div className="min-w-0">
             <p className="text-[11px] uppercase tracking-[0.22em] text-brass/80">{t.floor}</p>
             <h1 className="font-display text-2xl font-semibold text-ink">{t.title}</h1>
           </div>
@@ -866,9 +866,9 @@ export default function WaiterPage() {
             locale={locale}
             onChange={setStaffLocale}
             label={t.language}
-            className="absolute left-0 top-1 z-10 shrink-0"
+            className="absolute start-0 top-1 z-10 shrink-0"
           />
-          <QikTikLogo className="absolute right-0 top-1" />
+          <QikTikLogo className="absolute end-0 top-1" />
         </div>
         {hasFeature("pickup") ? (
           <div className="mt-2">

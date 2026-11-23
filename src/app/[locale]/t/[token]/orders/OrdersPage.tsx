@@ -382,7 +382,7 @@ export default function OrdersPage({ locale, token }: Props) {
   if (paidThanks || leftThanks) {
     return (
       <div className="guest-shell relative flex min-h-dvh flex-col items-center justify-center px-6 pb-24">
-        <QikTikLogo className="absolute top-3 right-5 z-10" />
+        <QikTikLogo className="absolute top-3 end-5 z-10" />
         <div className="guest-panel w-full max-w-md rounded-3xl p-6 text-center animate-rise">
           <p className="font-display text-3xl font-semibold text-ink">
             {leftThanks ? t("leaveThanks") : tPay("thankYou")}
@@ -400,7 +400,7 @@ export default function OrdersPage({ locale, token }: Props) {
   return (
     <div className="guest-shell pb-24">
       <header className="px-5 pb-2 pt-6 animate-rise">
-        <div className="relative flex items-start gap-3 pr-28">
+        <div className="relative flex items-start gap-3 pe-28">
           <div className="min-w-0">
             <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-brass/80">
               {tCommon("table")} {data?.table.number ?? "—"}
@@ -419,7 +419,7 @@ export default function OrdersPage({ locale, token }: Props) {
               </p>
             )}
           </div>
-          <QikTikLogo className="absolute right-0 top-1" />
+          <QikTikLogo className="absolute end-0 top-1" />
         </div>
       </header>
 

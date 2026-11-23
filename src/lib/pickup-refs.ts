@@ -22,11 +22,16 @@ function pickUnusedTwoDigit(used: Set<string>): string | null {
   return free[randomInt(free.length)]!;
 }
 
-/**
- * 2-digit guest ticket # (01–99), unique among active WAITING/READY tickets.
- * If every 2-digit slot is busy, expands slightly to 100–999.
- */
-export async function allocatePickupTicketRef(venueId: string): Promise<string> {
+/** Pick a random unused 3-digit value from 100–999. */
+function pickUnusedThreeDigit(used: Set<string>): string | null {
+  for (let attempt = 0; attempt < 64; attempt++) {
+    const orderRef = String(randomInt(100, 1000));
+    if (!used.has(orderRef)) return orderRef;
+  }
+  return null;
+}
+
+async function loadUsedTicketRefs(venueId: string): Promise<Set<string>> {
   const active = await prisma.pickupTicket.findMany({
     where: {
       venueId,
@@ -35,17 +40,28 @@ export async function allocatePickupTicketRef(venueId: string): Promise<string> 
     },
     select: { orderRef: true },
   });
-  const used = new Set(
+  return new Set(
     active.map((t) => t.orderRef).filter((ref): ref is string => Boolean(ref))
   );
+}
 
-  const twoDigit = pickUnusedTwoDigit(used);
-  if (twoDigit) return twoDigit;
+/**
+ * Guest ticket #: prefer 2 digits (01–99) while any of those slots are free.
+ * Once all 01–99 are held by active WAITING/READY tickets (or parallel load
+ * fills them), allocate 3 digits (100–999). Safe to call under concurrency —
+ * callers should create the row soon after; rare races get a unique fallback.
+ */
+export async function allocatePickupTicketRef(venueId: string): Promise<string> {
+  // Re-read a few times so parallel registrants don’t all grab the same free slot.
+  for (let round = 0; round < 4; round++) {
+    const used = await loadUsedTicketRefs(venueId);
 
-  // All 01–99 held by active tickets — expand slightly.
-  for (let attempt = 0; attempt < 32; attempt++) {
-    const orderRef = String(randomInt(100, 1000));
-    if (!used.has(orderRef)) return orderRef;
+    const twoDigit = pickUnusedTwoDigit(used);
+    if (twoDigit) return twoDigit;
+
+    // More than 99 active 2-digit tickets — use 3 digits.
+    const threeDigit = pickUnusedThreeDigit(used);
+    if (threeDigit) return threeDigit;
   }
 
   return `T-${Date.now().toString(36).slice(-5).toUpperCase()}`;
@@ -53,7 +69,7 @@ export async function allocatePickupTicketRef(venueId: string): Promise<string> 
 
 /**
  * Assistance queue ref like W-12 (2 digits), unique among open/acknowledged calls.
- * If every W-01–W-99 slot is busy, expands slightly to W-100–W-999.
+ * If every W-01–W-99 slot is busy, expands to W-100–W-999.
  */
 export async function allocateAssistanceOrderRef(venueId: string): Promise<string> {
   const active = await prisma.pickupAssistanceCall.findMany({
