@@ -10,6 +10,7 @@ import {
 } from "react";
 import {
   DEFAULT_FEATURES,
+  packageIdFromFeatures,
   type FeatureFlags,
   type FeatureKey,
   type PackageId,
@@ -45,15 +46,7 @@ export function FeaturesProvider({
   );
   const [packageId, setPackageId] = useState<PackageId>(
     initialPackageId ??
-      (initial
-        ? initial.ordering && initial.pickup
-          ? "full"
-          : initial.ordering
-            ? "menu_ordering"
-            : initial.pickup
-              ? "menu_pickup"
-              : "menu_only"
-        : "full")
+      (initial ? packageIdFromFeatures(initial) : "menu_ordering")
   );
   // Always start ready with defaults so staff boards aren't blocked on iPad.
   const [ready, setReady] = useState(true);
@@ -91,7 +84,7 @@ export function FeaturesProvider({
       packageId,
       features,
       hasFeature: (feature) =>
-        feature === "digitalMenu" ? true : features[feature],
+        feature === "digitalMenu" ? true : Boolean(features[feature]),
       refresh,
     }),
     [ready, packageId, features, refresh]
@@ -107,10 +100,10 @@ export function useFeatures(): FeaturesContextValue {
   if (!ctx) {
     return {
       ready: true,
-      packageId: "full",
+      packageId: "menu_ordering",
       features: DEFAULT_FEATURES,
       hasFeature: (feature) =>
-        feature === "digitalMenu" ? true : DEFAULT_FEATURES[feature],
+        feature === "digitalMenu" ? true : Boolean(DEFAULT_FEATURES[feature]),
       refresh: async () => {},
     };
   }

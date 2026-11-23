@@ -6,6 +6,7 @@ import { requireStaffSession } from "@/lib/staff-auth";
 import { apiError, pickupRegisterSchema } from "@/lib/validation";
 import { requireFeature } from "@/lib/features";
 import { requireVenue } from "@/lib/venue";
+import { expireStaleReadyPickupTickets } from "@/lib/pickup-expire";
 
 export const dynamic = "force-dynamic";
 
@@ -110,6 +111,12 @@ export async function GET(req: NextRequest) {
 
   if (statuses.length === 0) {
     return apiError("VALIDATION_ERROR", "No valid status filters", 400);
+  }
+
+  try {
+    await expireStaleReadyPickupTickets({ venueId: venue.id });
+  } catch {
+    /* queue still returns if expire fails */
   }
 
   const tickets = await prisma.pickupTicket.findMany({

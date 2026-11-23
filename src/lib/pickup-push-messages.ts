@@ -6,6 +6,7 @@ export const pickupPushMessages: Record<
   {
     ready: { title: string; body: string };
     ping: { title: string; body: string };
+    seen: { title: string; body: string };
   }
 > = {
   en: {
@@ -17,6 +18,10 @@ export const pickupPushMessages: Record<
       title: "Pickup reminder",
       body: "{name}, come pick up your order!",
     },
+    seen: {
+      title: "Staff saw your call",
+      body: "{name}, a waiter has seen your request and is coming.",
+    },
   },
   ar: {
     ready: {
@@ -26,6 +31,10 @@ export const pickupPushMessages: Record<
     ping: {
       title: "تذكير بالاستلام",
       body: "{name}، تعال لاستلام طلبك!",
+    },
+    seen: {
+      title: "رأى الطاقم طلبك",
+      body: "{name}، رأى النادل طلبك وهو في الطريق.",
     },
   },
   he: {
@@ -37,6 +46,10 @@ export const pickupPushMessages: Record<
       title: "תזכורת לאיסוף",
       body: "{name}, בואו לאסוף את ההזמנה!",
     },
+    seen: {
+      title: "הצוות ראה את הקריאה",
+      body: "{name}, מלצר ראה את הבקשה ובדרך אליכם.",
+    },
   },
   ru: {
     ready: {
@@ -46,6 +59,10 @@ export const pickupPushMessages: Record<
     ping: {
       title: "Напоминание о выдаче",
       body: "{name}, заберите заказ!",
+    },
+    seen: {
+      title: "Персонал увидел вызов",
+      body: "{name}, официант увидел ваш запрос и идёт к вам.",
     },
   },
 };

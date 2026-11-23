@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useGuestAuth } from "@/components/GuestAuthProvider";
 import { useFeatures } from "@/components/FeaturesProvider";
 import { QikTikLogo } from "@/components/QikTikLogo";
@@ -24,9 +24,11 @@ export function GuestAuthGate({ children }: { children: React.ReactNode }) {
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const browseOnly = searchParams.get("browse") === "1";
   const auth = useGuestAuth();
   const { ready: featuresReady, hasFeature } = useFeatures();
-  const ordering = hasFeature("ordering");
+  const ordering = hasFeature("ordering") && !browseOnly;
 
   const [langReady, setLangReady] = useState(false);
   const [langPicked, setLangPicked] = useState(false);
@@ -135,7 +137,9 @@ export function GuestAuthGate({ children }: { children: React.ReactNode }) {
     } else {
       segments.splice(1, 0, next);
     }
-    const href = segments.join("/") || `/${next}`;
+    const path = segments.join("/") || `/${next}`;
+    const qs = searchParams.toString();
+    const href = qs ? `${path}?${qs}` : path;
     if (next !== locale) router.push(href);
   }
 
@@ -263,8 +267,8 @@ export function GuestAuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Menu-only package: browse without guest registration / unlock.
-  if (!ordering) {
+  // Menu-only package, or pickup “Digital Menu” (?browse=1): view without table registration.
+  if (!ordering || browseOnly) {
     return <>{children}</>;
   }
 

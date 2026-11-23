@@ -2,13 +2,14 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { locales, localeNames, type Locale } from "@/i18n/config";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 export function LanguageSwitcher({ className }: { className?: string }) {
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const t = useTranslations("language");
 
   function switchLocale(newLocale: Locale) {
@@ -18,7 +19,9 @@ export function LanguageSwitcher({ className }: { className?: string }) {
     } else {
       segments.splice(1, 0, newLocale);
     }
-    router.push(segments.join("/") || "/");
+    const path = segments.join("/") || "/";
+    const qs = searchParams.toString();
+    router.push(qs ? `${path}?${qs}` : path);
   }
 
   return (

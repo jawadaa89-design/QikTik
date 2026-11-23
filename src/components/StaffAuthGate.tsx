@@ -7,8 +7,20 @@ import { useStaffLocale } from "@/components/StaffLanguageSwitcher";
 import { staffGateMessages } from "@/i18n/staff";
 import {
   clearStaffToken,
+  getStaffToken,
   setStaffToken,
 } from "@/lib/staff-client";
+
+/** Marks a successful unlock in this browser tab (survives URL token strip + Strict Mode). */
+const STAFF_GATE_OK_KEY = "qiktik_staff_gate_ok";
+
+/** Client-side expiry check for staff session tokens (`expiresAt.hmac`). */
+function staffTokenStillValid(token: string | null | undefined): boolean {
+  if (!token) return false;
+  const payload = token.split(".")[0];
+  const expiresAt = Number(payload);
+  return Number.isFinite(expiresAt) && expiresAt >= Date.now();
+}
 
 function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,16 +29,26 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
   const t = staffGateMessages[locale] ?? staffGateMessages.en;
 
   const staffError = searchParams.get("staff_error") === "1";
-  // Fresh unlock only — never restore an old cookie/localStorage session.
+  // One-shot token from unlock-redirect (?staff_token= / ?access_token=).
   const unlockToken =
     searchParams.get("staff_token") || searchParams.get("access_token");
 
+  // Initial state must match SSR: only URL tokens are known on the server.
+  // Browser storage is read in useLayoutEffect after mount (avoids hydration mismatch).
   const [unlocked, setUnlocked] = useState(() => Boolean(unlockToken));
+  const [ready, setReady] = useState(() => Boolean(unlockToken));
 
   useLayoutEffect(() => {
     if (unlockToken) {
       setStaffToken(unlockToken);
+      try {
+        sessionStorage.setItem(STAFF_GATE_OK_KEY, "1");
+      } catch {
+        /* ignore */
+      }
       setUnlocked(true);
+      setReady(true);
+      // Strip token from the address bar — must NOT treat that as a logout.
       try {
         const clean = window.location.pathname;
         window.history.replaceState(null, "", clean);
@@ -35,9 +57,44 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
       }
       return;
     }
-    // Every fresh open of a staff board asks for the password again.
+
+    // Same tab after unlock (replaceState cleared the query, or React remounted).
+    try {
+      if (
+        sessionStorage.getItem(STAFF_GATE_OK_KEY) === "1" &&
+        staffTokenStillValid(getStaffToken())
+      ) {
+        setUnlocked(true);
+        setReady(true);
+        return;
+      }
+    } catch {
+      /* ignore */
+    }
+
+    // Session from admin (or another staff page) in this browser — no second password.
+    const existing = getStaffToken();
+    if (staffTokenStillValid(existing)) {
+      setStaffToken(existing!);
+      try {
+        sessionStorage.setItem(STAFF_GATE_OK_KEY, "1");
+      } catch {
+        /* ignore */
+      }
+      setUnlocked(true);
+      setReady(true);
+      return;
+    }
+
+    // No valid session — require password.
     clearStaffToken();
+    try {
+      sessionStorage.removeItem(STAFF_GATE_OK_KEY);
+    } catch {
+      /* ignore */
+    }
     setUnlocked(false);
+    setReady(true);
     try {
       document.cookie = "qiktik_staff=; path=/; max-age=0; SameSite=Lax";
       document.cookie = "qiktik_staff_token=; path=/; max-age=0; SameSite=Lax";
@@ -60,6 +117,12 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
       window.removeEventListener("keydown", prime, true);
     };
   }, [unlocked]);
+
+  if (!ready) {
+    return (
+      <div style={{ minHeight: "100dvh", background: "#12160f" }} />
+    );
+  }
 
   if (!unlocked) {
     return (

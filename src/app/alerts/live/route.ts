@@ -1,0 +1,627 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import {
+  createStaffSessionValue,
+  demoStaffPassword,
+  verifyStaffPassword,
+  verifyStaffSessionValue,
+} from "@/lib/staff-auth";
+import { hasFeature } from "@/lib/features";
+import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
+import {
+  STAFF_LOCALE_KEY,
+  isRtl,
+  localeNames,
+  locales,
+  pickupMessages,
+  staffGateMessages,
+} from "@/i18n/staff";
+
+/** Menu+alerts+pickup → combined board (waiter calls + pickup queues). */
+async function combinedBoardPath(venueId: string | undefined): Promise<string> {
+  if (venueId && (await hasFeature("pickup", venueId))) return "/pickup/live";
+  return "/alerts/live";
+}
+
+function requestOrigin(req: NextRequest): string {
+  const host =
+    req.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
+    req.headers.get("host") ||
+    req.nextUrl.host;
+  const proto =
+    req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "http";
+  return `${proto}://${host}`;
+}
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+const LOCALE_JSON = JSON.stringify({
+  key: STAFF_LOCALE_KEY,
+  locales,
+  names: localeNames,
+  rtl: Object.fromEntries(locales.map((l) => [l, isRtl(l)])),
+  pickup: pickupMessages,
+  gate: staffGateMessages,
+});
+
+function esc(s: string) {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function ageLabel(d: Date) {
+  const mins = Math.max(0, Math.floor((Date.now() - d.getTime()) / 60_000));
+  if (mins < 1) return "&lt;1m";
+  if (mins < 60) return `${mins}m`;
+  return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+}
+
+/**
+ * Board session from URL/form token, or an existing staff cookie (e.g. already
+ * unlocked on /admin — no second password).
+ */
+function tokenFromQueryOrForm(req: NextRequest, formToken?: string): string | null {
+  const q = formToken || req.nextUrl.searchParams.get("access_token");
+  if (q && verifyStaffSessionValue(q)) return q;
+  const fromCookie =
+    req.cookies.get("qiktik_staff")?.value ||
+    req.cookies.get("qiktik_staff_token")?.value;
+  if (fromCookie && verifyStaffSessionValue(fromCookie)) return fromCookie;
+  return null;
+}
+
+function clearStaffCookies(res: NextResponse) {
+  res.cookies.set("qiktik_staff", "", { path: "/", maxAge: 0 });
+  res.cookies.set("qiktik_staff_token", "", { path: "/", maxAge: 0 });
+  return res;
+}
+
+async function loadCalls(venueSlug: string) {
+  const venue =
+    (await prisma.venue.findUnique({ where: { slug: venueSlug } })) ||
+    (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
+  if (!venue) return { venue: null, assistance: [] as Awaited<ReturnType<typeof prisma.pickupAssistanceCall.findMany>> };
+
+  const assistance = await prisma.pickupAssistanceCall.findMany({
+    where: { venueId: venue.id, status: { in: ["OPEN", "ACKNOWLEDGED"] } },
+    orderBy: [{ status: "asc" }, { createdAt: "asc" }],
+  });
+  return { venue, assistance };
+}
+
+function langSelectHtml() {
+  const opts = locales
+    .map((l) => `<option value="${l}">${esc(localeNames[l])}</option>`)
+    .join("");
+  return `<label class="lang">
+    <span class="sr-only" data-i18n="language">Language</span>
+    <select id="staff-lang" aria-label="Language" data-i18n-aria="language">${opts}</select>
+  </label>`;
+}
+
+function i18nBootScript(mode: "board" | "login") {
+  return `<script>
+(function () {
+  var CFG = ${LOCALE_JSON};
+  var MODE = ${JSON.stringify(mode)};
+  function stored() {
+    try {
+      var v = localStorage.getItem(CFG.key);
+      if (v && CFG.pickup[v]) return v;
+    } catch (e) {}
+    return "ar";
+  }
+  function save(loc) {
+    try { localStorage.setItem(CFG.key, loc); } catch (e) {}
+  }
+  function msgs(loc) {
+    return MODE === "login" ? (CFG.gate[loc] || CFG.gate.en) : (CFG.pickup[loc] || CFG.pickup.en);
+  }
+  function apply(loc) {
+    if (!CFG.pickup[loc]) loc = "ar";
+    save(loc);
+    document.documentElement.lang = loc;
+    document.documentElement.dir = CFG.rtl[loc] ? "rtl" : "ltr";
+    var t = msgs(loc);
+    var nodes = document.querySelectorAll("[data-i18n]");
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      var key = el.getAttribute("data-i18n");
+      if (!key || t[key] == null) continue;
+      var count = el.getAttribute("data-count");
+      el.textContent = count != null ? (t[key] + " (" + count + ")") : t[key];
+    }
+    var ariaNodes = document.querySelectorAll("[data-i18n-aria]");
+    for (var j = 0; j < ariaNodes.length; j++) {
+      var a = ariaNodes[j];
+      var ak = a.getAttribute("data-i18n-aria");
+      if (ak && t[ak] != null) a.setAttribute("aria-label", t[ak]);
+    }
+    var hint = document.getElementById("board-hint");
+    if (hint && MODE === "board") {
+      var venue = hint.getAttribute("data-venue") || "";
+      var pt = CFG.pickup[loc] || CFG.pickup.en;
+      hint.textContent = venue ? (venue + " · " + pt.liveSuffix) : pt.liveSuffix;
+    }
+    var sel = document.getElementById("staff-lang");
+    if (sel && sel.value !== loc) sel.value = loc;
+    window.__qiktikApplyLocale = apply;
+    window.__qiktikLocale = loc;
+  }
+  document.addEventListener("DOMContentLoaded", function () {
+    var loc = stored();
+    apply(loc);
+    var sel = document.getElementById("staff-lang");
+    if (sel) {
+      sel.value = loc;
+      sel.addEventListener("change", function () { apply(sel.value); });
+    }
+  });
+  window.__qiktikApplyLocale = apply;
+  window.__qiktikGetLocale = stored;
+})();
+</script>`;
+}
+
+function renderLogin(error?: string) {
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Alerts board — unlock</title>
+  <style>
+    body{margin:0;min-height:100vh;background:#101012;color:#eef2ef;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{width:100%;max-width:420px;background:#1a1f18;border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:24px}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px;margin-top:12px}
+    .brand img{width:56px;height:56px;border-radius:999px;object-fit:cover;border:2px solid rgba(249,115,22,.4);background:#f6f3ee}
+    h1{margin:0;font-size:24px}
+    p{color:#c8c4bb;font-size:14px}
+    label.field{display:block;font-size:12px;font-weight:600;color:#c8c4bb;margin-top:16px}
+    input{width:100%;box-sizing:border-box;margin-top:8px;padding:14px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#f2efe8;font-size:16px}
+    button{width:100%;margin-top:16px;min-height:52px;border:0;border-radius:12px;padding:14px;font-size:16px;font-weight:700;background:linear-gradient(135deg,#f97316,#c2410c);color:#0c100e}
+    .err{margin-top:12px;padding:10px 12px;border-radius:12px;border:1px solid rgba(212,114,114,.4);background:rgba(212,114,114,.12);color:#f0a0a0;font-size:14px}
+    .badge{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#f97316;font-weight:600}
+    .lang select{appearance:none;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#eef2ef;font-size:12px;font-weight:600;padding:8px 28px 8px 12px}
+    .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+  </style>
+  ${i18nBootScript("login")}
+</head>
+<body>
+  <form class="card" method="POST" action="/alerts/live">
+    <div class="top">
+      <div class="badge" data-i18n="badge">Staff</div>
+      ${langSelectHtml()}
+    </div>
+    <div class="brand">
+      <img src="/logo.png" alt="" width="56" height="56" />
+      <h1 data-i18n="title">Staff login</h1>
+    </div>
+    <p data-i18n="hint">Enter the staff password to open this board.</p>
+    ${error ? `<div class="err">${esc(error)}</div>` : ""}
+    <label class="field" for="password" data-i18n="password">Staff password</label>
+    <input id="password" name="password" type="password" required autocomplete="off" />
+    <button type="submit" data-i18n="unlock">Unlock</button>
+  </form>
+</body>
+</html>`;
+}
+
+function renderBoard(
+  token: string,
+  data: Awaited<ReturnType<typeof loadCalls>>
+) {
+  const refreshUrl = `/alerts/live?access_token=${encodeURIComponent(token)}`;
+  const { assistance, venue } = data;
+  const venueName = venue?.name || "My Restaurant";
+
+  const assistAction = (id: string, status: string, i18nKey: string, fallback: string, cls: string) => `
+    <form method="POST" action="/alerts/live">
+      <input type="hidden" name="access_token" value="${esc(token)}" />
+      <input type="hidden" name="assistance_id" value="${esc(id)}" />
+      <input type="hidden" name="assistance_status" value="${esc(status)}" />
+      <button class="${cls}" type="submit" data-i18n="${i18nKey}">${esc(fallback)}</button>
+    </form>`;
+
+  const openCallsJson = JSON.stringify(
+    assistance
+      .filter((c) => c.status === "OPEN")
+      .map((c) => ({
+        id: c.id,
+        customerName: c.customerName,
+        orderRef: c.orderRef,
+        comment: c.comment,
+      }))
+  );
+
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Alerts — ${esc(venueName)}</title>
+  <style>
+    :root{--bg:#0e1210;--panel:rgba(22,28,24,.92);--line:rgba(255,255,255,.08);--ink:#eef2ef;--muted:rgba(200,196,187,.55);--orange:#f97316;--red:#d47272}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(ellipse 80% 50% at 10% -10%,rgba(249,115,22,.14),transparent 55%),var(--bg)}
+    header{padding:18px 20px 16px;border-bottom:1px solid var(--line);background:rgba(10,14,12,.78)}
+    .header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .header-brand{display:flex;align-items:center;gap:22px;min-width:0}
+    .header-brand img{width:56px;height:56px;border-radius:999px;object-fit:cover;border:2px solid rgba(249,115,22,.45);background:#f6f3ee}
+    .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--orange);font-weight:700}
+    h1{margin:4px 0 0;font-size:clamp(22px,4vw,30px);font-weight:750}
+    .hint{margin:8px 0 0;color:var(--muted);font-size:13px}
+    main{max-width:720px;margin:0 auto;padding:18px 16px 28px}
+    .panel{border-radius:20px;border:1px solid rgba(212,114,114,.28);background:var(--panel);padding:14px;box-shadow:0 12px 40px rgba(0,0,0,.22)}
+    .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;padding:2px 4px 10px;border-bottom:1px solid var(--line)}
+    h2{margin:0;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--red);font-weight:800}
+    .count{min-width:28px;height:28px;padding:0 8px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;background:rgba(212,114,114,.2);color:#f3c0c0}
+    ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+    .card{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:center;padding:14px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
+    .card.open{border-inline-start:3px solid #ef4444;border-color:rgba(254,202,202,.9);background:rgba(185,28,28,.42);transition:none;-webkit-animation:alertPulse .7s ease-in-out infinite;animation:alertPulse .7s ease-in-out infinite}
+    .name{font-size:17px;font-weight:700}
+    .meta{margin-top:4px;font-size:12px;color:var(--muted)}
+    .actions{display:flex;flex-wrap:wrap;gap:8px}
+    button{border:0;border-radius:11px;padding:10px 14px;font-size:13px;font-weight:750;cursor:pointer;min-height:42px}
+    .btn-ready{background:linear-gradient(135deg,#4aa87a,#2f7a56);color:#fff}
+    .btn-ghost{background:rgba(255,255,255,.05);color:rgba(238,242,239,.8);border:1px solid rgba(255,255,255,.12)}
+    .empty{padding:36px 16px;text-align:center;border-radius:14px;border:1px dashed rgba(255,255,255,.1);color:rgba(200,196,187,.42);font-size:14px}
+    .footer{padding:8px 16px 24px;text-align:center;font-size:12px;color:rgba(200,196,187,.4)}
+    a{color:var(--orange);text-decoration:none}
+    .lang select{appearance:none;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#eef2ef;font-size:12px;font-weight:600;padding:8px 28px 8px 12px}
+    .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+    #sound-banner{display:none;margin:12px 16px 0;padding:12px 14px;border-radius:12px;border:1px solid rgba(249,115,22,.45);background:rgba(249,115,22,.14);color:#f97316;font-size:14px;font-weight:600;text-align:center;cursor:pointer}
+    #sound-banner.show{display:block}
+    #call-alert{display:none;position:fixed;inset:0;z-index:9999;place-items:center;padding:24px;background:rgba(12,40,28,.82);animation:bgpulse .7s ease-in-out infinite}
+    #call-alert.show{display:grid}
+    #call-alert .panel{width:min(520px,100%);border:4px solid #fecaca;border-radius:24px;background:#b91c1c;padding:40px 24px;text-align:center;color:#fff;animation:flash .7s ease-in-out infinite;min-height:0}
+    #call-alert .badge{font-size:13px;font-weight:800;letter-spacing:.28em;text-transform:uppercase;color:#fee2e2}
+    #call-alert h2{margin:16px 0 0;font-size:clamp(28px,6vw,40px);font-weight:800;color:#fff;letter-spacing:normal;text-transform:none}
+    #call-alert .box{margin-top:12px;border-radius:16px;background:rgba(0,0,0,.2);padding:12px 16px;text-align:start}
+    #call-alert .box dt{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#fecaca}
+    #call-alert .box dd{margin:4px 0 0;font-size:clamp(20px,5vw,28px);font-weight:800}
+    #call-alert .tap{margin-top:28px;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:#fecaca}
+    @keyframes flash{0%,100%{opacity:1}50%{opacity:.72}}
+    @keyframes bgpulse{0%,100%{background-color:rgba(12,40,28,.82)}50%{background-color:rgba(20,90,55,.9)}}
+    @keyframes alertPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.72;transform:scale(1.015)}}
+    @-webkit-keyframes alertPulse{0%,100%{opacity:1;-webkit-transform:scale(1)}50%{opacity:.72;-webkit-transform:scale(1.015)}}
+  </style>
+  ${i18nBootScript("board")}
+</head>
+<body>
+  <div id="sound-banner" data-i18n="soundEnable">Tap here to enable call-waiter sound + alerts</div>
+  <div id="call-alert" role="alertdialog" aria-modal="true">
+    <button type="button" class="panel" id="call-alert-btn">
+      <div class="badge" data-i18n="callWaiterTitle">Call waiter</div>
+      <h2 data-i18n="callWaiterBadge">Guest needs help</h2>
+      <dl>
+        <div class="box"><dt data-i18n="callWaiterName">Guest</dt><dd id="call-alert-name">—</dd></div>
+        <div class="box"><dt data-i18n="callWaiterOrderRef">Order / table</dt><dd id="call-alert-ref">—</dd></div>
+        <div class="box" id="call-alert-comment-wrap" style="display:none"><dt data-i18n="callWaiterComment">Comment</dt><dd id="call-alert-comment"></dd></div>
+      </dl>
+      <div class="tap" data-i18n="tapDismiss">Tap to dismiss</div>
+    </button>
+  </div>
+  <header>
+    <div class="header-top">
+      <div class="header-brand">
+        <img src="/logo.png" alt="${esc(venueName)}" width="56" height="56" />
+        <div>
+          <div class="eyebrow" data-i18n="assistanceSection">Waiter calls</div>
+          <h1 data-i18n="callWaiterTitle">Call a waiter</h1>
+        </div>
+      </div>
+      ${langSelectHtml()}
+    </div>
+    <p class="hint" id="board-hint" data-venue="${esc(venueName)}">${esc(venueName)} · live alerts</p>
+  </header>
+  <main>
+    <section class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="assistanceSection">Waiter calls</h2>
+        <span class="count">${assistance.length}</span>
+      </div>
+      ${
+        assistance.length === 0
+          ? `<div class="empty" data-i18n="emptyAssistance">No waiter calls</div>`
+          : `<ul>${assistance
+              .map((c) => {
+                const cls = c.status === "OPEN" ? "card open" : "card";
+                const acts =
+                  (c.status === "OPEN"
+                    ? assistAction(c.id, "ACKNOWLEDGED", "assistanceAcknowledge", "Acknowledge", "btn-ghost")
+                    : "") +
+                  assistAction(c.id, "DONE", "assistanceDone", "Done", "btn-ready");
+                return `<li class="${cls}">
+                  <div>
+                    <div class="name">${esc(c.customerName)}</div>
+                    <div class="meta">${ageLabel(c.updatedAt)} · #${esc(c.orderRef)}${c.comment ? ` · ${esc(c.comment)}` : ""}</div>
+                  </div>
+                  <div class="actions">${acts}</div>
+                </li>`;
+              })
+              .join("")}</ul>`
+      }
+    </section>
+  </main>
+  <div class="footer">
+    <a href="${refreshUrl}" id="refresh-link" data-i18n="refresh">Refresh now</a>
+    ·
+    <a href="/alerts/live?lock=1" data-i18n="lock">Lock</a>
+  </div>
+  <audio id="alert-audio" preload="auto" playsinline></audio>
+  <script>
+(function () {
+  var REFRESH_URL = ${JSON.stringify(refreshUrl)};
+  var OPEN_CALLS = ${openCallsJson};
+  var SEEN_KEY = "qiktik_assist_seen";
+  var SOUND_KEY = "qiktik_sound_on";
+  var audioCtx = null;
+  var soundReady = false;
+  var alertEl = document.getElementById("call-alert");
+  var soundBanner = document.getElementById("sound-banner");
+  var alertAudio = document.getElementById("alert-audio");
+  var alertVisible = false;
+  alertAudio.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
+
+  function soundWasEnabled() { try { return localStorage.getItem(SOUND_KEY) === "1"; } catch (e) { return false; } }
+  function markSoundEnabled() {
+    soundReady = true;
+    try { localStorage.setItem(SOUND_KEY, "1"); } catch (e) {}
+    if (soundBanner) soundBanner.classList.remove("show");
+  }
+  function showSoundBannerIfNeeded() {
+    if (!soundBanner) return;
+    if (soundReady || soundWasEnabled()) soundBanner.classList.remove("show");
+    else soundBanner.classList.add("show");
+  }
+  function seenSet() { try { return JSON.parse(sessionStorage.getItem(SEEN_KEY) || "[]"); } catch (e) { return []; } }
+  function markSeen(id) {
+    var s = seenSet();
+    if (s.indexOf(id) === -1) s.push(id);
+    try { sessionStorage.setItem(SEEN_KEY, JSON.stringify(s.slice(-40))); } catch (e) {}
+  }
+  function wasSeen(id) { return seenSet().indexOf(id) !== -1; }
+  function primeSound(fromGesture) {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) {
+        if (!audioCtx || audioCtx.state === "closed") audioCtx = new AC();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+      }
+      if (fromGesture) {
+        alertAudio.muted = true;
+        var p = alertAudio.play();
+        if (p && p.then) p.then(function () { alertAudio.pause(); alertAudio.currentTime = 0; alertAudio.muted = false; }).catch(function () {});
+      }
+      if (fromGesture || (audioCtx && audioCtx.state === "running")) markSoundEnabled();
+    } catch (e) {}
+  }
+  function playBeep() {
+    try {
+      if (!audioCtx) return;
+      var now = audioCtx.currentTime;
+      [880, 1175, 880].forEach(function (freq, i) {
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = "square";
+        osc.frequency.value = freq;
+        var t0 = now + i * 0.2;
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(0.32, t0 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.16);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(t0); osc.stop(t0 + 0.18);
+      });
+      if (navigator.vibrate) navigator.vibrate([180, 80, 180, 80, 320]);
+    } catch (e) {}
+  }
+  function showAlert(call, force) {
+    if (!call || !call.id) return;
+    if (!force && wasSeen(call.id)) return;
+    markSeen(call.id);
+    document.getElementById("call-alert-name").textContent = call.customerName || "—";
+    document.getElementById("call-alert-ref").textContent = call.orderRef ? ("#" + call.orderRef) : "—";
+    var wrap = document.getElementById("call-alert-comment-wrap");
+    var comment = (call.comment || "").trim();
+    if (comment) { wrap.style.display = "block"; document.getElementById("call-alert-comment").textContent = comment; }
+    else wrap.style.display = "none";
+    alertEl.classList.add("show");
+    alertVisible = true;
+    playBeep();
+  }
+  function hideAlert() { alertEl.classList.remove("show"); alertVisible = false; }
+  document.getElementById("call-alert-btn").addEventListener("click", function (e) { e.preventDefault(); hideAlert(); });
+  showSoundBannerIfNeeded();
+  if (soundBanner) soundBanner.addEventListener("click", function () { primeSound(true); playBeep(); });
+  document.addEventListener("pointerdown", function () { primeSound(true); }, true);
+  for (var i = 0; i < OPEN_CALLS.length; i++) { showAlert(OPEN_CALLS[i]); break; }
+
+  function softRefresh() {
+    if (alertVisible) return;
+    fetch(REFRESH_URL, { credentials: "same-origin", cache: "no-store" })
+      .then(function (r) { return r.text(); })
+      .then(function (html) {
+        var doc = new DOMParser().parseFromString(html, "text/html");
+        var newMain = doc.querySelector("main");
+        var curMain = document.querySelector("main");
+        if (newMain && curMain) curMain.innerHTML = newMain.innerHTML;
+        if (typeof window.__qiktikApplyLocale === "function") {
+          window.__qiktikApplyLocale(window.__qiktikLocale || "ar");
+        }
+      }).catch(function () {});
+  }
+  document.addEventListener("submit", function (e) {
+    var form = e.target;
+    if (!form || form.tagName !== "FORM") return;
+    if (form.querySelector('input[name="password"]')) return;
+    e.preventDefault();
+    primeSound(true);
+    fetch("/alerts/live", { method: "POST", body: new FormData(form), credentials: "same-origin", redirect: "manual" })
+      .then(function () { hideAlert(); softRefresh(); })
+      .catch(function () { form.submit(); });
+  }, true);
+  var refreshLink = document.getElementById("refresh-link");
+  if (refreshLink) refreshLink.addEventListener("click", function (e) { e.preventDefault(); softRefresh(); });
+
+  function connectSSE() {
+    try {
+      var es = new EventSource("/api/v1/events");
+      es.addEventListener("pickup:call-waiter", function (ev) {
+        try {
+          var data = JSON.parse(ev.data);
+          showAlert({ id: data.id, customerName: data.customerName, orderRef: data.orderRef, comment: data.comment }, true);
+        } catch (e) {}
+      });
+      es.addEventListener("pickup:assistance-updated", function (ev) {
+        try {
+          var data = JSON.parse(ev.data);
+          if (data && data.status === "OPEN") showAlert(data, true);
+          softRefresh();
+        } catch (e) {}
+      });
+      es.onerror = function () { es.close(); setTimeout(connectSSE, 3000); };
+    } catch (e) {}
+  }
+  connectSSE();
+  setInterval(softRefresh, 4000);
+})();
+  </script>
+</body>
+</html>`;
+}
+
+export async function GET(req: NextRequest) {
+  const wantLock = req.nextUrl.searchParams.get("lock") === "1";
+  const token = wantLock ? null : tokenFromQueryOrForm(req);
+  if (!token) {
+    return clearStaffCookies(
+      new NextResponse(renderLogin(), {
+        headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+      })
+    );
+  }
+  try {
+    const data = await loadCalls(DEFAULT_VENUE_SLUG);
+    const boardPath = await combinedBoardPath(data.venue?.id);
+    if (boardPath !== "/alerts/live") {
+      const dest = new URL(
+        `${boardPath}?access_token=${encodeURIComponent(token)}`,
+        requestOrigin(req)
+      );
+      return NextResponse.redirect(dest, 303);
+    }
+    return new NextResponse(renderBoard(token, data), {
+      headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+    });
+  } catch {
+    return clearStaffCookies(
+      new NextResponse(renderLogin("Database error — try unlock again"), {
+        status: 500,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      })
+    );
+  }
+}
+
+export async function POST(req: NextRequest) {
+  const form = await req.formData().catch(() => null);
+  const password = form ? String(form.get("password") ?? "") : "";
+  const accessToken = form ? String(form.get("access_token") ?? "") : "";
+  const assistanceId = form ? String(form.get("assistance_id") ?? "") : "";
+  const assistanceStatus = form ? String(form.get("assistance_status") ?? "") : "";
+
+  if (password) {
+    let ok = false;
+    try {
+      ok = await verifyStaffPassword(password);
+    } catch {
+      ok = password.trim() === demoStaffPassword();
+    }
+    if (!ok) {
+      return clearStaffCookies(
+        new NextResponse(renderLogin("Wrong staff password"), {
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        })
+      );
+    }
+    const token = createStaffSessionValue();
+    const venue =
+      (await prisma.venue.findUnique({ where: { slug: DEFAULT_VENUE_SLUG } })) ||
+      (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
+    const boardPath = await combinedBoardPath(venue?.id);
+    const dest = new URL(
+      `${boardPath}?access_token=${encodeURIComponent(token)}`,
+      requestOrigin(req)
+    );
+    const res = NextResponse.redirect(dest, 303);
+    res.cookies.set("qiktik_staff", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: false,
+      path: "/",
+      maxAge: 12 * 60 * 60,
+    });
+    res.cookies.set("qiktik_staff_token", token, {
+      httpOnly: false,
+      sameSite: "lax",
+      secure: false,
+      path: "/",
+      maxAge: 12 * 60 * 60,
+    });
+    return res;
+  }
+
+  const token = tokenFromQueryOrForm(req, accessToken);
+  if (!token) {
+    return clearStaffCookies(
+      new NextResponse(renderLogin("Session expired"), {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      })
+    );
+  }
+
+  try {
+    if (assistanceId && ["ACKNOWLEDGED", "DONE"].includes(assistanceStatus)) {
+      const { publish, RealtimeEvents } = await import("@/lib/realtime");
+      const call = await prisma.pickupAssistanceCall.update({
+        where: { id: assistanceId },
+        data: { status: assistanceStatus as "ACKNOWLEDGED" | "DONE" },
+      });
+      publish(RealtimeEvents.PICKUP_ASSISTANCE_UPDATED, {
+        id: call.id,
+        venueId: call.venueId,
+        status: call.status,
+        customerName: call.customerName,
+        orderRef: call.orderRef,
+        comment: call.comment,
+      });
+      if (assistanceStatus === "ACKNOWLEDGED") {
+        try {
+          const { notifyGuestAssistanceAcknowledged } = await import("@/lib/web-push");
+          await notifyGuestAssistanceAcknowledged(call);
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+  } catch {
+    /* show board anyway */
+  }
+
+  const host =
+    req.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
+    req.headers.get("host") ||
+    req.nextUrl.host;
+  const proto =
+    req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "http";
+  return NextResponse.redirect(
+    new URL(`/alerts/live?access_token=${encodeURIComponent(token)}`, `${proto}://${host}`),
+    303
+  );
+}

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { apiError } from "@/lib/validation";
 import { publish, RealtimeEvents } from "@/lib/realtime";
 import { suppressPartySizeAlert } from "@/lib/party-size";
+import { requireFeature } from "@/lib/features";
 import { z } from "zod";
 
 const schema = z.object({
@@ -28,6 +29,9 @@ export async function POST(
 
   const table = await prisma.table.findUnique({ where: { token } });
   if (!table) return apiError("TABLE_NOT_FOUND", "Invalid table token", 404);
+
+  const blocked = await requireFeature("alerts", table.venueId);
+  if (blocked) return blocked;
 
   const session = await prisma.session.findFirst({
     where: { tableId: table.id, status: { in: ["OPEN", "BILL_REQUESTED"] } },

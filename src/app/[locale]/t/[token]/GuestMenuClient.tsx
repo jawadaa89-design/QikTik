@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { MenuItemCard } from "@/components/MenuItemCard";
 import { BottomNav } from "@/components/BottomNav";
@@ -28,13 +29,21 @@ export function GuestMenuClient({
   categories,
 }: Props) {
   const t = useTranslations("common");
+  const tOrder = useTranslations("order");
+  const searchParams = useSearchParams();
+  const browseOnly = searchParams.get("browse") === "1";
   const { addItem, count } = useCart();
   const { guestName } = useGuestAuth();
   const { hasFeature } = useFeatures();
-  const ordering = hasFeature("ordering");
+  const ordering = hasFeature("ordering") && !browseOnly;
+  const alertsOnly =
+    hasFeature("alerts") && !hasFeature("ordering") && !browseOnly;
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id ?? "");
   const [activeSubId, setActiveSubId] = useState<string | "all">("all");
   const [search, setSearch] = useState("");
+  const [callState, setCallState] = useState<"idle" | "sending" | "sent" | "error">(
+    "idle"
+  );
 
   const current = categories.find((c) => c.id === activeCategory) ?? categories[0];
   const children = current?.children ?? [];
@@ -78,8 +87,32 @@ export function GuestMenuClient({
     setActiveSubId("all");
   }
 
+  async function callWaiter() {
+    if (callState === "sending" || callState === "sent") return;
+    setCallState("sending");
+    try {
+      const res = await fetch(`/api/v1/tables/${token}/alerts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "WAITER_CALLED" }),
+      });
+      if (!res.ok) {
+        setCallState("error");
+        return;
+      }
+      setCallState("sent");
+      window.setTimeout(() => setCallState("idle"), 12_000);
+    } catch {
+      setCallState("error");
+    }
+  }
+
   return (
-    <div className={ordering ? "guest-shell pb-24" : "guest-shell pb-10"}>
+    <div
+      className={
+        ordering || alertsOnly ? "guest-shell pb-24" : "guest-shell pb-10"
+      }
+    >
       <header className="relative overflow-hidden border-b border-white/5 px-5 pb-5 pt-6">
         <div className="absolute inset-0 bg-gradient-to-b from-[#141c18] to-transparent" />
         <div className="absolute -end-16 -top-20 h-56 w-56 rounded-full bg-brass/10 blur-3xl" />
@@ -98,8 +131,9 @@ export function GuestMenuClient({
               priority
             />
             <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.22em] text-brass/80">
-              {t("table")} {tableNumber}
-              {guestName ? ` · ${guestName}` : ""}
+              {browseOnly
+                ? t("menu")
+                : `${t("table")} ${tableNumber}${guestName ? ` · ${guestName}` : ""}`}
             </p>
             <h1 className="mt-0.5 font-display text-2xl font-semibold leading-tight text-ink">
               {venueName}
@@ -194,6 +228,25 @@ export function GuestMenuClient({
           <p className="py-10 text-center text-sm text-ink-soft/50">—</p>
         )}
       </section>
+
+      {alertsOnly ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#0c110f]/95 px-4 py-3 backdrop-blur-md">
+          <button
+            type="button"
+            onClick={() => void callWaiter()}
+            disabled={callState === "sending" || callState === "sent"}
+            className="btn-primary w-full disabled:opacity-60"
+          >
+            {callState === "sending"
+              ? t("loading")
+              : callState === "sent"
+                ? tOrder("callWaiter") + " ✓"
+                : callState === "error"
+                  ? tOrder("callWaiter")
+                  : tOrder("callWaiter")}
+          </button>
+        </div>
+      ) : null}
 
       {ordering ? (
         <BottomNav locale={locale} tableToken={token} cartCount={count} active="menu" />

@@ -15,11 +15,10 @@ const packageIds = Object.keys(PACKAGE_PRESETS) as PackageId[];
 
 const patchSchema = z.union([
   z.object({
-    packageId: z.enum(
-      packageIds as [PackageId, ...PackageId[]]
-    ),
+    packageId: z.enum(packageIds as [PackageId, ...PackageId[]]),
   }),
   z.object({
+    alerts: z.boolean(),
     ordering: z.boolean(),
     pickup: z.boolean(),
   }),

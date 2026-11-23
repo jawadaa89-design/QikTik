@@ -680,6 +680,7 @@ export type AdminMessages = {
   linkKitchen: string;
   linkWaiter: string;
   linkPickup: string;
+  linkAlerts: string;
   venueFallback: string;
   revenueToday: string;
   ordersToday: string;
@@ -751,6 +752,11 @@ export type AdminMessages = {
   pickupGuestTitle: string;
   pickupGuestHint: string;
   pickupGuestUrlLabel: string;
+  menuGuestTitle: string;
+  menuGuestHint: string;
+  menuGuestHintOrdering: string;
+  alertsBoardTitle: string;
+  alertsBoardHint: string;
   copyLink: string;
   linkCopied: string;
   colNumber: string;
@@ -762,10 +768,15 @@ export type AdminMessages = {
   packageTitle: string;
   packageHint: string;
   packageMenuOnly: string;
+  packageMenuAlerts: string;
+  packageMenuAlertsPickup: string;
   packageMenuOrdering: string;
-  packageMenuPickup: string;
-  packageFull: string;
+  packageMenuOnlyDesc: string;
+  packageMenuAlertsDesc: string;
+  packageMenuAlertsPickupDesc: string;
+  packageMenuOrderingDesc: string;
   featureDigitalMenu: string;
+  featureAlerts: string;
   featureOrdering: string;
   featurePickup: string;
   featureAlwaysOn: string;
@@ -784,6 +795,7 @@ const adminEn: AdminMessages = {
   linkKitchen: "Kitchen",
   linkWaiter: "Waiter",
   linkPickup: "Pickup queue",
+  linkAlerts: "Alerts board",
   venueFallback: "Venue",
   revenueToday: "Revenue today",
   ordersToday: "Orders today",
@@ -796,7 +808,7 @@ const adminEn: AdminMessages = {
   pickupFeed: "Recent pickup",
   noOrders: "No orders yet today",
   noPickupTickets: "No pickup tickets yet",
-  menuOnlyDashHint: "This venue is on Menu only — manage the digital menu below. Table ordering and pickup need a package upgrade.",
+  menuOnlyDashHint: "This venue is on Menu only — manage the digital menu below. Alerts, ordering, and pickup need a package upgrade.",
   manageMenuCta: "Open menu",
   openPackageCta: "Change package",
   menuTitle: "Menu",
@@ -863,6 +875,14 @@ const adminEn: AdminMessages = {
   pickupGuestHint:
     "Share or print this URL / QR for guests who order for pickup — not table-session ordering.",
   pickupGuestUrlLabel: "Pickup URL",
+  menuGuestTitle: "Guest menu link",
+  menuGuestHint:
+    "Share this public menu link — guests can browse and call a waiter (no table QR).",
+  menuGuestHintOrdering:
+    "Share this public menu link — guests browse, enter their table number, register, and order (table QR still works).",
+  alertsBoardTitle: "Alerts board",
+  alertsBoardHint:
+    "Staff screen for waiter calls — includes the pickup queue when that package is on.",
   copyLink: "Copy link",
   linkCopied: "Copied",
   colNumber: "#",
@@ -882,13 +902,19 @@ const adminEn: AdminMessages = {
   },
   packageTitle: "Customer package",
   packageHint:
-    "Digital Menu is always included. Choose which optional features this venue gets.",
+    "Digital Menu is always included. Pick the guest experience this venue should offer.",
   packageMenuOnly: "Menu only",
-  packageMenuOrdering: "Menu + Ordering",
-  packageMenuPickup: "Menu + Pickup",
-  packageFull: "Menu + Ordering + Pickup",
+  packageMenuAlerts: "Menu + alerts system",
+  packageMenuAlertsPickup: "Menu + alerts + pickup",
+  packageMenuOrdering: "Menu + ordering",
+  packageMenuOnlyDesc: "Public menu link for guests",
+  packageMenuAlertsDesc: "Public menu link + waiter call alerts (no table QR)",
+  packageMenuAlertsPickupDesc: "Pickup link with menu inside + waiter alerts",
+  packageMenuOrderingDesc:
+    "Public menu link (enter table number) + optional table QR for full ordering",
   featureDigitalMenu: "Digital Menu",
-  featureOrdering: "Ordering system",
+  featureAlerts: "Waiter alerts / call waiter",
+  featureOrdering: "Table ordering",
   featurePickup: "Pickup system",
   featureAlwaysOn: "Always on",
   packageSaved: "Package saved",
@@ -906,6 +932,7 @@ const adminAr: AdminMessages = {
   linkKitchen: "المطبخ",
   linkWaiter: "النادل",
   linkPickup: "طابور الاستلام",
+  linkAlerts: "لوحة التنبيهات",
   venueFallback: "المطعم",
   revenueToday: "إيراد اليوم",
   ordersToday: "طلبات اليوم",
@@ -986,6 +1013,14 @@ const adminAr: AdminMessages = {
   pickupGuestHint:
     "شارك أو اطبع هذا الرابط / QR للضيوف الذين يطلبون للاستلام — وليس لجلسات الطاولات.",
   pickupGuestUrlLabel: "رابط الاستلام",
+  menuGuestTitle: "رابط قائمة الضيوف",
+  menuGuestHint:
+    "شارك رابط القائمة العامة — يمكن للضيوف التصفح واستدعاء النادل (بدون QR للطاولة).",
+  menuGuestHintOrdering:
+    "شارك رابط القائمة العامة — الضيوف يتصفحون ويدخلون رقم الطاولة ويسجّلون ويطلبون (QR الطاولة ما زال يعمل).",
+  alertsBoardTitle: "لوحة التنبيهات",
+  alertsBoardHint:
+    "شاشة الموظفين لاستدعاءات النادل — تتضمن طابور الاستلام عند تفعيل تلك الباقة.",
   copyLink: "نسخ الرابط",
   linkCopied: "تم النسخ",
   colNumber: "#",
@@ -1006,11 +1041,17 @@ const adminAr: AdminMessages = {
   packageTitle: "باقة العميل",
   packageHint: "القائمة الرقمية دائماً مشمولة. اختر الميزات الاختيارية لهذا المطعم.",
   packageMenuOnly: "القائمة فقط",
+  packageMenuAlerts: "القائمة + نظام التنبيهات",
+  packageMenuAlertsPickup: "القائمة + التنبيهات + الاستلام",
   packageMenuOrdering: "القائمة + الطلب",
-  packageMenuPickup: "القائمة + الاستلام",
-  packageFull: "القائمة + الطلب + الاستلام",
+  packageMenuOnlyDesc: "رابط القائمة العامة للضيوف",
+  packageMenuAlertsDesc: "رابط القائمة العامة + تنبيهات استدعاء النادل (بدون QR للطاولة)",
+  packageMenuAlertsPickupDesc: "رابط الاستلام مع القائمة داخله + تنبيهات النادل",
+  packageMenuOrderingDesc:
+    "رابط القائمة العامة (إدخال رقم الطاولة) + QR اختياري للطاولة للطلب الكامل",
   featureDigitalMenu: "القائمة الرقمية",
-  featureOrdering: "نظام الطلب",
+  featureAlerts: "تنبيهات النادل / استدعاء النادل",
+  featureOrdering: "طلب الطاولات",
   featurePickup: "نظام الاستلام",
   featureAlwaysOn: "دائماً مفعّل",
   packageSaved: "تم حفظ الباقة",
@@ -1028,6 +1069,7 @@ const adminHe: AdminMessages = {
   linkKitchen: "מטבח",
   linkWaiter: "מלצר",
   linkPickup: "תור איסוף",
+  linkAlerts: "לוח התראות",
   venueFallback: "מקום",
   revenueToday: "הכנסות היום",
   ordersToday: "הזמנות היום",
@@ -1108,6 +1150,14 @@ const adminHe: AdminMessages = {
   pickupGuestHint:
     "שתפו או הדפיסו את הכתובת / QR לאורחים שמזמינים לאיסוף — לא לסשן שולחן.",
   pickupGuestUrlLabel: "כתובת איסוף",
+  menuGuestTitle: "קישור תפריט לאורחים",
+  menuGuestHint:
+    "שתפו את קישור התפריט הציבורי — אורחים יכולים לעיין ולקרוא למלצר (בלי QR לשולחן).",
+  menuGuestHintOrdering:
+    "שתפו את קישור התפריט הציבורי — אורחים מעיינים, מזינים מספר שולחן, נרשמים ומזמינים (QR לשולחן עדיין עובד).",
+  alertsBoardTitle: "לוח התראות",
+  alertsBoardHint:
+    "מסך צוות לקריאות מלצר — כולל תור איסוף כשהחבילה כוללת איסוף.",
   copyLink: "העתקת קישור",
   linkCopied: "הועתק",
   colNumber: "#",
@@ -1128,11 +1178,17 @@ const adminHe: AdminMessages = {
   packageTitle: "חבילת לקוח",
   packageHint: "תפריט דיגיטלי תמיד כלול. בחרו אילו תוספות המקום מקבל.",
   packageMenuOnly: "תפריט בלבד",
+  packageMenuAlerts: "תפריט + מערכת התראות",
+  packageMenuAlertsPickup: "תפריט + התראות + איסוף",
   packageMenuOrdering: "תפריט + הזמנות",
-  packageMenuPickup: "תפריט + איסוף",
-  packageFull: "תפריט + הזמנות + איסוף",
+  packageMenuOnlyDesc: "קישור תפריט ציבורי לאורחים",
+  packageMenuAlertsDesc: "קישור תפריט ציבורי + התראות קריאת מלצר (בלי QR לשולחן)",
+  packageMenuAlertsPickupDesc: "קישור איסוף עם תפריט בפנים + התראות מלצר",
+  packageMenuOrderingDesc:
+    "קישור תפריט ציבורי (הזנת מספר שולחן) + QR אופציונלי לשולחן להזמנה מלאה",
   featureDigitalMenu: "תפריט דיגיטלי",
-  featureOrdering: "מערכת הזמנות",
+  featureAlerts: "התראות מלצר / קריאה למלצר",
+  featureOrdering: "הזמנות משולחן",
   featurePickup: "מערכת איסוף",
   featureAlwaysOn: "תמיד פעיל",
   packageSaved: "החבילה נשמרה",
@@ -1150,6 +1206,7 @@ const adminRu: AdminMessages = {
   linkKitchen: "Кухня",
   linkWaiter: "Официант",
   linkPickup: "Очередь самовывоза",
+  linkAlerts: "Доска оповещений",
   venueFallback: "Заведение",
   revenueToday: "Выручка сегодня",
   ordersToday: "Заказы сегодня",
@@ -1230,6 +1287,14 @@ const adminRu: AdminMessages = {
   pickupGuestHint:
     "Поделитесь или распечатайте этот URL / QR для гостей с самовывозом — не для сессий за столом.",
   pickupGuestUrlLabel: "URL самовывоза",
+  menuGuestTitle: "Ссылка на меню для гостей",
+  menuGuestHint:
+    "Поделитесь публичной ссылкой на меню — гости могут смотреть меню и вызвать официанта (без QR стола).",
+  menuGuestHintOrdering:
+    "Поделитесь публичной ссылкой на меню — гости смотрят меню, вводят номер стола, регистрируются и заказывают (QR стола по-прежнему работает).",
+  alertsBoardTitle: "Доска оповещений",
+  alertsBoardHint:
+    "Экран персонала для вызова официанта — включает очередь самовывоза при соответствующем пакете.",
   copyLink: "Копировать",
   linkCopied: "Скопировано",
   colNumber: "#",
@@ -1251,11 +1316,17 @@ const adminRu: AdminMessages = {
   packageHint:
     "Цифровое меню всегда включено. Выберите доп. функции для заведения.",
   packageMenuOnly: "Только меню",
+  packageMenuAlerts: "Меню + система оповещений",
+  packageMenuAlertsPickup: "Меню + оповещения + самовывоз",
   packageMenuOrdering: "Меню + заказы",
-  packageMenuPickup: "Меню + самовывоз",
-  packageFull: "Меню + заказы + самовывоз",
+  packageMenuOnlyDesc: "Публичная ссылка на меню для гостей",
+  packageMenuAlertsDesc: "Публичное меню + вызов официанта (без QR стола)",
+  packageMenuAlertsPickupDesc: "Ссылка самовывоза с меню внутри + оповещения",
+  packageMenuOrderingDesc:
+    "Публичная ссылка на меню (номер стола) + опциональный QR стола для полного заказа",
   featureDigitalMenu: "Цифровое меню",
-  featureOrdering: "Система заказов",
+  featureAlerts: "Оповещения / вызов официанта",
+  featureOrdering: "Заказ со стола",
   featurePickup: "Система самовывоза",
   featureAlwaysOn: "Всегда вкл.",
   packageSaved: "Пакет сохранён",
@@ -1296,6 +1367,11 @@ export type PickupMessages = {
   callWaiterOrderRef: string;
   callWaiterComment: string;
   callWaiterDismiss: string;
+  soundEnable: string;
+  tapDismiss: string;
+  refresh: string;
+  lock: string;
+  liveSuffix: string;
   linkKitchen: string;
   linkWaiter: string;
   linkAdmin: string;
@@ -1330,6 +1406,11 @@ const pickupEn: PickupMessages = {
   callWaiterOrderRef: "Order / table",
   callWaiterComment: "Comment",
   callWaiterDismiss: "Got it",
+  soundEnable: "Tap here to enable call-waiter sound + alerts",
+  tapDismiss: "Tap to dismiss",
+  refresh: "Refresh now",
+  lock: "Lock",
+  liveSuffix: "live alerts + auto-refresh",
   linkKitchen: "Kitchen",
   linkWaiter: "Waiter",
   linkAdmin: "Admin",
@@ -1364,6 +1445,11 @@ const pickupAr: PickupMessages = {
   callWaiterOrderRef: "طلب / طاولة",
   callWaiterComment: "ملاحظة",
   callWaiterDismiss: "تم",
+  soundEnable: "اضغط هنا لتفعيل صوت استدعاء النادل والتنبيهات",
+  tapDismiss: "اضغط للإغلاق",
+  refresh: "تحديث الآن",
+  lock: "قفل",
+  liveSuffix: "تنبيهات مباشرة وتحديث تلقائي",
   linkKitchen: "المطبخ",
   linkWaiter: "النادل",
   linkAdmin: "الإدارة",
@@ -1398,6 +1484,11 @@ const pickupHe: PickupMessages = {
   callWaiterOrderRef: "הזמנה / שולחן",
   callWaiterComment: "הערה",
   callWaiterDismiss: "הבנתי",
+  soundEnable: "לחצו כאן להפעלת צליל קריאת מלצר והתראות",
+  tapDismiss: "לחצו לסגירה",
+  refresh: "רענון עכשיו",
+  lock: "נעילה",
+  liveSuffix: "התראות חיות ורענון אוטומטי",
   linkKitchen: "מטבח",
   linkWaiter: "מלצר",
   linkAdmin: "ניהול",
@@ -1432,6 +1523,11 @@ const pickupRu: PickupMessages = {
   callWaiterOrderRef: "Заказ / стол",
   callWaiterComment: "Комментарий",
   callWaiterDismiss: "Понятно",
+  soundEnable: "Нажмите, чтобы включить звук вызова официанта и оповещения",
+  tapDismiss: "Нажмите, чтобы закрыть",
+  refresh: "Обновить",
+  lock: "Заблокировать",
+  liveSuffix: "живые оповещения и автообновление",
   linkKitchen: "Кухня",
   linkWaiter: "Официант",
   linkAdmin: "Админ",
@@ -1453,6 +1549,7 @@ export type StaffGateMessages = {
   password: string;
   unlock: string;
   wrongPassword: string;
+  language: string;
 };
 
 export const staffGateMessages: Record<Locale, StaffGateMessages> = {
@@ -1463,6 +1560,7 @@ export const staffGateMessages: Record<Locale, StaffGateMessages> = {
     password: "Staff password",
     unlock: "Unlock",
     wrongPassword: "Wrong staff password",
+    language: "Language",
   },
   ar: {
     badge: "الموظفون",
@@ -1471,6 +1569,7 @@ export const staffGateMessages: Record<Locale, StaffGateMessages> = {
     password: "كلمة مرور الموظفين",
     unlock: "فتح",
     wrongPassword: "كلمة مرور الموظفين غير صحيحة",
+    language: "اللغة",
   },
   he: {
     badge: "צוות",
@@ -1479,6 +1578,7 @@ export const staffGateMessages: Record<Locale, StaffGateMessages> = {
     password: "סיסמת צוות",
     unlock: "פתיחה",
     wrongPassword: "סיסמת צוות שגויה",
+    language: "שפה",
   },
   ru: {
     badge: "Персонал",
@@ -1487,6 +1587,7 @@ export const staffGateMessages: Record<Locale, StaffGateMessages> = {
     password: "Пароль персонала",
     unlock: "Открыть",
     wrongPassword: "Неверный пароль персонала",
+    language: "Язык",
   },
 };
 

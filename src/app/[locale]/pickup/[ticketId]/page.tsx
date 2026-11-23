@@ -113,7 +113,7 @@ export default function PickupWaitingPage() {
   /** Bumps on every show so the popup remounts and CSS flash restarts on repeat pings. */
   const [alertPulseKey, setAlertPulseKey] = useState(0);
   const [callWaiterState, setCallWaiterState] = useState<
-    "idle" | "sending" | "sent" | "cooldown"
+    "idle" | "sending" | "sent" | "seen" | "cooldown"
   >("idle");
   const [callWaiterError, setCallWaiterError] = useState<string | null>(null);
   const [callFormOpen, setCallFormOpen] = useState(false);
@@ -125,6 +125,7 @@ export default function PickupWaitingPage() {
   const pingHideTimer = useRef<number | null>(null);
   const callCooldownTimer = useRef<number | null>(null);
   const callSentTimer = useRef<number | null>(null);
+  const callSeenTimer = useRef<number | null>(null);
   /** Avoid re-opening the soft prompt after the guest closed it this visit. */
   const pushPromptClosedRef = useRef(false);
 
@@ -208,6 +209,40 @@ export default function PickupWaitingPage() {
       const payload = data as PingPayload | null;
       if (!payload || payload.id !== ticketId) return;
       handlePing(payload);
+      return;
+    }
+    if (event === "pickup:assistance-updated") {
+      const payload = data as {
+        orderRef?: string | null;
+        status?: string;
+      } | null;
+      if (!payload?.orderRef || !ticket?.orderRef) return;
+      if (payload.orderRef !== ticket.orderRef) return;
+      if (payload.status === "ACKNOWLEDGED") {
+        if (callCooldownTimer.current) {
+          window.clearTimeout(callCooldownTimer.current);
+          callCooldownTimer.current = null;
+        }
+        if (callSentTimer.current) {
+          window.clearTimeout(callSentTimer.current);
+          callSentTimer.current = null;
+        }
+        setCallFormOpen(false);
+        setCallWaiterError(null);
+        setCallWaiterState("seen");
+        if (callSeenTimer.current) window.clearTimeout(callSeenTimer.current);
+        callSeenTimer.current = window.setTimeout(() => {
+          setCallWaiterState("idle");
+        }, 45_000);
+        return;
+      }
+      if (payload.status === "DONE") {
+        if (callSeenTimer.current) {
+          window.clearTimeout(callSeenTimer.current);
+          callSeenTimer.current = null;
+        }
+        setCallWaiterState("idle");
+      }
     }
   });
 
@@ -216,6 +251,7 @@ export default function PickupWaitingPage() {
       if (pingHideTimer.current) window.clearTimeout(pingHideTimer.current);
       if (callCooldownTimer.current) window.clearTimeout(callCooldownTimer.current);
       if (callSentTimer.current) window.clearTimeout(callSentTimer.current);
+      if (callSeenTimer.current) window.clearTimeout(callSeenTimer.current);
     };
   }, []);
 
@@ -813,7 +849,11 @@ export default function PickupWaitingPage() {
 
             {!isDone && (
               <div className="mt-5 space-y-3">
-                {!callFormOpen ? (
+                {callWaiterState === "seen" ? (
+                  <p className="rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-4 py-3 text-center text-sm font-semibold text-emerald-300">
+                    {t("callWaiterSeen")}
+                  </p>
+                ) : !callFormOpen ? (
                   <button
                     type="button"
                     disabled={callWaiterState !== "idle"}

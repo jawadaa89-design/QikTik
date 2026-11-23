@@ -7,6 +7,103 @@ import {
   verifyStaffSessionValue,
 } from "@/lib/staff-auth";
 import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
+import {
+  STAFF_LOCALE_KEY,
+  isRtl,
+  localeNames,
+  locales,
+  pickupMessages,
+  staffGateMessages,
+} from "@/i18n/staff";
+import { expireStaleReadyPickupTickets } from "@/lib/pickup-expire";
+
+const LOCALE_JSON = JSON.stringify({
+  key: STAFF_LOCALE_KEY,
+  locales,
+  names: localeNames,
+  rtl: Object.fromEntries(locales.map((l) => [l, isRtl(l)])),
+  pickup: pickupMessages,
+  gate: staffGateMessages,
+});
+
+function langSelectHtml(labelKey: "language" = "language") {
+  const opts = locales
+    .map((l) => `<option value="${l}">${esc(localeNames[l])}</option>`)
+    .join("");
+  return `<label class="lang">
+    <span class="sr-only" data-i18n="${labelKey}">Language</span>
+    <select id="staff-lang" aria-label="Language" data-i18n-aria="${labelKey}">
+      ${opts}
+    </select>
+  </label>`;
+}
+
+function i18nBootScript(mode: "board" | "login") {
+  return `<script>
+(function () {
+  var CFG = ${LOCALE_JSON};
+  var MODE = ${JSON.stringify(mode)};
+  function stored() {
+    try {
+      var v = localStorage.getItem(CFG.key);
+      if (v && CFG.pickup[v]) return v;
+    } catch (e) {}
+    return "ar";
+  }
+  function save(loc) {
+    try { localStorage.setItem(CFG.key, loc); } catch (e) {}
+  }
+  function msgs(loc) {
+    return MODE === "login" ? (CFG.gate[loc] || CFG.gate.en) : (CFG.pickup[loc] || CFG.pickup.en);
+  }
+  function apply(loc) {
+    if (!CFG.pickup[loc]) loc = "ar";
+    save(loc);
+    document.documentElement.lang = loc;
+    document.documentElement.dir = CFG.rtl[loc] ? "rtl" : "ltr";
+    var t = msgs(loc);
+    var nodes = document.querySelectorAll("[data-i18n]");
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      var key = el.getAttribute("data-i18n");
+      if (!key || t[key] == null) continue;
+      var count = el.getAttribute("data-count");
+      el.textContent = count != null ? (t[key] + " (" + count + ")") : t[key];
+    }
+    var ariaNodes = document.querySelectorAll("[data-i18n-aria]");
+    for (var j = 0; j < ariaNodes.length; j++) {
+      var a = ariaNodes[j];
+      var ak = a.getAttribute("data-i18n-aria");
+      if (ak && t[ak] != null) a.setAttribute("aria-label", t[ak]);
+    }
+    var hint = document.getElementById("board-hint");
+    if (hint && MODE === "board") {
+      var venue = hint.getAttribute("data-venue") || "";
+      var pt = CFG.pickup[loc] || CFG.pickup.en;
+      hint.textContent = venue ? (venue + " · " + pt.liveSuffix) : pt.liveSuffix;
+    }
+    var sel = document.getElementById("staff-lang");
+    if (sel && sel.value !== loc) sel.value = loc;
+    window.__qiktikApplyLocale = apply;
+    window.__qiktikLocale = loc;
+  }
+  document.addEventListener("DOMContentLoaded", function () {
+    var loc = stored();
+    apply(loc);
+    var sel = document.getElementById("staff-lang");
+    if (sel) {
+      sel.value = loc;
+      sel.addEventListener("change", function () {
+        apply(sel.value);
+      });
+    }
+  });
+  // Expose early for soft-refresh re-apply
+  window.__qiktikApplyLocale = apply;
+  window.__qiktikGetLocale = stored;
+})();
+</script>`;
+}
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -26,10 +123,17 @@ function ageLabel(d: Date) {
   return `${Math.floor(mins / 60)}h ${mins % 60}m`;
 }
 
-/** Active board session = access_token in the URL/form only (cookies alone never auto-unlock). */
+/**
+ * Board session from URL/form token, or an existing staff cookie (e.g. already
+ * unlocked on /admin — no second password).
+ */
 function tokenFromQueryOrForm(req: NextRequest, formToken?: string): string | null {
   const q = formToken || req.nextUrl.searchParams.get("access_token");
   if (q && verifyStaffSessionValue(q)) return q;
+  const fromCookie =
+    req.cookies.get("qiktik_staff")?.value ||
+    req.cookies.get("qiktik_staff_token")?.value;
+  if (fromCookie && verifyStaffSessionValue(fromCookie)) return fromCookie;
   return null;
 }
 
@@ -44,6 +148,12 @@ async function loadBoard(venueSlug: string) {
     (await prisma.venue.findUnique({ where: { slug: venueSlug } })) ||
     (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
   if (!venue) return { venue: null, waiting: [], ready: [], assistance: [] };
+
+  try {
+    await expireStaleReadyPickupTickets({ venueId: venue.id });
+  } catch {
+    /* board still loads if expire fails */
+  }
 
   const [waiting, ready, assistance] = await Promise.all([
     prisma.pickupTicket.findMany({
@@ -64,32 +174,45 @@ async function loadBoard(venueSlug: string) {
 
 function renderLogin(error?: string) {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Pickup board — unlock</title>
   <style>
     body{margin:0;min-height:100vh;background:#101012;color:#eef2ef;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:flex;align-items:center;justify-content:center;padding:24px}
-    .card{width:100%;max-width:420px;background:#1a1f18;border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:24px}
-    h1{margin:8px 0 0;font-size:24px}
+    .card{width:100%;max-width:420px;background:#1a1f18;border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:24px;position:relative}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px;margin-top:12px}
+    .brand img{width:56px;height:56px;border-radius:999px;object-fit:cover;border:2px solid rgba(249,115,22,.4);background:#f6f3ee;flex-shrink:0}
+    h1{margin:0;font-size:24px}
     p{color:#c8c4bb;font-size:14px}
-    label{display:block;font-size:12px;font-weight:600;color:#c8c4bb;margin-top:16px}
+    label.field{display:block;font-size:12px;font-weight:600;color:#c8c4bb;margin-top:16px}
     input{width:100%;box-sizing:border-box;margin-top:8px;padding:14px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#f2efe8;font-size:16px}
     button{width:100%;margin-top:16px;min-height:52px;border:0;border-radius:12px;padding:14px;font-size:16px;font-weight:700;background:linear-gradient(135deg,#f97316,#c2410c);color:#0c100e}
     .err{margin-top:12px;padding:10px 12px;border-radius:12px;border:1px solid rgba(212,114,114,.4);background:rgba(212,114,114,.12);color:#f0a0a0;font-size:14px}
     .badge{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#f97316;font-weight:600}
+    .lang{display:inline-flex;position:relative}
+    .lang select{appearance:none;-webkit-appearance:none;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#eef2ef;font-size:12px;font-weight:600;padding:8px 28px 8px 12px}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
   </style>
+  ${i18nBootScript("login")}
 </head>
 <body>
   <form class="card" method="POST" action="/pickup/live">
-    <div class="badge">Staff</div>
-    <h1>Pickup board</h1>
-    <p>Enter the staff password to open this board.</p>
+    <div class="top">
+      <div class="badge" data-i18n="badge">Staff</div>
+      ${langSelectHtml()}
+    </div>
+    <div class="brand">
+      <img src="/logo.png" alt="" width="56" height="56" />
+      <h1 data-i18n="title">Staff login</h1>
+    </div>
+    <p data-i18n="hint">Enter the staff password to open this board.</p>
     ${error ? `<div class="err">${esc(error)}</div>` : ""}
-    <label for="password">Staff password</label>
+    <label class="field" for="password" data-i18n="password">Staff password</label>
     <input id="password" name="password" type="password" required autocomplete="off" />
-    <button type="submit">Unlock</button>
+    <button type="submit" data-i18n="unlock">Unlock</button>
   </form>
 </body>
 </html>`;
@@ -111,30 +234,31 @@ function renderBoard(
       createdAt: Date;
       status: string;
     },
-    actions: string
+    actions: string,
+    variant: "waiting" | "ready" = "waiting"
   ) => `
-    <li class="card">
-      <div>
+    <li class="card ${variant}">
+      <div class="card-body">
         <div class="name">${esc(t.customerName)}</div>
         <div class="meta">${ageLabel(t.createdAt)}${t.orderRef ? ` · #${esc(t.orderRef)}` : ""}${t.phone ? ` · ${esc(t.phone)}` : ""}</div>
       </div>
       <div class="actions">${actions}</div>
     </li>`;
 
-  const action = (id: string, status: string, label: string, cls: string) => `
+  const action = (id: string, status: string, i18nKey: string, fallback: string, cls: string) => `
     <form method="POST" action="/pickup/live">
       <input type="hidden" name="access_token" value="${esc(token)}" />
       <input type="hidden" name="ticket_id" value="${esc(id)}" />
       <input type="hidden" name="status" value="${esc(status)}" />
-      <button class="${cls}" type="submit">${esc(label)}</button>
+      <button class="${cls}" type="submit" data-i18n="${i18nKey}">${esc(fallback)}</button>
     </form>`;
 
-  const assistAction = (id: string, status: string, label: string, cls: string) => `
+  const assistAction = (id: string, status: string, i18nKey: string, fallback: string, cls: string) => `
     <form method="POST" action="/pickup/live">
       <input type="hidden" name="access_token" value="${esc(token)}" />
       <input type="hidden" name="assistance_id" value="${esc(id)}" />
       <input type="hidden" name="assistance_status" value="${esc(status)}" />
-      <button class="${cls}" type="submit">${esc(label)}</button>
+      <button class="${cls}" type="submit" data-i18n="${i18nKey}">${esc(fallback)}</button>
     </form>`;
 
   const openCallsJson = JSON.stringify(
@@ -148,41 +272,136 @@ function renderBoard(
       }))
   );
 
+  const venueName = venue?.name || "My Restaurant";
+
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Pickup queue — ${esc(venue?.name || "QikTik")}</title>
   <style>
-    body{margin:0;background:#101012;color:#eef2ef;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    header{padding:16px;border-bottom:1px solid rgba(255,255,255,.08);background:#0c110f}
-    .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#f97316;opacity:.85}
-    h1{margin:4px 0 0;font-size:28px}
-    .hint{margin:6px 0 0;color:rgba(200,196,187,.55);font-size:14px}
-    main{max-width:720px;margin:0 auto;padding:16px;display:grid;gap:24px}
-    h2{margin:0 0 12px;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#f97316}
-    h2.ready{color:#5fad86}
-    h2.assist{color:#d47272}
-    ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-    .card{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:center;padding:16px;border-radius:16px;background:rgba(26,26,30,.92);border:1px solid rgba(255,255,255,.08)}
-    .card.ready{border-color:rgba(95,173,134,.35);background:rgba(95,173,134,.12)}
-    .card.open{border-color:rgba(212,114,114,.35);background:rgba(212,114,114,.12)}
-    .name{font-size:18px;font-weight:600}
-    .meta{margin-top:4px;font-size:12px;color:rgba(200,196,187,.55)}
+    :root{
+      --bg:#0e1210;
+      --panel:rgba(22,28,24,.92);
+      --line:rgba(255,255,255,.08);
+      --ink:#eef2ef;
+      --muted:rgba(200,196,187,.55);
+      --orange:#f97316;
+      --green:#5fad86;
+      --red:#d47272;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;min-height:100vh;color:var(--ink);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:
+        radial-gradient(ellipse 80% 50% at 10% -10%,rgba(249,115,22,.14),transparent 55%),
+        radial-gradient(ellipse 60% 40% at 100% 0%,rgba(95,173,134,.1),transparent 50%),
+        var(--bg);
+    }
+    header{
+      padding:18px 20px 16px;
+      border-bottom:1px solid var(--line);
+      background:rgba(10,14,12,.78);
+      backdrop-filter:blur(10px);
+    }
+    .header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .header-brand{display:flex;align-items:center;gap:40px;min-width:0}
+    .header-brand img{
+      width:56px;height:56px;border-radius:999px;object-fit:cover;flex-shrink:0;
+      margin-inline-end:8px;
+      border:2px solid rgba(249,115,22,.45);background:#f6f3ee;
+      box-shadow:0 0 0 4px rgba(249,115,22,.08);
+    }
+    .header-brand > div{padding-inline-start:4px}
+    .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--orange);opacity:.9;font-weight:700}
+    h1{margin:4px 0 0;font-size:clamp(22px,4vw,30px);font-weight:750;letter-spacing:-.02em}
+    .hint{margin:8px 0 0;color:var(--muted);font-size:13px}
+    main{max-width:1180px;margin:0 auto;padding:18px 16px 28px;display:grid;gap:18px}
+    .columns{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+    @media (max-width:820px){.columns{grid-template-columns:1fr}}
+    .panel{
+      border-radius:20px;border:1px solid var(--line);background:var(--panel);
+      padding:14px;min-height:220px;
+      box-shadow:0 12px 40px rgba(0,0,0,.22);
+    }
+    .panel.waiting{border-color:rgba(249,115,22,.22)}
+    .panel.ready-col{border-color:rgba(95,173,134,.28)}
+    .panel.assist-panel{border-color:rgba(212,114,114,.28);min-height:0}
+    .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;padding:2px 4px 10px;border-bottom:1px solid var(--line)}
+    h2{margin:0;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--orange);font-weight:800}
+    h2.ready{color:var(--green)}
+    h2.assist{color:var(--red)}
+    .count{
+      min-width:28px;height:28px;padding:0 8px;border-radius:999px;
+      display:inline-flex;align-items:center;justify-content:center;
+      font-size:13px;font-weight:800;background:rgba(255,255,255,.06);color:var(--ink);
+    }
+    .panel.waiting .count{background:rgba(249,115,22,.18);color:#ffd4b0}
+    .panel.ready-col .count{background:rgba(95,173,134,.2);color:#b7ebcd}
+    .panel.assist-panel .count{background:rgba(212,114,114,.2);color:#f3c0c0}
+    ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+    .card{
+      display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:center;
+      padding:14px 14px;border-radius:14px;
+      background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);
+      transition:border-color .15s ease, background .15s ease;
+    }
+    .card.waiting{border-inline-start:3px solid rgba(249,115,22,.75)}
+    .card.ready{border-inline-start:3px solid rgba(95,173,134,.85);border-color:rgba(95,173,134,.28);background:rgba(95,173,134,.1)}
+    .card.open{
+      position:relative;
+      border-inline-start:3px solid #ef4444;
+      border-color:rgba(254,202,202,.9);
+      background:rgba(185,28,28,.42);
+      transition:none;
+      -webkit-transform:translateZ(0);
+      transform:translateZ(0);
+      -webkit-animation:alertPulse .7s ease-in-out infinite;
+      animation:alertPulse .7s ease-in-out infinite;
+      will-change:opacity,transform;
+    }
+    .card.open::after{
+      content:"";
+      pointer-events:none;
+      position:absolute;inset:0;border-radius:inherit;
+      background:rgba(255,255,255,.22);
+      -webkit-animation:alertFlash .7s ease-in-out infinite;
+      animation:alertFlash .7s ease-in-out infinite;
+    }
+    .card-body{min-width:0;flex:1;position:relative;z-index:1}
+    .card.open .actions{position:relative;z-index:1}
+    .name{font-size:17px;font-weight:700;letter-spacing:-.01em}
+    .meta{margin-top:4px;font-size:12px;color:var(--muted);line-height:1.35}
     .actions{display:flex;flex-wrap:wrap;gap:8px}
-    button{border:0;border-radius:12px;padding:10px 14px;font-size:14px;font-weight:700}
-    .btn-ready{background:#3d8f68;color:#fff}
-    .btn-done{background:#f97316;color:#0c100e}
-    .btn-ghost{background:rgba(255,255,255,.06);color:rgba(238,242,239,.75);border:1px solid rgba(255,255,255,.1)}
-    .empty{padding:32px 16px;text-align:center;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:rgba(200,196,187,.45);font-size:14px}
-    .footer{padding:12px 16px;text-align:center;font-size:12px;color:rgba(200,196,187,.4)}
-    a{color:#f97316}
+    button{
+      border:0;border-radius:11px;padding:10px 14px;font-size:13px;font-weight:750;
+      cursor:pointer;min-height:42px;
+    }
+    .btn-ready{background:linear-gradient(135deg,#4aa87a,#2f7a56);color:#fff}
+    .btn-done{background:linear-gradient(135deg,#fb923c,#ea580c);color:#0c100e}
+    .btn-ghost{background:rgba(255,255,255,.05);color:rgba(238,242,239,.8);border:1px solid rgba(255,255,255,.12)}
+    .empty{
+      padding:36px 16px;text-align:center;border-radius:14px;
+      border:1px dashed rgba(255,255,255,.1);background:rgba(255,255,255,.02);
+      color:rgba(200,196,187,.42);font-size:14px;
+    }
+    .footer{padding:8px 16px 24px;text-align:center;font-size:12px;color:rgba(200,196,187,.4)}
+    a{color:var(--orange);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .lang{display:inline-flex;position:relative;flex-shrink:0}
+    .lang select{
+      appearance:none;-webkit-appearance:none;border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
+      color:#eef2ef;font-size:12px;font-weight:600;padding:8px 28px 8px 12px
+    }
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
     #sound-banner{display:none;margin:12px 16px 0;padding:12px 14px;border-radius:12px;border:1px solid rgba(249,115,22,.45);background:rgba(249,115,22,.14);color:#f97316;font-size:14px;font-weight:600;text-align:center;cursor:pointer}
     #sound-banner.show{display:block}
     #call-alert{display:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;height:100dvh;z-index:9999;place-items:center;padding:max(24px,env(safe-area-inset-top)) max(24px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));box-sizing:border-box;background:rgba(12,40,28,.82);animation:bgpulse .7s ease-in-out infinite;-webkit-transform:translateZ(0);transform:translateZ(0)}
     #call-alert.show{display:grid}
-    #call-alert .panel{-webkit-appearance:none;appearance:none;display:block;width:min(520px,100%);max-width:520px;margin:0;border:4px solid #fecaca;border-radius:24px;background:#b91c1c;padding:40px 24px;text-align:center;box-shadow:0 0 60px rgba(220,38,38,.55);animation:flash .7s ease-in-out infinite;color:#fff;font:inherit}
+    #call-alert .panel{-webkit-appearance:none;appearance:none;display:block;width:min(520px,100%);max-width:520px;margin:0;border:4px solid #fecaca;border-radius:24px;background:#b91c1c;padding:40px 24px;text-align:center;box-shadow:0 0 60px rgba(220,38,38,.55);animation:flash .7s ease-in-out infinite;color:#fff;font:inherit;min-height:0}
     #call-alert .badge{font-size:13px;font-weight:800;letter-spacing:.28em;text-transform:uppercase;color:#fee2e2}
     #call-alert h2{margin:16px 0 0;font-size:clamp(28px,6vw,40px);font-weight:800;line-height:1.1;color:#fff;letter-spacing:normal;text-transform:none}
     #call-alert .box{margin-top:12px;border-radius:16px;background:rgba(0,0,0,.2);padding:12px 16px;text-align:start}
@@ -190,75 +409,122 @@ function renderBoard(
     #call-alert .box dd{margin:4px 0 0;font-size:clamp(20px,5vw,28px);font-weight:800}
     #call-alert .tap{margin-top:28px;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:#fecaca;opacity:.9}
     @keyframes flash{0%,100%{opacity:1}50%{opacity:.72}}
+    @-webkit-keyframes flash{0%,100%{opacity:1}50%{opacity:.72}}
     @keyframes bgpulse{0%,100%{background-color:rgba(12,40,28,.82)}50%{background-color:rgba(20,90,55,.9)}}
+    @-webkit-keyframes bgpulse{0%,100%{background-color:rgba(12,40,28,.82)}50%{background-color:rgba(20,90,55,.9)}}
+    /* opacity + scale — reliable on iPad Safari (bg/box-shadow pulses often do not run) */
+    @keyframes alertPulse{
+      0%,100%{-webkit-transform:translateZ(0) scale(1);transform:translateZ(0) scale(1);opacity:1}
+      50%{-webkit-transform:translateZ(0) scale(1.015);transform:translateZ(0) scale(1.015);opacity:.72}
+    }
+    @-webkit-keyframes alertPulse{
+      0%,100%{-webkit-transform:translateZ(0) scale(1);transform:translateZ(0) scale(1);opacity:1}
+      50%{-webkit-transform:translateZ(0) scale(1.015);transform:translateZ(0) scale(1.015);opacity:.72}
+    }
+    @keyframes alertFlash{
+      0%,100%{opacity:0}
+      50%{opacity:1}
+    }
+    @-webkit-keyframes alertFlash{
+      0%,100%{opacity:0}
+      50%{opacity:1}
+    }
   </style>
+  ${i18nBootScript("board")}
 </head>
 <body>
-  <div id="sound-banner">Tap here to enable call-waiter sound + alerts</div>
+  <div id="sound-banner" data-i18n="soundEnable">Tap here to enable call-waiter sound + alerts</div>
   <div id="call-alert" role="alertdialog" aria-modal="true">
     <button type="button" class="panel" id="call-alert-btn">
-      <div class="badge">Call waiter</div>
-      <h2 id="call-alert-title">Guest needs help</h2>
+      <div class="badge" data-i18n="callWaiterTitle">Call waiter</div>
+      <h2 id="call-alert-title" data-i18n="callWaiterBadge">Guest needs help</h2>
       <dl>
-        <div class="box"><dt>Name</dt><dd id="call-alert-name">—</dd></div>
-        <div class="box"><dt>Ticket</dt><dd id="call-alert-ref">—</dd></div>
-        <div class="box" id="call-alert-comment-wrap" style="display:none"><dt>Comment</dt><dd id="call-alert-comment"></dd></div>
+        <div class="box"><dt data-i18n="callWaiterName">Guest</dt><dd id="call-alert-name">—</dd></div>
+        <div class="box"><dt data-i18n="callWaiterOrderRef">Order / table</dt><dd id="call-alert-ref">—</dd></div>
+        <div class="box" id="call-alert-comment-wrap" style="display:none"><dt data-i18n="callWaiterComment">Comment</dt><dd id="call-alert-comment"></dd></div>
       </dl>
-      <div class="tap">Tap to dismiss</div>
+      <div class="tap" data-i18n="tapDismiss">Tap to dismiss</div>
     </button>
   </div>
   <header>
-    <div class="eyebrow">Floor</div>
-    <h1>Pickup queue</h1>
-    <p class="hint">${esc(venue?.name || "My Restaurant")} · live alerts + auto-refresh</p>
+    <div class="header-top">
+      <div class="header-brand">
+        <img src="/logo.png" alt="${esc(venueName)}" width="56" height="56" />
+        <div>
+          <div class="eyebrow" data-i18n="floor">My Restaurant · Pickup</div>
+          <h1 data-i18n="title">Pickup queue</h1>
+        </div>
+      </div>
+      ${langSelectHtml()}
+    </div>
+    <p class="hint" id="board-hint" data-venue="${esc(venueName)}">${esc(venueName)} · live alerts + auto-refresh</p>
   </header>
   <main>
-    <section>
-      <h2>Waiting orders (${waiting.length})</h2>
-      ${
-        waiting.length === 0
-          ? `<div class="empty">No guests waiting</div>`
-          : `<ul>${waiting
-              .map((t) =>
-                ticketCard(
-                  t,
-                  action(t.id, "READY", "Mark ready", "btn-ready") +
-                    action(t.id, "CANCELLED", "Cancel", "btn-ghost")
+    <div class="columns">
+      <section class="panel waiting">
+        <div class="panel-head">
+          <h2 data-i18n="waitingSection">Waiting orders</h2>
+          <span class="count">${waiting.length}</span>
+        </div>
+        ${
+          waiting.length === 0
+            ? `<div class="empty" data-i18n="emptyWaiting">No guests waiting</div>`
+            : `<ul>${waiting
+                .map((t) =>
+                  ticketCard(
+                    t,
+                    action(t.id, "READY", "markReady", "Mark ready", "btn-ready") +
+                      action(t.id, "CANCELLED", "cancel", "Cancel", "btn-ghost"),
+                    "waiting"
+                  )
                 )
-              )
-              .join("")}</ul>`
-      }
-    </section>
-    <section>
-      <h2 class="ready">Ready for pickup (${ready.length})</h2>
-      ${
-        ready.length === 0
-          ? `<div class="empty">No ready orders</div>`
-          : `<ul>${ready
-              .map((t) =>
-                ticketCard(
-                  t,
-                  action(t.id, "COMPLETED", "Picked up", "btn-done")
+                .join("")}</ul>`
+        }
+      </section>
+      <section class="panel ready-col">
+        <div class="panel-head">
+          <h2 class="ready" data-i18n="readySection">Ready For Pickup Orders</h2>
+          <span class="count">${ready.length}</span>
+        </div>
+        ${
+          ready.length === 0
+            ? `<div class="empty" data-i18n="emptyReady">Nothing ready yet</div>`
+            : `<ul>${ready
+                .map((t) =>
+                  ticketCard(
+                    t,
+                    action(t.id, "COMPLETED", "markPickedUp", "Picked up", "btn-done"),
+                    "ready"
+                  )
                 )
-              )
-              .join("")}</ul>`
-      }
-    </section>
-    <section>
-      <h2 class="assist">Waiter calls (${assistance.length})</h2>
+                .join("")}</ul>`
+        }
+      </section>
+    </div>
+    <section class="panel assist-panel">
+      <div class="panel-head">
+        <h2 class="assist" data-i18n="assistanceSection">Waiter calls</h2>
+        <span class="count">${assistance.length}</span>
+      </div>
       ${
         assistance.length === 0
-          ? `<div class="empty">No waiter calls</div>`
+          ? `<div class="empty" data-i18n="emptyAssistance">No waiter calls</div>`
           : `<ul>${assistance
               .map((c) => {
                 const cls = c.status === "OPEN" ? "card open" : "card";
                 const acts =
                   (c.status === "OPEN"
-                    ? assistAction(c.id, "ACKNOWLEDGED", "Acknowledge", "btn-ghost")
+                    ? assistAction(
+                        c.id,
+                        "ACKNOWLEDGED",
+                        "assistanceAcknowledge",
+                        "Acknowledge",
+                        "btn-ghost"
+                      )
                     : "") +
-                  assistAction(c.id, "DONE", "Done", "btn-ready");
+                  assistAction(c.id, "DONE", "assistanceDone", "Done", "btn-ready");
                 return `<li class="${cls}">
-                  <div>
+                  <div class="card-body">
                     <div class="name">${esc(c.customerName)}</div>
                     <div class="meta">${ageLabel(c.updatedAt)} · #${esc(c.orderRef)}${c.comment ? ` · ${esc(c.comment)}` : ""}</div>
                   </div>
@@ -270,9 +536,9 @@ function renderBoard(
     </section>
   </main>
   <div class="footer">
-    <a href="${refreshUrl}">Refresh now</a>
+    <a href="${refreshUrl}" id="refresh-link" data-i18n="refresh">Refresh now</a>
     ·
-    <a href="/pickup/live?lock=1">Lock</a>
+    <a href="/pickup/live?lock=1" data-i18n="lock">Lock</a>
   </div>
   <audio id="alert-audio" preload="auto" playsinline></audio>
   <script>
@@ -474,6 +740,9 @@ function renderBoard(
         var newMain = doc.querySelector("main");
         var curMain = document.querySelector("main");
         if (newMain && curMain) curMain.innerHTML = newMain.innerHTML;
+        if (typeof window.__qiktikApplyLocale === "function") {
+          window.__qiktikApplyLocale(window.__qiktikLocale || (typeof window.__qiktikGetLocale === "function" ? window.__qiktikGetLocale() : "ar"));
+        }
       })
       .catch(function () {});
   }
@@ -503,8 +772,8 @@ function renderBoard(
       });
   }, true);
 
-  var refreshLink = document.querySelector('.footer a[href*="/pickup/live"]');
-  if (refreshLink && /Refresh/i.test(refreshLink.textContent || "")) {
+  var refreshLink = document.getElementById("refresh-link");
+  if (refreshLink) {
     refreshLink.addEventListener("click", function (e) {
       e.preventDefault();
       softRefresh();
@@ -676,10 +945,22 @@ export async function POST(req: NextRequest) {
       });
       publish(RealtimeEvents.PICKUP_ASSISTANCE_UPDATED, {
         id: call.id,
+        venueId: call.venueId,
         status: call.status,
         customerName: call.customerName,
         orderRef: call.orderRef,
+        comment: call.comment,
       });
+      if (assistanceStatus === "ACKNOWLEDGED") {
+        try {
+          const { notifyGuestAssistanceAcknowledged } = await import(
+            "@/lib/web-push"
+          );
+          await notifyGuestAssistanceAcknowledged(call);
+        } catch {
+          /* ignore push failures */
+        }
+      }
     }
   } catch {
     /* show board anyway */

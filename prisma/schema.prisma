@@ -123,6 +123,8 @@ model Venue {
   taxIncluded       Boolean  @default(true) @map("tax_included")
   stripeAccountId   String?  @map("stripe_account_id")
   edgeServerUrl     String?  @map("edge_server_url")
+  /** Table QR waiter-call / bill alerts (no ordering required). */
+  alertsEnabled     Boolean  @default(true) @map("alerts_enabled")
   /** Table ordering (guest cart + waiter/kitchen order flow). Digital menu is always on. */
   orderingEnabled   Boolean  @default(true) @map("ordering_enabled")
   /** Guest pickup registration + staff pickup queue. */

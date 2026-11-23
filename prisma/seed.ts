@@ -327,7 +327,84 @@ const tablePlan: { section: DiningSection; numbers: number[] }[] = [
   { section: "TERRACE", numbers: [31, 32, 33, 34, 35, 36] },
 ];
 
+async function seedTablesAndMenu(venueId: string) {
+  for (const plan of tablePlan) {
+    for (const number of plan.numbers) {
+      const token = number === 7 ? DEMO_TOKEN : generateTableToken();
+      await prisma.table.create({
+        data: {
+          venueId,
+          number,
+          section: plan.section,
+          token,
+          status: number === 7 ? "ACTIVE" : "FREE",
+        },
+      });
+    }
+  }
+
+  for (const cat of categories) {
+    const category = await prisma.menuCategory.create({
+      data: {
+        venueId,
+        sortOrder: cat.sortOrder,
+        active: true,
+        translations: {
+          create: Object.entries(cat.names).map(([locale, name]) => ({ locale, name })),
+        },
+      },
+    });
+
+    for (const item of cat.items) {
+      await prisma.menuItem.create({
+        data: {
+          categoryId: category.id,
+          sku: item.sku,
+          price: item.price,
+          imageUrl: item.imageUrl ?? `/menu/${item.sku}.jpg`,
+          route: item.route,
+          allergens: item.allergens ?? [],
+          available: true,
+          sortOrder: item.sortOrder,
+          translations: {
+            create: Object.entries(item.names).map(([locale, name]) => ({
+              locale,
+              name,
+              description: item.descriptions[locale],
+            })),
+          },
+        },
+      });
+    }
+  }
+}
+
 async function main() {
+  /** Restore menu + tables on the existing venue without wiping pickup tickets. */
+  if (process.env.SEED_MENU_ONLY === "1") {
+    const venue =
+      (await prisma.venue.findUnique({ where: { slug: "my-restaurant" } })) ||
+      (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
+    if (!venue) {
+      throw new Error("No venue found — run a full seed first (npm run db:seed)");
+    }
+
+    await prisma.menuCategory.deleteMany({ where: { venueId: venue.id } });
+    await prisma.table.deleteMany({ where: { venueId: venue.id } });
+    await seedTablesAndMenu(venue.id);
+
+    const tableCount = await prisma.table.count({ where: { venueId: venue.id } });
+    const itemCount = await prisma.menuItem.count({
+      where: { category: { venueId: venue.id } },
+    });
+    console.log("\n✓ Menu + tables restored (pickup data kept)");
+    console.log(`  Venue:   ${venue.name}`);
+    console.log(`  Tables:  ${tableCount}`);
+    console.log(`  Menu:    ${itemCount} items`);
+    console.log(`  Browse:  http://localhost:3000/ar/menu\n`);
+    return;
+  }
+
   await prisma.orderItem.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.order.deleteMany();
@@ -368,55 +445,7 @@ async function main() {
     ],
   });
 
-  for (const plan of tablePlan) {
-    for (const number of plan.numbers) {
-      const token = number === 7 ? DEMO_TOKEN : generateTableToken();
-      await prisma.table.create({
-        data: {
-          venueId: venue.id,
-          number,
-          section: plan.section,
-          token,
-          status: number === 7 ? "ACTIVE" : "FREE",
-        },
-      });
-    }
-  }
-
-  for (const cat of categories) {
-    const category = await prisma.menuCategory.create({
-      data: {
-        venueId: venue.id,
-        sortOrder: cat.sortOrder,
-        active: true,
-        translations: {
-          create: Object.entries(cat.names).map(([locale, name]) => ({ locale, name })),
-        },
-      },
-    });
-
-    for (const item of cat.items) {
-      await prisma.menuItem.create({
-        data: {
-          categoryId: category.id,
-          sku: item.sku,
-          price: item.price,
-          imageUrl: item.imageUrl ?? `/menu/${item.sku}.jpg`,
-          route: item.route,
-          allergens: item.allergens ?? [],
-          available: true,
-          sortOrder: item.sortOrder,
-          translations: {
-            create: Object.entries(item.names).map(([locale, name]) => ({
-              locale,
-              name,
-              description: item.descriptions[locale],
-            })),
-          },
-        },
-      });
-    }
-  }
+  await seedTablesAndMenu(venue.id);
 
   const tableCount = await prisma.table.count();
   const itemCount = await prisma.menuItem.count();
@@ -427,6 +456,7 @@ async function main() {
   console.log(`  Menu:    ${itemCount} items`);
   console.log(`  Demo:    Table 7 → ${DEMO_TOKEN}`);
   console.log("\n  Guest:   http://localhost:3000/ar/t/" + DEMO_TOKEN);
+  console.log("  Browse:  http://localhost:3000/ar/menu");
   console.log("  Kitchen: http://localhost:3000/kitchen?station=MAIN_KITCHEN");
   console.log("  Waiter:  http://localhost:3000/waiter?section=INSIDE");
   console.log("  Admin:   http://localhost:3000/admin");

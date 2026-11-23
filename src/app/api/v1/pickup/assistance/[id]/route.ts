@@ -67,5 +67,14 @@ export async function PATCH(
   const payload = serializeAssistance(call);
   publish(RealtimeEvents.PICKUP_ASSISTANCE_UPDATED, payload);
 
+  if (parsed.data.status === "ACKNOWLEDGED") {
+    try {
+      const { notifyGuestAssistanceAcknowledged } = await import("@/lib/web-push");
+      await notifyGuestAssistanceAcknowledged(call);
+    } catch {
+      /* ignore push failures */
+    }
+  }
+
   return Response.json({ call: payload });
 }

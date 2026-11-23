@@ -91,7 +91,7 @@ async function clearSubscription(ticketId: string, reason: string) {
   }
 }
 
-export type PickupPushKind = "ready" | "ping" | "test";
+export type PickupPushKind = "ready" | "ping" | "seen" | "test";
 
 /**
  * Send a Web Push to the guest subscription saved on the ticket.
@@ -159,15 +159,17 @@ export async function sendPickupWebPush(opts: {
     opts.kind === "test"
       ? copy.body
       : copy.body.replace(/\{name\}/g, name);
-  // Ping/test: vary body slightly each time (Apple may suppress identical content).
+  // Ping/seen/test: vary body slightly each time (Apple may suppress identical content).
   const body =
     opts.kind === "ready" ? baseBody : `${baseBody} (${timeLabel})`;
   const tag =
     opts.kind === "ready"
       ? `pickup-ready-${opts.ticketId}`
-      : opts.kind === "test"
-        ? `pickup-test-${opts.ticketId}-${sentAt}`
-        : `pickup-ping-${opts.ticketId}-${sentAt}`;
+      : opts.kind === "seen"
+        ? `pickup-seen-${opts.ticketId}-${sentAt}`
+        : opts.kind === "test"
+          ? `pickup-test-${opts.ticketId}-${sentAt}`
+          : `pickup-ping-${opts.ticketId}-${sentAt}`;
   // Apple Web Push expects a compact JSON body; keep top-level title/body plus
   // nested data.url (SW also accepts top-level url for older handlers).
   const payload = JSON.stringify({
@@ -250,4 +252,27 @@ export async function sendPickupWebPush(opts: {
     );
     return { sent: false, reason: "send-failed", endpointHost };
   }
+}
+
+/** Notify the guest ticket linked to an assistance call (same venue + orderRef). */
+export async function notifyGuestAssistanceAcknowledged(call: {
+  venueId: string;
+  orderRef: string;
+  customerName: string;
+}): Promise<PickupPushResult | null> {
+  const ticket = await prisma.pickupTicket.findFirst({
+    where: {
+      venueId: call.venueId,
+      orderRef: call.orderRef,
+      status: { in: ["WAITING", "READY"] },
+    },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, customerName: true },
+  });
+  if (!ticket) return null;
+  return sendPickupWebPush({
+    ticketId: ticket.id,
+    customerName: call.customerName || ticket.customerName,
+    kind: "seen",
+  });
 }

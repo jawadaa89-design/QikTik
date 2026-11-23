@@ -17,7 +17,12 @@ export async function GET(req: NextRequest) {
   if (!venue) {
     return Response.json({
       venue: null,
-      features: { digitalMenu: true, ordering: true, pickup: true },
+      features: {
+        digitalMenu: true,
+        alerts: true,
+        ordering: true,
+        pickup: false,
+      },
       stats: {
         revenueToday: "0.00",
         ordersToday: 0,
@@ -30,10 +35,14 @@ export async function GET(req: NextRequest) {
       recent: [],
       recentPickup: [],
       pickupGuestUrl: `${base}/${locale}/pickup`,
+      menuGuestUrl: `${base}/${locale}/menu`,
+      // Alerts-only → /alerts; with pickup → combined pickup board (calls + queues)
+      alertsBoardUrl: `${base}/alerts/live`,
     });
   }
 
   const features = featuresFromFlags(
+    venue.alertsEnabled,
     venue.orderingEnabled,
     venue.pickupEnabled
   );
@@ -148,5 +157,9 @@ export async function GET(req: NextRequest) {
       createdAt: p.createdAt.toISOString(),
     })),
     pickupGuestUrl: `${base}/${locale}/pickup`,
+    menuGuestUrl: `${base}/${locale}/menu`,
+    alertsBoardUrl: features.pickup
+      ? `${base}/pickup/live`
+      : `${base}/alerts/live`,
   });
 }

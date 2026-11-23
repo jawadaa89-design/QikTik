@@ -16,9 +16,9 @@ type Tab = "dashboard" | "menu" | "tables" | "package";
 
 const PACKAGE_OPTIONS: PackageId[] = [
   "menu_only",
+  "menu_alerts",
+  "menu_alerts_pickup",
   "menu_ordering",
-  "menu_pickup",
-  "full",
 ];
 
 type Dashboard = {
@@ -48,6 +48,8 @@ type Dashboard = {
     createdAt: string;
   }[];
   pickupGuestUrl: string;
+  menuGuestUrl: string;
+  alertsBoardUrl: string;
 };
 
 type MenuCategory = {
@@ -129,8 +131,12 @@ export default function AdminPage() {
   const [menuLocale, setMenuLocale] = useState<Locale>("ar");
   const [copiedLink, setCopiedLink] = useState(false);
 
+  const alertsOn = hasFeature("alerts");
   const orderingOn = hasFeature("ordering");
   const pickupOn = hasFeature("pickup");
+  /** Table QR is only for ordering — Menu+alerts uses the public /menu link. */
+  const tablesNeeded = orderingOn;
+  const guestLinksNeeded = alertsOn || pickupOn || orderingOn;
 
   const loadDash = useCallback(async () => {
     try {
@@ -163,8 +169,8 @@ export default function AdminPage() {
     if (tab === "dashboard") loadDash();
     if (tab === "menu") loadMenu();
     if (tab === "tables") {
-      if (orderingOn) loadTables();
-      if (pickupOn) loadDash();
+      if (tablesNeeded) loadTables();
+      if (guestLinksNeeded) loadDash();
     }
     if (tab === "package") void refreshFeatures();
   }, [
@@ -173,8 +179,8 @@ export default function AdminPage() {
     loadMenu,
     loadTables,
     refreshFeatures,
-    orderingOn,
-    pickupOn,
+    tablesNeeded,
+    guestLinksNeeded,
   ]);
 
   async function copyText(text: string) {
@@ -187,16 +193,14 @@ export default function AdminPage() {
     }
   }
 
-  async function savePackage(next: PackageId | { ordering: boolean; pickup: boolean }) {
+  async function savePackage(next: PackageId) {
     setPackageBusy(true);
     setPackageMsg(null);
     try {
-      const body =
-        typeof next === "string" ? { packageId: next } : next;
       const res = await fetch("/api/v1/admin/features", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ packageId: next }),
       });
       if (!res.ok) {
         setPackageMsg(t.packageSaveError);
@@ -215,12 +219,25 @@ export default function AdminPage() {
     switch (id) {
       case "menu_only":
         return t.packageMenuOnly;
+      case "menu_alerts":
+        return t.packageMenuAlerts;
+      case "menu_alerts_pickup":
+        return t.packageMenuAlertsPickup;
       case "menu_ordering":
         return t.packageMenuOrdering;
-      case "menu_pickup":
-        return t.packageMenuPickup;
-      case "full":
-        return t.packageFull;
+    }
+  }
+
+  function packageDesc(id: PackageId) {
+    switch (id) {
+      case "menu_only":
+        return t.packageMenuOnlyDesc;
+      case "menu_alerts":
+        return t.packageMenuAlertsDesc;
+      case "menu_alerts_pickup":
+        return t.packageMenuAlertsPickupDesc;
+      case "menu_ordering":
+        return t.packageMenuOrderingDesc;
     }
   }
 
@@ -630,11 +647,8 @@ export default function AdminPage() {
     return status;
   }
 
-  const tablesNavLabel = orderingOn
-    ? t.navTables
-    : pickupOn
-      ? t.navLinks
-      : t.navTables;
+  const tablesNavLabel =
+    tablesNeeded || guestLinksNeeded ? (tablesNeeded ? t.navTables : t.navLinks) : t.navTables;
 
   const nav = [
     ["dashboard", t.navDashboard],
@@ -681,6 +695,11 @@ export default function AdminPage() {
             />
           </div>
           <div className="mt-10 space-y-2 border-t border-white/8 pt-4 text-xs text-ink-soft/40">
+            {alertsOn ? (
+              <a href="/alerts" className="block hover:text-brass">
+                {t.linkAlerts}
+              </a>
+            ) : null}
             {hasFeature("pickup") ? (
               <a href="/pickup" className="block hover:text-brass">
                 {t.linkPickup}
@@ -727,7 +746,7 @@ export default function AdminPage() {
                 {dash.venue?.name ?? t.venueFallback}
               </h2>
 
-              {!orderingOn && !pickupOn ? (
+              {!orderingOn && !pickupOn && !alertsOn ? (
                 <div className="guest-panel mt-5 rounded-2xl p-4">
                   <p className="text-sm text-ink-soft/70">{t.menuOnlyDashHint}</p>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -797,6 +816,56 @@ export default function AdminPage() {
                     </div>
                   ))}
               </div>
+
+              {(alertsOn || orderingOn) && dash.menuGuestUrl ? (
+                <div className="guest-panel mt-5 rounded-2xl p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft/50">
+                    {t.menuGuestTitle}
+                  </p>
+                  <p className="mt-1 text-sm text-ink-soft/55">
+                    {orderingOn ? t.menuGuestHintOrdering : t.menuGuestHint}
+                  </p>
+                  <a
+                    href={dash.menuGuestUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 block break-all text-sm font-semibold text-brass hover:underline"
+                  >
+                    {dash.menuGuestUrl}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => void copyText(dash.menuGuestUrl)}
+                    className="mt-3 rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
+                  >
+                    {copiedLink ? t.linkCopied : t.copyLink}
+                  </button>
+                </div>
+              ) : null}
+
+              {alertsOn && dash.alertsBoardUrl ? (
+                <div className="guest-panel mt-5 rounded-2xl p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft/50">
+                    {t.alertsBoardTitle}
+                  </p>
+                  <p className="mt-1 text-sm text-ink-soft/55">{t.alertsBoardHint}</p>
+                  <a
+                    href={dash.alertsBoardUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 block break-all text-sm font-semibold text-brass hover:underline"
+                  >
+                    {dash.alertsBoardUrl}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => void copyText(dash.alertsBoardUrl)}
+                    className="mt-3 rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
+                  >
+                    {copiedLink ? t.linkCopied : t.copyLink}
+                  </button>
+                </div>
+              ) : null}
 
               {pickupOn && dash.pickupGuestUrl ? (
                 <div className="guest-panel mt-5 rounded-2xl p-4">
@@ -1505,12 +1574,37 @@ export default function AdminPage() {
 
           {tab === "tables" && (
             <>
-              {orderingOn ? (
+              {tablesNeeded ? (
                 <>
                   <h2 className="font-display text-3xl font-semibold text-ink">
                     {t.tablesTitle}
                   </h2>
                   <p className="mt-1 text-sm text-ink-soft/50">{t.tablesHint}</p>
+                  {dash?.menuGuestUrl ? (
+                    <div className="guest-panel mt-4 rounded-2xl p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft/50">
+                        {t.menuGuestTitle}
+                      </p>
+                      <p className="mt-1 text-sm text-ink-soft/55">
+                        {orderingOn ? t.menuGuestHintOrdering : t.menuGuestHint}
+                      </p>
+                      <a
+                        href={dash.menuGuestUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 block break-all text-sm font-semibold text-brass hover:underline"
+                      >
+                        {dash.menuGuestUrl}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => void copyText(dash.menuGuestUrl)}
+                        className="mt-3 rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
+                      >
+                        {copiedLink ? t.linkCopied : t.copyLink}
+                      </button>
+                    </div>
+                  ) : null}
                   {pickupOn && dash?.pickupGuestUrl ? (
                     <div className="guest-panel mt-4 rounded-2xl p-4">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft/50">
@@ -1572,51 +1666,81 @@ export default function AdminPage() {
                     </table>
                   </div>
                 </>
-              ) : pickupOn ? (
+              ) : guestLinksNeeded ? (
                 <>
                   <h2 className="font-display text-3xl font-semibold text-ink">
-                    {t.pickupGuestTitle}
+                    {t.navLinks}
                   </h2>
-                  <p className="mt-1 text-sm text-ink-soft/50">{t.pickupGuestHint}</p>
-                  <div className="guest-panel mt-5 rounded-2xl p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft/50">
-                      {t.pickupGuestUrlLabel}
-                    </p>
-                    {dash?.pickupGuestUrl ? (
-                      <>
-                        <a
-                          href={dash.pickupGuestUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mt-2 block break-all text-sm font-semibold text-brass hover:underline"
-                        >
-                          {dash.pickupGuestUrl}
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => void copyText(dash.pickupGuestUrl)}
-                          className="mt-3 rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
-                        >
-                          {copiedLink ? t.linkCopied : t.copyLink}
-                        </button>
-                      </>
-                    ) : (
-                      <p className="mt-2 text-sm text-ink-soft/40">…</p>
-                    )}
-                  </div>
-                  <div className="guest-panel mt-4 rounded-2xl p-4">
-                    <p className="font-semibold text-ink">{t.orderingRequiredTitle}</p>
-                    <p className="mt-1 text-sm text-ink-soft/60">
-                      {t.orderingRequiredBody}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setTab("package")}
-                      className="btn-ghost mt-3 px-4 py-2 text-sm"
-                    >
-                      {t.openPackageCta}
-                    </button>
-                  </div>
+                  <p className="mt-1 text-sm text-ink-soft/50">
+                    {alertsOn ? t.menuGuestHint : t.pickupGuestHint}
+                  </p>
+                  {alertsOn && dash?.menuGuestUrl ? (
+                    <div className="guest-panel mt-5 rounded-2xl p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft/50">
+                        {t.menuGuestTitle}
+                      </p>
+                      <a
+                        href={dash.menuGuestUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 block break-all text-sm font-semibold text-brass hover:underline"
+                      >
+                        {dash.menuGuestUrl}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => void copyText(dash.menuGuestUrl)}
+                        className="mt-3 rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
+                      >
+                        {copiedLink ? t.linkCopied : t.copyLink}
+                      </button>
+                    </div>
+                  ) : null}
+                  {alertsOn && dash?.alertsBoardUrl ? (
+                    <div className="guest-panel mt-4 rounded-2xl p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft/50">
+                        {t.alertsBoardTitle}
+                      </p>
+                      <p className="mt-1 text-sm text-ink-soft/55">{t.alertsBoardHint}</p>
+                      <a
+                        href={dash.alertsBoardUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 block break-all text-sm font-semibold text-brass hover:underline"
+                      >
+                        {dash.alertsBoardUrl}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => void copyText(dash.alertsBoardUrl)}
+                        className="mt-3 rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
+                      >
+                        {copiedLink ? t.linkCopied : t.copyLink}
+                      </button>
+                    </div>
+                  ) : null}
+                  {pickupOn && dash?.pickupGuestUrl ? (
+                    <div className="guest-panel mt-4 rounded-2xl p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft/50">
+                        {t.pickupGuestUrlLabel}
+                      </p>
+                      <a
+                        href={dash.pickupGuestUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 block break-all text-sm font-semibold text-brass hover:underline"
+                      >
+                        {dash.pickupGuestUrl}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => void copyText(dash.pickupGuestUrl)}
+                        className="mt-3 rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
+                      >
+                        {copiedLink ? t.linkCopied : t.copyLink}
+                      </button>
+                    </div>
+                  ) : null}
                 </>
               ) : (
                 <>
@@ -1671,13 +1795,7 @@ export default function AdminPage() {
                     >
                       <p className="font-semibold text-ink">{packageLabel(id)}</p>
                       <p className="mt-1 text-xs text-ink-soft/50">
-                        {id === "menu_only"
-                          ? t.featureDigitalMenu
-                          : id === "menu_ordering"
-                            ? `${t.featureDigitalMenu} · ${t.featureOrdering}`
-                            : id === "menu_pickup"
-                              ? `${t.featureDigitalMenu} · ${t.featurePickup}`
-                              : `${t.featureDigitalMenu} · ${t.featureOrdering} · ${t.featurePickup}`}
+                        {packageDesc(id)}
                       </p>
                     </button>
                   );
@@ -1694,46 +1812,27 @@ export default function AdminPage() {
                     {t.on}
                   </span>
                 </div>
-                <div className="flex items-center justify-between gap-3 border-t border-white/8 pt-3">
-                  <p className="font-semibold text-ink">{t.featureOrdering}</p>
-                  <button
-                    type="button"
-                    disabled={packageBusy}
-                    onClick={() =>
-                      void savePackage({
-                        ordering: !features.ordering,
-                        pickup: features.pickup,
-                      })
-                    }
-                    className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
-                      features.ordering
-                        ? "bg-ready/15 text-ready"
-                        : "bg-alert/15 text-alert"
-                    }`}
+                {(
+                  [
+                    [t.featureAlerts, features.alerts] as const,
+                    [t.featureOrdering, features.ordering] as const,
+                    [t.featurePickup, features.pickup] as const,
+                  ] as const
+                ).map(([label, on]) => (
+                  <div
+                    key={label}
+                    className="flex items-center justify-between gap-3 border-t border-white/8 pt-3"
                   >
-                    {features.ordering ? t.on : t.off}
-                  </button>
-                </div>
-                <div className="flex items-center justify-between gap-3 border-t border-white/8 pt-3">
-                  <p className="font-semibold text-ink">{t.featurePickup}</p>
-                  <button
-                    type="button"
-                    disabled={packageBusy}
-                    onClick={() =>
-                      void savePackage({
-                        ordering: features.ordering,
-                        pickup: !features.pickup,
-                      })
-                    }
-                    className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
-                      features.pickup
-                        ? "bg-ready/15 text-ready"
-                        : "bg-alert/15 text-alert"
-                    }`}
-                  >
-                    {features.pickup ? t.on : t.off}
-                  </button>
-                </div>
+                    <p className="font-semibold text-ink">{label}</p>
+                    <span
+                      className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
+                        on ? "bg-ready/15 text-ready" : "bg-alert/15 text-alert"
+                      }`}
+                    >
+                      {on ? t.on : t.off}
+                    </span>
+                  </div>
+                ))}
               </div>
 
               {packageMsg ? (

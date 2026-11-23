@@ -4,6 +4,13 @@ export const createSessionSchema = z.object({
   locale: z.enum(["en", "ar", "he", "ru"]),
 });
 
+/** Public menu → resolve table number to opaque token (Menu + ordering). */
+export const resolveTableNumberSchema = z.object({
+  tableNumber: z.coerce.number().int().min(1).max(9999),
+  venueSlug: z.string().trim().min(1).max(64).optional(),
+  locale: z.enum(["en", "ar", "he", "ru"]).optional(),
+});
+
 export const createOrderSchema = z.object({
   paymentMode: z.enum(["PAY_NOW", "ADD_TO_TAB"]),
   items: z

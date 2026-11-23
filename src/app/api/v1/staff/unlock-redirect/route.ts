@@ -14,6 +14,8 @@ function resolveStaffDest(nextPath: string): string {
   if (path.startsWith("/kitchen")) return "/kitchen";
   if (path.startsWith("/waiter")) return "/waiter";
   if (path.startsWith("/admin")) return "/admin";
+  // /alerts/live redirects to /pickup/live when pickup package is on
+  if (path.startsWith("/alerts")) return "/alerts/live";
   // Canonical pickup board (SSR) — works on iPad / PC / phone
   return "/pickup/live";
 }

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { allocateAssistanceOrderRef } from "@/lib/pickup-refs";
 import { publish, RealtimeEvents } from "@/lib/realtime";
 import { apiError, pickupCallWaiterByRefSchema } from "@/lib/validation";
-import { requireFeature } from "@/lib/features";
+import { hasFeature } from "@/lib/features";
 import { requireVenue } from "@/lib/venue";
 
 export const dynamic = "force-dynamic";
@@ -68,8 +68,16 @@ export async function POST(req: NextRequest) {
   if ("error" in resolved) return resolved.error;
   const { venue } = resolved;
 
-  const blocked = await requireFeature("pickup", venue.id);
-  if (blocked) return blocked;
+  // Menu+alerts (no pickup) and pickup packages both allow venue-wide waiter calls.
+  const alertsOn = await hasFeature("alerts", venue.id);
+  const pickupOn = await hasFeature("pickup", venue.id);
+  if (!alertsOn && !pickupOn) {
+    return apiError(
+      "FEATURE_DISABLED",
+      "Waiter alerts are not enabled for this venue",
+      403
+    );
+  }
 
   const cooldownKey = `${venue.id}:${customerName.toLowerCase()}`;
   const now = Date.now();

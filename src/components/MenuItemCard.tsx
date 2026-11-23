@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { cn, formatPrice } from "@/lib/utils";
 import type { MenuItem, MenuItemAdditional } from "@/lib/demo-data";
 import { useGuestAuth } from "@/components/GuestAuthProvider";
@@ -27,7 +28,9 @@ export function MenuItemCard({ item, onAdd, index = 0 }: Props) {
   const tCommon = useTranslations("common");
   const { ensureUnlocked } = useGuestAuth();
   const { hasFeature } = useFeatures();
-  const ordering = hasFeature("ordering");
+  const searchParams = useSearchParams();
+  // Pickup digital menu uses ?browse=1 — view only, no table ordering.
+  const ordering = hasFeature("ordering") && searchParams.get("browse") !== "1";
   const [open, setOpen] = useState(false);
   const [notes, setNotes] = useState("");
   const [quantity, setQuantity] = useState(1);
