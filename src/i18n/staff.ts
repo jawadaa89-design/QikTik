@@ -774,11 +774,9 @@ export type AdminMessages = {
   tablesHint: string;
   orderingRequiredTitle: string;
   orderingRequiredBody: string;
-  pickupGuestTitle: string;
-  pickupGuestHint: string;
-  pickupGuestUrlLabel: string;
   menuGuestTitle: string;
   menuGuestHint: string;
+  menuGuestHintPickup: string;
   menuGuestHintOrdering: string;
   alertsBoardTitle: string;
   alertsBoardHint: string;
@@ -922,15 +920,13 @@ const adminEn: AdminMessages = {
   orderingRequiredTitle: "Table ordering not in this package",
   orderingRequiredBody:
     "Table sessions, floor status, and per-table guest URLs need the Ordering package. Switch package to enable them.",
-  pickupGuestTitle: "Pickup guest link",
-  pickupGuestHint:
-    "Share or print this URL / QR for guests who order for pickup — not table-session ordering.",
-  pickupGuestUrlLabel: "Pickup URL",
   menuGuestTitle: "Guest menu link",
   menuGuestHint:
-    "Share this public menu link — guests can browse and call a waiter (no table QR).",
+    "Main guest link for this restaurant — share or print this menu URL / QR.",
+  menuGuestHintPickup:
+    "Main guest link — menu plus pickup registration when guests order at the counter.",
   menuGuestHintOrdering:
-    "Share this public menu link — guests browse, enter their table number, register, and order (table QR still works).",
+    "Main guest link — guests browse, enter their table number, register, and order (table QR still works).",
   alertsBoardTitle: "Alerts board",
   alertsBoardHint:
     "Staff screen for waiter calls — includes the pickup queue when that package is on.",
@@ -960,7 +956,8 @@ const adminEn: AdminMessages = {
   packageMenuOrdering: "Menu + ordering",
   packageMenuOnlyDesc: "Public menu link for guests",
   packageMenuAlertsDesc: "Public menu link + waiter call alerts (no table QR)",
-  packageMenuAlertsPickupDesc: "Pickup link with menu inside + waiter alerts",
+  packageMenuAlertsPickupDesc:
+    "Guest menu home with pickup registration + waiter alerts",
   packageMenuOrderingDesc:
     "Public menu link (enter table number) + optional table QR for full ordering",
   featureDigitalMenu: "Digital Menu",
@@ -1086,15 +1083,13 @@ const adminAr: AdminMessages = {
   orderingRequiredTitle: "طلب الطاولات غير مشمول في هذه الباقة",
   orderingRequiredBody:
     "جلسات الطاولات وحالة القاعة وروابط الضيوف لكل طاولة تحتاج باقة الطلب. غيّر الباقة لتفعيلها.",
-  pickupGuestTitle: "رابط ضيف الاستلام",
-  pickupGuestHint:
-    "شارك أو اطبع هذا الرابط / QR للضيوف الذين يطلبون للاستلام — وليس لجلسات الطاولات.",
-  pickupGuestUrlLabel: "رابط الاستلام",
   menuGuestTitle: "رابط قائمة الضيوف",
   menuGuestHint:
-    "شارك رابط القائمة العامة — يمكن للضيوف التصفح واستدعاء النادل (بدون QR للطاولة).",
+    "الرابط الرئيسي للضيوف — شارك أو اطبع رابط / رمز قائمة الطعام.",
+  menuGuestHintPickup:
+    "الرابط الرئيسي — القائمة مع تسجيل الاستلام عند الطلب من الكاونتر.",
   menuGuestHintOrdering:
-    "شارك رابط القائمة العامة — الضيوف يتصفحون ويدخلون رقم الطاولة ويسجّلون ويطلبون (QR الطاولة ما زال يعمل).",
+    "الرابط الرئيسي — يتصفح الضيوف ويدخلون رقم الطاولة ويسجّلون ويطلبون (رمز الطاولة ما زال يعمل).",
   alertsBoardTitle: "لوحة التنبيهات",
   alertsBoardHint:
     "شاشة الموظفين لاستدعاءات النادل — تتضمن طابور الاستلام عند تفعيل تلك الباقة.",
@@ -1123,7 +1118,8 @@ const adminAr: AdminMessages = {
   packageMenuOrdering: "القائمة + الطلب",
   packageMenuOnlyDesc: "رابط القائمة العامة للضيوف",
   packageMenuAlertsDesc: "رابط القائمة العامة + تنبيهات استدعاء النادل (بدون QR للطاولة)",
-  packageMenuAlertsPickupDesc: "رابط الاستلام مع القائمة داخله + تنبيهات النادل",
+  packageMenuAlertsPickupDesc:
+    "الصفحة الرئيسية للقائمة مع تسجيل الاستلام + تنبيهات النادل",
   packageMenuOrderingDesc:
     "رابط القائمة العامة (إدخال رقم الطاولة) + QR اختياري للطاولة للطلب الكامل",
   featureDigitalMenu: "القائمة الرقمية",
@@ -1249,15 +1245,13 @@ const adminHe: AdminMessages = {
   orderingRequiredTitle: "הזמנות שולחן לא כלולות בחבילה",
   orderingRequiredBody:
     "סשנים של שולחנות, סטטוס רצפה וכתובות אורח לכל שולחן דורשים את חבילת ההזמנות. החליפו חבילה כדי להפעיל.",
-  pickupGuestTitle: "קישור אורח לאיסוף",
-  pickupGuestHint:
-    "שתפו או הדפיסו את הכתובת / QR לאורחים שמזמינים לאיסוף — לא לסשן שולחן.",
-  pickupGuestUrlLabel: "כתובת איסוף",
   menuGuestTitle: "קישור תפריט לאורחים",
   menuGuestHint:
-    "שתפו את קישור התפריט הציבורי — אורחים יכולים לעיין ולקרוא למלצר (בלי QR לשולחן).",
+    "קישור האורחים הראשי — שתפו או הדפיסו את כתובת / QR התפריט.",
+  menuGuestHintPickup:
+    "קישור ראשי — תפריט עם הרשמה לאיסוף כשמזמינים בדלפק.",
   menuGuestHintOrdering:
-    "שתפו את קישור התפריט הציבורי — אורחים מעיינים, מזינים מספר שולחן, נרשמים ומזמינים (QR לשולחן עדיין עובד).",
+    "קישור ראשי — אורחים מעיינים, מזינים מספר שולחן, נרשמים ומזמינים (QR לשולחן עדיין עובד).",
   alertsBoardTitle: "לוח התראות",
   alertsBoardHint:
     "מסך צוות לקריאות מלצר — כולל תור איסוף כשהחבילה כוללת איסוף.",
@@ -1286,7 +1280,8 @@ const adminHe: AdminMessages = {
   packageMenuOrdering: "תפריט + הזמנות",
   packageMenuOnlyDesc: "קישור תפריט ציבורי לאורחים",
   packageMenuAlertsDesc: "קישור תפריט ציבורי + התראות קריאת מלצר (בלי QR לשולחן)",
-  packageMenuAlertsPickupDesc: "קישור איסוף עם תפריט בפנים + התראות מלצר",
+  packageMenuAlertsPickupDesc:
+    "דף בית התפריט עם הרשמה לאיסוף + התראות מלצר",
   packageMenuOrderingDesc:
     "קישור תפריט ציבורי (הזנת מספר שולחן) + QR אופציונלי לשולחן להזמנה מלאה",
   featureDigitalMenu: "תפריט דיגיטלי",
@@ -1412,15 +1407,13 @@ const adminRu: AdminMessages = {
   orderingRequiredTitle: "Заказы со столов не в этом пакете",
   orderingRequiredBody:
     "Сессии столов, статус зала и гостевые URL по столам требуют пакета Ordering. Смените пакет, чтобы включить.",
-  pickupGuestTitle: "Ссылка гостя на самовывоз",
-  pickupGuestHint:
-    "Поделитесь или распечатайте этот URL / QR для гостей с самовывозом — не для сессий за столом.",
-  pickupGuestUrlLabel: "URL самовывоза",
   menuGuestTitle: "Ссылка на меню для гостей",
   menuGuestHint:
-    "Поделитесь публичной ссылкой на меню — гости могут смотреть меню и вызвать официанта (без QR стола).",
+    "Главная гостевая ссылка — поделитесь или распечатайте URL / QR меню.",
+  menuGuestHintPickup:
+    "Главная ссылка — меню плюс регистрация на самовывоз при заказе у стойки.",
   menuGuestHintOrdering:
-    "Поделитесь публичной ссылкой на меню — гости смотрят меню, вводят номер стола, регистрируются и заказывают (QR стола по-прежнему работает).",
+    "Главная ссылка — гости смотрят меню, вводят номер стола, регистрируются и заказывают (QR стола по-прежнему работает).",
   alertsBoardTitle: "Доска оповещений",
   alertsBoardHint:
     "Экран персонала для вызова официанта — включает очередь самовывоза при соответствующем пакете.",
@@ -1450,7 +1443,8 @@ const adminRu: AdminMessages = {
   packageMenuOrdering: "Меню + заказы",
   packageMenuOnlyDesc: "Публичная ссылка на меню для гостей",
   packageMenuAlertsDesc: "Публичное меню + вызов официанта (без QR стола)",
-  packageMenuAlertsPickupDesc: "Ссылка самовывоза с меню внутри + оповещения",
+  packageMenuAlertsPickupDesc:
+    "Главная страница меню с регистрацией на самовывоз + оповещения",
   packageMenuOrderingDesc:
     "Публичная ссылка на меню (номер стола) + опциональный QR стола для полного заказа",
   featureDigitalMenu: "Цифровое меню",

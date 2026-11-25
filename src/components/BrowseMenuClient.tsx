@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { CallWaiterBellIcon } from "@/components/CallWaiterBellIcon";
@@ -11,6 +12,7 @@ import { VenueLogo } from "@/components/VenueLogo";
 import { VenueContactIcons } from "@/components/VenueContactIcons";
 import { formatPrice } from "@/lib/utils";
 import { useVenueSlug } from "@/components/VenueProvider";
+import { venuePickupPath } from "@/lib/venue-paths";
 import type { MenuCategory, MenuItem } from "@/lib/demo-data";
 import type { Locale } from "@/i18n/config";
 
@@ -21,16 +23,19 @@ type Props = {
   enableCallWaiter?: boolean;
   /** Menu+ordering: enter table number → register & order. */
   enableOrderAtTable?: boolean;
+  /** Menu+pickup: register for pickup notifications from the menu. */
+  enablePickup?: boolean;
   /** Hide items and show a coming-soon placeholder. */
   comingSoon?: boolean;
 };
 
-/** Public digital menu — browse; optional call-waiter / order-by-table-number. */
+/** Public digital menu — restaurant home; optional pickup / call-waiter / order-at-table. */
 export function BrowseMenuClient({
   venueName,
   categories,
   enableCallWaiter = false,
   enableOrderAtTable = false,
+  enablePickup = false,
   comingSoon = false,
 }: Props) {
   const t = useTranslations("common");
@@ -250,7 +255,7 @@ export function BrowseMenuClient({
             <VenueContactIcons />
           </div>
 
-          {(enableOrderAtTable || enableCallWaiter) && (
+          {(enableOrderAtTable || enablePickup || enableCallWaiter) && (
             <div className="mt-4 space-y-2.5">
               {enableOrderAtTable ? (
                 !orderFormOpen ? (
@@ -309,6 +314,20 @@ export function BrowseMenuClient({
                     </div>
                   </form>
                 )
+              ) : null}
+
+              {enablePickup ? (
+                <Link
+                  href={`${venuePickupPath(venueSlug, locale)}/register`}
+                  className="btn-primary inline-flex w-full flex-col items-center justify-center gap-0.5 px-4 py-3.5 text-center"
+                >
+                  <span className="text-sm font-bold leading-tight">
+                    {tPickup("registerCta")}
+                  </span>
+                  <span className="text-xs font-medium leading-snug text-[#0c100e]/75">
+                    {tPickup("subtitle")}
+                  </span>
+                </Link>
               ) : null}
 
               {enableCallWaiter ? (

@@ -55,7 +55,6 @@ type Dashboard = {
     status: string;
     createdAt: string;
   }[];
-  pickupGuestUrl: string;
   menuGuestUrl: string;
   alertsBoardUrl: string;
 };
@@ -153,9 +152,10 @@ export default function AdminPage() {
   const alertsOn = hasFeature("alerts");
   const orderingOn = hasFeature("ordering");
   const pickupOn = hasFeature("pickup");
-  /** Table QR is only for ordering — Menu+alerts uses the public /menu link. */
+  /** Table QR is only for ordering — guest home is always the public /menu link. */
   const tablesNeeded = orderingOn;
-  const guestLinksNeeded = alertsOn || pickupOn || orderingOn;
+  /** Menu is in every package; Guest links tab always available when not using Tables. */
+  const guestLinksNeeded = true;
 
   const loadDash = useCallback(async () => {
     try {
@@ -964,13 +964,17 @@ export default function AdminPage() {
                   ))}
               </div>
 
-              {(alertsOn || orderingOn) && dash.menuGuestUrl ? (
+              {dash.menuGuestUrl ? (
                 <div className="guest-panel mt-5 rounded-2xl p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft/50">
                     {t.menuGuestTitle}
                   </p>
                   <p className="mt-1 text-sm text-ink-soft/55">
-                    {orderingOn ? t.menuGuestHintOrdering : t.menuGuestHint}
+                    {orderingOn
+                      ? t.menuGuestHintOrdering
+                      : pickupOn
+                        ? t.menuGuestHintPickup
+                        : t.menuGuestHint}
                   </p>
                   <a
                     href={dash.menuGuestUrl}
@@ -1016,33 +1020,6 @@ export default function AdminPage() {
                       {copiedLink ? t.linkCopied : t.copyLink}
                     </button>
                     <LinkQrActions href={dash.alertsBoardUrl} label={t.alertsBoardTitle} />
-                  </div>
-                </div>
-              ) : null}
-
-              {pickupOn && dash.pickupGuestUrl ? (
-                <div className="guest-panel mt-5 rounded-2xl p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft/50">
-                    {t.pickupGuestTitle}
-                  </p>
-                  <p className="mt-1 text-sm text-ink-soft/55">{t.pickupGuestHint}</p>
-                  <a
-                    href={dash.pickupGuestUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-3 block break-all text-sm font-semibold text-brass hover:underline"
-                  >
-                    {dash.pickupGuestUrl}
-                  </a>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => void copyText(dash.pickupGuestUrl)}
-                      className="rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
-                    >
-                      {copiedLink ? t.linkCopied : t.copyLink}
-                    </button>
-                    <LinkQrActions href={dash.pickupGuestUrl} label={t.pickupGuestTitle} />
                   </div>
                 </div>
               ) : null}
@@ -1742,7 +1719,11 @@ export default function AdminPage() {
                         {t.menuGuestTitle}
                       </p>
                       <p className="mt-1 text-sm text-ink-soft/55">
-                        {orderingOn ? t.menuGuestHintOrdering : t.menuGuestHint}
+                        {orderingOn
+                          ? t.menuGuestHintOrdering
+                          : pickupOn
+                            ? t.menuGuestHintPickup
+                            : t.menuGuestHint}
                       </p>
                       <a
                         href={dash.menuGuestUrl}
@@ -1761,32 +1742,6 @@ export default function AdminPage() {
                           {copiedLink ? t.linkCopied : t.copyLink}
                         </button>
                         <LinkQrActions href={dash.menuGuestUrl} label={t.menuGuestTitle} />
-                      </div>
-                    </div>
-                  ) : null}
-                  {pickupOn && dash?.pickupGuestUrl ? (
-                    <div className="guest-panel mt-4 rounded-2xl p-4">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft/50">
-                        {t.pickupGuestTitle}
-                      </p>
-                      <p className="mt-1 text-sm text-ink-soft/55">{t.pickupGuestHint}</p>
-                      <a
-                        href={dash.pickupGuestUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-2 block break-all text-sm font-semibold text-brass hover:underline"
-                      >
-                        {dash.pickupGuestUrl}
-                      </a>
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => void copyText(dash.pickupGuestUrl)}
-                          className="rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
-                        >
-                          {copiedLink ? t.linkCopied : t.copyLink}
-                        </button>
-                        <LinkQrActions href={dash.pickupGuestUrl} label={t.pickupGuestTitle} />
                       </div>
                     </div>
                   ) : null}
@@ -1841,9 +1796,13 @@ export default function AdminPage() {
                     {t.navLinks}
                   </h2>
                   <p className="mt-1 text-sm text-ink-soft/50">
-                    {alertsOn ? t.menuGuestHint : t.pickupGuestHint}
+                    {orderingOn
+                      ? t.menuGuestHintOrdering
+                      : pickupOn
+                        ? t.menuGuestHintPickup
+                        : t.menuGuestHint}
                   </p>
-                  {alertsOn && dash?.menuGuestUrl ? (
+                  {dash?.menuGuestUrl ? (
                     <div className="guest-panel mt-5 rounded-2xl p-4">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft/50">
                         {t.menuGuestTitle}
@@ -1891,31 +1850,6 @@ export default function AdminPage() {
                           {copiedLink ? t.linkCopied : t.copyLink}
                         </button>
                         <LinkQrActions href={dash.alertsBoardUrl} label={t.alertsBoardTitle} />
-                      </div>
-                    </div>
-                  ) : null}
-                  {pickupOn && dash?.pickupGuestUrl ? (
-                    <div className="guest-panel mt-4 rounded-2xl p-4">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft/50">
-                        {t.pickupGuestUrlLabel}
-                      </p>
-                      <a
-                        href={dash.pickupGuestUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-2 block break-all text-sm font-semibold text-brass hover:underline"
-                      >
-                        {dash.pickupGuestUrl}
-                      </a>
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => void copyText(dash.pickupGuestUrl)}
-                          className="rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
-                        >
-                          {copiedLink ? t.linkCopied : t.copyLink}
-                        </button>
-                        <LinkQrActions href={dash.pickupGuestUrl} label={t.pickupGuestTitle} />
                       </div>
                     </div>
                   ) : null}

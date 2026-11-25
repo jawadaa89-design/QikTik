@@ -4,7 +4,7 @@
  *
  *   npx tsx scripts/generate-coffee-up-qrs.ts
  */
-import { mkdir, writeFile, readFile } from "fs/promises";
+import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import QRCode from "qrcode";
 import { PrismaClient } from "@prisma/client";
@@ -125,7 +125,6 @@ async function main() {
     : `../../${logoUrl.replace(/^\//, "")}`;
 
   const menuUrl = `${BASE}/r/${SLUG}/ar/menu`;
-  const guestPickupUrl = `${BASE}/r/${SLUG}/ar/pickup`;
   const staffPickupUrl = `${BASE}/r/${SLUG}/pickup`;
   const alertsUrl = `${BASE}/r/${SLUG}/alerts`;
   const adminUrl = `${BASE}/r/${SLUG}/admin`;
@@ -133,14 +132,12 @@ async function main() {
   console.log(`Coffee Up QRs → ${OUT_CU}`);
 
   await writeQrPng(path.join(OUT_CU, "menu.png"), menuUrl);
-  await writeQrPng(path.join(OUT_CU, "pickup.png"), guestPickupUrl);
   await writeQrPng(path.join(OUT_CU, "pickup-board.png"), staffPickupUrl);
   await writeQrPng(path.join(OUT_CU, "alerts.png"), alertsUrl);
   await writeQrPng(path.join(OUT_CU, "admin.png"), adminUrl);
 
   // Also refresh shared public/qr root assets used by existing HTML placards
   await writeQrPng(path.join(OUT, "menu.png"), menuUrl);
-  await writeQrPng(path.join(OUT, "pickup.png"), guestPickupUrl);
   await writeQrPng(path.join(OUT, "pickup-board.png"), staffPickupUrl);
 
   for (const t of tables) {
@@ -161,18 +158,6 @@ async function main() {
       qrFile: "menu.png",
       url: menuUrl,
       logoSrc,
-    })
-  );
-  await writeFile(
-    path.join(OUT_CU, "pickup-guest.html"),
-    simpleCardHtml({
-      venueName: venue.name,
-      label: "Guest pickup",
-      title: "Scan to register for pickup",
-      qrFile: "pickup.png",
-      url: guestPickupUrl,
-      logoSrc,
-      accent: "#b58d54",
     })
   );
   await writeFile(
@@ -282,24 +267,9 @@ async function main() {
 `
   );
 
-  // Patch pickup.html URLs (keep Coffee Up placard design)
-  const pickupHtmlPath = path.join(OUT, "pickup.html");
-  let pickupHtml = await readFile(pickupHtmlPath, "utf8");
-  pickupHtml = pickupHtml
-    .replaceAll("https://app.qiktik.tech/r/myrestaurant/ar/pickup", guestPickupUrl)
-    .replaceAll("/r/myrestaurant/ar/pickup", `/r/${SLUG}/ar/pickup`)
-    .replaceAll("My Restaurant", venue.name)
-    .replaceAll("Guest Pickup Placard — My Restaurant", `Guest Pickup Placard — ${venue.name}`);
-  // Prefer local regenerated pickup.png
-  if (!pickupHtml.includes('src="pickup.png"') && pickupHtml.includes("pickup.png")) {
-    /* already relative */
-  }
-  await writeFile(pickupHtmlPath, pickupHtml);
-
   // Index for coffee-up folder
   const indexRows = [
-    ["menu.html", "Guest menu", menuUrl],
-    ["pickup-guest.html", "Guest pickup", guestPickupUrl],
+    ["menu.html", "Guest menu (home)", menuUrl],
     ["staff-board.html", "Staff pickup board", staffPickupUrl],
     ["alerts.html", "Alerts board", alertsUrl],
     ...tables.map((t) => [
@@ -338,7 +308,7 @@ async function main() {
 `
   );
 
-  console.log(`\n✓ Done — ${tables.length} table QRs + menu/pickup/staff/alerts`);
+  console.log(`\n✓ Done — ${tables.length} table QRs + menu/staff/alerts`);
   console.log(`  Folder: public/qr/coffee-up/`);
   console.log(`  Index:  public/qr/coffee-up/index.html`);
 }

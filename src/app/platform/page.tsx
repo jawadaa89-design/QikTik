@@ -9,7 +9,6 @@ import { DEFAULT_VENUE_BRAND } from "@/lib/venue-brand";
 type VenueUrls = {
   menu: string;
   admin: string;
-  guestPickup: string;
   staffPickup: string;
   alerts: string;
   kitchen: string;
@@ -44,9 +43,9 @@ const PACKAGE_LABEL: Record<PackageId, string> = Object.fromEntries(
   PACKAGES.map((p) => [p.id, p.label])
 ) as Record<PackageId, string>;
 
+/** Guest home is always the menu; pickup registers from that page when in package. */
 const LINK_LABELS: { key: keyof VenueUrls; label: string }[] = [
-  { key: "menu", label: "Guest menu" },
-  { key: "guestPickup", label: "Guest pickup" },
+  { key: "menu", label: "Guest menu (home)" },
   { key: "admin", label: "Admin" },
   { key: "staffPickup", label: "Pickup board" },
   { key: "alerts", label: "Alerts board" },

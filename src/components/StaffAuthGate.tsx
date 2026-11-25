@@ -13,7 +13,7 @@ import {
   STAFF_AUTH_REQUIRED_EVENT,
 } from "@/lib/staff-client";
 import { useVenueSlug } from "@/components/VenueProvider";
-import { venuePickupPath, venueStaffPath } from "@/lib/venue-paths";
+import { venueMenuPath, venueStaffPath } from "@/lib/venue-paths";
 
 /** Marks a successful unlock in this browser tab (survives URL token strip + Strict Mode). */
 const STAFF_GATE_OK_KEY = "qiktik_staff_gate_ok";
@@ -134,7 +134,10 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
     browserPath && browserPath.startsWith("/r/")
       ? browserPath
       : venueStaffPath(venueSlug, boardFromPath(pathname));
-  const guestPickupHref = venuePickupPath(venueSlug, locale === "he" || locale === "ru" || locale === "en" ? locale : "ar");
+  const guestMenuHref = venueMenuPath(
+    venueSlug,
+    locale === "he" || locale === "ru" || locale === "en" ? locale : "ar"
+  );
 
   useEffect(() => {
     if (!unlocked) return;
@@ -225,7 +228,7 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
 
           {showGuestPickupEscape && (
             <a
-              href={guestPickupHref}
+              href={guestMenuHref}
               style={{
                 display: "block",
                 marginTop: 16,
@@ -241,12 +244,12 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
               }}
             >
               {locale === "ar"
-                ? "ضيف؟ افتح صفحة الاستلام بدون كلمة مرور"
+                ? "ضيف؟ افتح القائمة بدون كلمة مرور"
                 : locale === "he"
-                  ? "אורח? לפתיחת איסוף בלי סיסמה"
+                  ? "אורח? לפתיחת התפריט בלי סיסמה"
                   : locale === "ru"
-                    ? "Гость? Открыть самовывоз без пароля"
-                    : "Guest? Open pickup — no password"}
+                    ? "Гость? Открыть меню без пароля"
+                    : "Guest? Open menu — no password"}
             </a>
           )}
 

@@ -3,7 +3,7 @@
   "name": "My Restaurant Pickup",
   "short_name": "QikTik Pickup",
   "description": "Guest pickup waiting notifications for My Restaurant / QikTik",
-  "start_url": "./ar/pickup",
+  "start_url": "./ar/menu",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],

@@ -4,11 +4,7 @@ import { requireStaffSession } from "@/lib/staff-auth";
 import { getPublicBaseUrl } from "@/lib/public-url";
 import { featuresFromFlags } from "@/lib/features";
 import { resolveVenueFromRequest } from "@/lib/venue";
-import {
-  venueMenuPath,
-  venuePickupPath,
-  venueStaffPath,
-} from "@/lib/venue-paths";
+import { venueMenuPath, venueStaffPath } from "@/lib/venue-paths";
 import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
 
 export async function GET(req: NextRequest) {
@@ -40,7 +36,6 @@ export async function GET(req: NextRequest) {
       },
       recent: [],
       recentPickup: [],
-      pickupGuestUrl: `${base}${venuePickupPath(DEFAULT_VENUE_SLUG, locale)}`,
       menuGuestUrl: `${base}${venueMenuPath(DEFAULT_VENUE_SLUG, locale)}`,
       alertsBoardUrl: `${base}${venueStaffPath(DEFAULT_VENUE_SLUG, "alerts")}`,
     });
@@ -161,7 +156,6 @@ export async function GET(req: NextRequest) {
       status: p.status,
       createdAt: p.createdAt.toISOString(),
     })),
-    pickupGuestUrl: `${base}${venuePickupPath(venue.slug, locale)}`,
     menuGuestUrl: `${base}${venueMenuPath(venue.slug, locale)}`,
     alertsBoardUrl: features.pickup
       ? `${base}${venueStaffPath(venue.slug, "pickup")}`

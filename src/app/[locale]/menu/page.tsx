@@ -31,9 +31,9 @@ export default async function PublicMenuPage({ params }: Props) {
   const enableOrderAtTable = venue
     ? await hasFeature("ordering", venue.id)
     : false;
+  const enablePickup = venue ? await hasFeature("pickup", venue.id) : false;
   const enableCallWaiter = venue
-    ? (await hasFeature("alerts", venue.id)) ||
-      (await hasFeature("pickup", venue.id))
+    ? (await hasFeature("alerts", venue.id)) || enablePickup
     : false;
 
   return (
@@ -43,6 +43,7 @@ export default async function PublicMenuPage({ params }: Props) {
       comingSoon={categories.length === 0}
       enableOrderAtTable={enableOrderAtTable}
       enableCallWaiter={enableCallWaiter}
+      enablePickup={enablePickup}
     />
   );
 }

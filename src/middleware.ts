@@ -65,11 +65,35 @@ export default function middleware(request: NextRequest) {
 
     const restParts = parts.slice(2);
 
-    // /r/{slug} → default locale menu
+    // /r/{slug} → default locale menu (menu is the restaurant home)
     if (restParts.length === 0) {
       return withVenueCookie(
         NextResponse.redirect(
           new URL(`/r/${slug}/${defaultLocale}/menu`, request.url)
+        ),
+        slug
+      );
+    }
+
+    // /r/{slug}/{locale} → menu (same home; language switcher stays on /menu)
+    if (restParts.length === 1 && isLocale(restParts[0])) {
+      return withVenueCookie(
+        NextResponse.redirect(
+          new URL(`/r/${slug}/${restParts[0]}/menu`, request.url)
+        ),
+        slug
+      );
+    }
+
+    // Old guest /{locale}/pickup landing removed — send bookmarks/QRs to menu home
+    if (
+      restParts.length === 2 &&
+      isLocale(restParts[0]) &&
+      restParts[1] === "pickup"
+    ) {
+      return withVenueCookie(
+        NextResponse.redirect(
+          new URL(`/r/${slug}/${restParts[0]}/menu`, request.url)
         ),
         slug
       );

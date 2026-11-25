@@ -7,10 +7,12 @@ export type FeatureKey = "digitalMenu" | "alerts" | "ordering" | "pickup";
 
 /**
  * Packages (admin):
- * - Menu only → public menu link
- * - Menu + alerts → menu + table waiter-call
- * - Menu + alerts + pickup → pickup (+ menu inside) + alerts
- * - Menu + ordering → table QR with full ordering (+ menu inside)
+ * - Menu only → guest home = digital menu
+ * - Menu + alerts → menu + call waiter on the menu
+ * - Menu + alerts + pickup → menu + pickup register CTA on the menu + alerts
+ * - Menu + ordering → menu + table number / table QR ordering
+ *
+ * Guest entry is always the menu URL. Pickup is not a separate guest link.
  */
 export type PackageId =
   | "menu_only"

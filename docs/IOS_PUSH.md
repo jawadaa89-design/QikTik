@@ -34,7 +34,7 @@ cloudflared tunnel --url http://localhost:3000
 ```
 
 3. Copy the printed `https://….trycloudflare.com` URL.
-4. On the iPhone (same or any network), open that HTTPS URL → `/ar/pickup` (or your locale).
+4. On the iPhone (same or any network), open that HTTPS URL → `/ar/menu`, then register for pickup (or your locale).
 5. You do **not** need to change `NEXT_PUBLIC_MENU_BASE_URL` for the tunnel: QR/admin links
    follow the request Host when it is not localhost. Keep the LAN value for Wi‑Fi demos.
    In-app menu links are always same-origin relative (they will not bounce you to `http://10.0.0.x`).

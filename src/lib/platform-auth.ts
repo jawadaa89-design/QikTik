@@ -8,9 +8,9 @@ export function platformPasswordOk(password: string): boolean {
 }
 
 export type VenuePublicUrls = {
+  /** Restaurant home for every package */
   menu: string;
   admin: string;
-  guestPickup: string;
   staffPickup: string;
   alerts: string;
   kitchen: string;
@@ -22,7 +22,6 @@ export function venuePublicUrls(slug: string): VenuePublicUrls {
   return {
     menu: `${base}/ar/menu`,
     admin: `${base}/admin`,
-    guestPickup: `${base}/ar/pickup`,
     staffPickup: `${base}/pickup`,
     alerts: `${base}/alerts`,
     kitchen: `${base}/kitchen`,

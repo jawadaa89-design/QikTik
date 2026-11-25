@@ -1038,7 +1038,10 @@ export default function PickupWaitingPage() {
       </div>
 
       <p className="mt-6 text-center text-sm">
-        <Link href={venuePickupPath(venueSlug, locale)} className="text-ink-soft/50 hover:text-brass">
+        <Link
+          href={`${venuePickupPath(venueSlug, locale)}/register`}
+          className="text-ink-soft/50 hover:text-brass"
+        >
           {t("registerAnother")}
         </Link>
       </p>

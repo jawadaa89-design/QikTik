@@ -6,9 +6,8 @@ The marketing site stays on **qiktik.tech**. The app runs on a subdomain so root
 
 | Purpose | Path |
 |---------|------|
-| Demo venue root | `https://app.qiktik.tech/r/myrestaurant` |
-| Menu | `/r/myrestaurant/ar/menu` |
-| Pickup guest | `/r/myrestaurant/ar/pickup` |
+| Demo venue root | `https://app.qiktik.tech/r/myrestaurant` (→ menu) |
+| Guest home (menu) | `/r/myrestaurant/ar/menu` |
 | Table QR | `/r/myrestaurant/ar/t/{token}` |
 | Admin | `/r/myrestaurant/admin` |
 | Alerts / pickup boards | `/r/myrestaurant/alerts`, `/r/myrestaurant/pickup` |
