@@ -377,7 +377,7 @@ async function main() {
   console.log(`  Venue: ${venue.name} (${venue.slug})`);
   console.log(`  Categories: ${categories.length}`);
   console.log(`  Items: ${itemCount}`);
-  console.log(`  Guest: https://app.qiktik.tech/r/coffee-up/ar/menu`);
+  console.log(`  Guest: https://app.qiktik.tech/r/coffee-up/ar/main`);
   console.log(`  Admin: https://app.qiktik.tech/r/coffee-up/admin`);
 }
 

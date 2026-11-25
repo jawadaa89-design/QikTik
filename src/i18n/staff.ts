@@ -928,13 +928,13 @@ const adminEn: AdminMessages = {
   orderingRequiredTitle: "Table ordering not in this package",
   orderingRequiredBody:
     "Table sessions, floor status, and per-table guest URLs need the Ordering package. Request it under Package (email QikTik).",
-  menuGuestTitle: "Guest menu link",
+  menuGuestTitle: "Guest home link",
   menuGuestHint:
-    "Main guest link for this restaurant — share or print this menu URL / QR.",
+    "Main guest link for this restaurant — share or print this home URL / QR.",
   menuGuestHintPickup:
-    "Main guest link — menu plus pickup registration when guests order at the counter.",
+    "Main guest link — home page with menu and pickup registration when guests order at the counter.",
   menuGuestHintOrdering:
-    "Main guest link — guests browse, enter their table number, register, and order (table QR still works).",
+    "Main guest link — guests open home, enter their table number, register, and order (table QR still works).",
   alertsBoardTitle: "Alerts board",
   alertsBoardHint:
     "Staff screen for waiter calls — includes the pickup queue when that package is on.",
@@ -1097,13 +1097,13 @@ const adminAr: AdminMessages = {
   orderingRequiredTitle: "طلب الطاولات غير مشمول في هذه الباقة",
   orderingRequiredBody:
     "جلسات الطاولات وحالة القاعة وروابط الضيوف لكل طاولة تحتاج باقة الطلب. غيّر الباقة لتفعيلها.",
-  menuGuestTitle: "رابط قائمة الضيوف",
+  menuGuestTitle: "رابط الصفحة الرئيسية للضيوف",
   menuGuestHint:
-    "الرابط الرئيسي للضيوف — شارك أو اطبع رابط / رمز قائمة الطعام.",
+    "الرابط الرئيسي للضيوف — شارك أو اطبع رابط / رمز الصفحة الرئيسية.",
   menuGuestHintPickup:
-    "الرابط الرئيسي — القائمة مع تسجيل الاستلام عند الطلب من الكاونتر.",
+    "الرابط الرئيسي — الصفحة الرئيسية مع القائمة وتسجيل الاستلام عند الطلب من الكاونتر.",
   menuGuestHintOrdering:
-    "الرابط الرئيسي — يتصفح الضيوف ويدخلون رقم الطاولة ويسجّلون ويطلبون (رمز الطاولة ما زال يعمل).",
+    "الرابط الرئيسي — يفتح الضيوف الصفحة الرئيسية ويدخلون رقم الطاولة ويسجّلون ويطلبون (رمز الطاولة ما زال يعمل).",
   alertsBoardTitle: "لوحة التنبيهات",
   alertsBoardHint:
     "شاشة الموظفين لاستدعاءات النادل — تتضمن طابور الاستلام عند تفعيل تلك الباقة.",
@@ -1266,13 +1266,13 @@ const adminHe: AdminMessages = {
   orderingRequiredTitle: "הזמנות שולחן לא כלולות בחבילה",
   orderingRequiredBody:
     "סשנים של שולחנות, סטטוס רצפה וכתובות אורח לכל שולחן דורשים את חבילת ההזמנות. החליפו חבילה כדי להפעיל.",
-  menuGuestTitle: "קישור תפריט לאורחים",
+  menuGuestTitle: "קישור דף הבית לאורחים",
   menuGuestHint:
-    "קישור האורחים הראשי — שתפו או הדפיסו את כתובת / QR התפריט.",
+    "קישור האורחים הראשי — שתפו או הדפיסו את כתובת / QR דף הבית.",
   menuGuestHintPickup:
-    "קישור ראשי — תפריט עם הרשמה לאיסוף כשמזמינים בדלפק.",
+    "קישור ראשי — דף בית עם תפריט והרשמה לאיסוף כשמזמינים בדלפק.",
   menuGuestHintOrdering:
-    "קישור ראשי — אורחים מעיינים, מזינים מספר שולחן, נרשמים ומזמינים (QR לשולחן עדיין עובד).",
+    "קישור ראשי — אורחים פותחים את דף הבית, מזינים מספר שולחן, נרשמים ומזמינים (QR לשולחן עדיין עובד).",
   alertsBoardTitle: "לוח התראות",
   alertsBoardHint:
     "מסך צוות לקריאות מלצר — כולל תור איסוף כשהחבילה כוללת איסוף.",
@@ -1435,13 +1435,13 @@ const adminRu: AdminMessages = {
   orderingRequiredTitle: "Заказы со столов не в этом пакете",
   orderingRequiredBody:
     "Сессии столов, статус зала и гостевые URL по столам требуют пакета Ordering. Смените пакет, чтобы включить.",
-  menuGuestTitle: "Ссылка на меню для гостей",
+  menuGuestTitle: "Ссылка на главную для гостей",
   menuGuestHint:
-    "Главная гостевая ссылка — поделитесь или распечатайте URL / QR меню.",
+    "Главная гостевая ссылка — поделитесь или распечатайте URL / QR домашней страницы.",
   menuGuestHintPickup:
-    "Главная ссылка — меню плюс регистрация на самовывоз при заказе у стойки.",
+    "Главная ссылка — домашняя страница с меню и регистрацией на самовывоз у стойки.",
   menuGuestHintOrdering:
-    "Главная ссылка — гости смотрят меню, вводят номер стола, регистрируются и заказывают (QR стола по-прежнему работает).",
+    "Главная ссылка — гости открывают home, вводят номер стола, регистрируются и заказывают (QR стола по-прежнему работает).",
   alertsBoardTitle: "Доска оповещений",
   alertsBoardHint:
     "Экран персонала для вызова официанта — включает очередь самовывоза при соответствующем пакете.",

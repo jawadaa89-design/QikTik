@@ -59,49 +59,21 @@ export default function middleware(request: NextRequest) {
     const slug = parts[1]?.trim().toLowerCase();
     if (!slug) {
       return NextResponse.redirect(
-        new URL(`/r/${DEFAULT_VENUE_SLUG}/${defaultLocale}/menu`, request.url)
+        new URL(`/r/${DEFAULT_VENUE_SLUG}/${defaultLocale}/main`, request.url)
       );
     }
 
     const restParts = parts.slice(2);
 
-    // /r/{slug} → default locale menu (menu is the restaurant home)
-    if (restParts.length === 0) {
-      return withVenueCookie(
-        NextResponse.redirect(
-          new URL(`/r/${slug}/${defaultLocale}/menu`, request.url)
-        ),
-        slug
-      );
-    }
-
-    // /r/{slug}/{locale} → menu (same home; language switcher stays on /menu)
-    if (restParts.length === 1 && isLocale(restParts[0])) {
-      return withVenueCookie(
-        NextResponse.redirect(
-          new URL(`/r/${slug}/${restParts[0]}/menu`, request.url)
-        ),
-        slug
-      );
-    }
-
-    // Old guest /{locale}/pickup landing removed — send bookmarks/QRs to menu home
-    if (
-      restParts.length === 2 &&
-      isLocale(restParts[0]) &&
-      restParts[1] === "pickup"
-    ) {
-      return withVenueCookie(
-        NextResponse.redirect(
-          new URL(`/r/${slug}/${restParts[0]}/menu`, request.url)
-        ),
-        slug
-      );
-    }
-
     // Staff board roots: keep /r/{slug}/pickup in the address bar (no bounce to /pickup/live)
     let restPath = `/${restParts.join("/")}`;
-    if (restParts.length === 1 && restParts[0] === "pickup") {
+    if (restParts.length === 0) {
+      // /r/{slug} → main (restaurant home; no redirect)
+      restPath = `/${defaultLocale}/main`;
+    } else if (restParts.length === 1 && isLocale(restParts[0])) {
+      // /r/{slug}/{locale} → main
+      restPath = `/${restParts[0]}/main`;
+    } else if (restParts.length === 1 && restParts[0] === "pickup") {
       restPath = "/pickup/live";
     } else if (restParts.length === 1 && restParts[0] === "alerts") {
       restPath = "/alerts/live";

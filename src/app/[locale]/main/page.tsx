@@ -13,8 +13,8 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
-/** Public digital menu — no table token. Order-by-number and/or call waiter when enabled. */
-export default async function PublicMenuPage({ params }: Props) {
+/** Restaurant home — digital menu + package actions (pickup, order, call waiter). */
+export default async function VenueMainPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 

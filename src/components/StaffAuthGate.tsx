@@ -13,7 +13,7 @@ import {
   STAFF_AUTH_REQUIRED_EVENT,
 } from "@/lib/staff-client";
 import { useVenueSlug } from "@/components/VenueProvider";
-import { venueMenuPath, venueStaffPath } from "@/lib/venue-paths";
+import { venueMainPath, venueStaffPath } from "@/lib/venue-paths";
 
 /** Marks a successful unlock in this browser tab (survives URL token strip + Strict Mode). */
 const STAFF_GATE_OK_KEY = "qiktik_staff_gate_ok";
@@ -134,7 +134,7 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
     browserPath && browserPath.startsWith("/r/")
       ? browserPath
       : venueStaffPath(venueSlug, boardFromPath(pathname));
-  const guestMenuHref = venueMenuPath(
+  const guestMenuHref = venueMainPath(
     venueSlug,
     locale === "he" || locale === "ru" || locale === "en" ? locale : "ar"
   );

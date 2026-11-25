@@ -10,7 +10,7 @@ import { QikTikLogo } from "@/components/QikTikLogo";
 import { VenueLogo } from "@/components/VenueLogo";
 import { primeGuestPickupAudio } from "@/lib/guest-pickup-alert-audio";
 import { useVenueName, useVenueSlug } from "@/components/VenueProvider";
-import { venueMenuPath, venuePickupPath } from "@/lib/venue-paths";
+import { venueMainPath, venuePickupPath } from "@/lib/venue-paths";
 
 type Mode = "register" | "reconnect";
 
@@ -288,7 +288,7 @@ export default function PickupRegisterPage() {
       </div>
 
       <p className="mt-6 text-center text-sm">
-        <Link href={venueMenuPath(venueSlug, locale)} className="text-ink-soft/50 hover:text-brass">
+        <Link href={venueMainPath(venueSlug, locale)} className="text-ink-soft/50 hover:text-brass">
           {t("backHome")}
         </Link>
       </p>

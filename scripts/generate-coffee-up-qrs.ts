@@ -124,7 +124,7 @@ async function main() {
     ? logoUrl
     : `../../${logoUrl.replace(/^\//, "")}`;
 
-  const menuUrl = `${BASE}/r/${SLUG}/ar/menu`;
+  const menuUrl = `${BASE}/r/${SLUG}/ar/main`;
   const staffPickupUrl = `${BASE}/r/${SLUG}/pickup`;
   const alertsUrl = `${BASE}/r/${SLUG}/alerts`;
   const adminUrl = `${BASE}/r/${SLUG}/admin`;
@@ -153,8 +153,8 @@ async function main() {
     path.join(OUT_CU, "menu.html"),
     simpleCardHtml({
       venueName: venue.name,
-      label: "Digital menu",
-      title: "Scan to open the menu",
+      label: "Restaurant home",
+      title: "Scan to open the restaurant",
       qrFile: "menu.png",
       url: menuUrl,
       logoSrc,
@@ -269,7 +269,7 @@ async function main() {
 
   // Index for coffee-up folder
   const indexRows = [
-    ["menu.html", "Guest menu (home)", menuUrl],
+    ["menu.html", "Guest home (main)", menuUrl],
     ["staff-board.html", "Staff pickup board", staffPickupUrl],
     ["alerts.html", "Alerts board", alertsUrl],
     ...tables.map((t) => [

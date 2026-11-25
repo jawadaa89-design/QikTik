@@ -152,7 +152,7 @@ export default function AdminPage() {
   const alertsOn = hasFeature("alerts");
   const orderingOn = hasFeature("ordering");
   const pickupOn = hasFeature("pickup");
-  /** Table QR is only for ordering — guest home is always the public /menu link. */
+  /** Table QR is only for ordering — guest home is always the public /main link. */
   const tablesNeeded = orderingOn;
   /** Menu is in every package; Guest links tab always available when not using Tables. */
   const guestLinksNeeded = true;

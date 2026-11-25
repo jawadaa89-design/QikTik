@@ -259,3 +259,9 @@ select,
 textarea {
   color-scheme: dark;
 }
+
+/* Native <option> menus often force a light OS panel — keep readable text */
+select option {
+  background-color: #ffffff;
+  color: #111111;
+}

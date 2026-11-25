@@ -45,7 +45,7 @@ const PACKAGE_LABEL: Record<PackageId, string> = Object.fromEntries(
 
 /** Guest home is always the menu; pickup registers from that page when in package. */
 const LINK_LABELS: { key: keyof VenueUrls; label: string }[] = [
-  { key: "menu", label: "Guest menu (home)" },
+  { key: "menu", label: "Guest home (main)" },
   { key: "admin", label: "Admin" },
   { key: "staffPickup", label: "Pickup board" },
   { key: "alerts", label: "Alerts board" },
@@ -433,10 +433,15 @@ export default function PlatformPage() {
                             [v.id]: e.target.value as PackageId,
                           }))
                         }
-                        className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-[#f2efe8] outline-none focus:border-brass/40"
+                        className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1a211c] px-3 py-2.5 text-sm text-[#f2efe8] outline-none focus:border-brass/40"
                       >
                         {PACKAGES.map((p) => (
-                          <option key={p.id} value={p.id}>
+                          <option
+                            key={p.id}
+                            value={p.id}
+                            className="bg-white text-[#111111]"
+                            style={{ backgroundColor: "#ffffff", color: "#111111" }}
+                          >
                             {p.label}
                           </option>
                         ))}
@@ -632,7 +637,7 @@ export default function PlatformPage() {
                       className="text-[10px] font-bold uppercase tracking-[0.18em]"
                       style={{ color: accentColor }}
                     >
-                      Guest menu
+                      Guest home
                     </p>
                     <p className="truncate text-sm font-semibold">
                       {name || "Restaurant name"}

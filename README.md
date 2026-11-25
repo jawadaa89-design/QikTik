@@ -24,7 +24,7 @@ npm run dev
 | Role | URL |
 |------|-----|
 | Guest table 7 | http://localhost:3000/ar/t/t_table7demo2026 |
-| Guest menu (home) | http://localhost:3000/ar/menu |
+| Guest home (main) | http://localhost:3000/ar/main |
 | Staff pickup board | http://localhost:3000/pickup |
 | Kitchen | http://localhost:3000/kitchen?station=MAIN_KITCHEN |
 | Waiter | http://localhost:3000/waiter?section=INSIDE |

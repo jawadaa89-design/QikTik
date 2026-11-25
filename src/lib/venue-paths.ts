@@ -15,8 +15,14 @@ export function venueGuestBase(venueSlug: string, locale: string): string {
   return `/r/${normalizeVenueSlug(venueSlug)}/${locale}`;
 }
 
+/** Restaurant home (digital menu + package CTAs). */
+export function venueMainPath(venueSlug: string, locale: string): string {
+  return `${venueGuestBase(venueSlug, locale)}/main`;
+}
+
+/** @deprecated Use venueMainPath — guest home was renamed from /menu to /main. */
 export function venueMenuPath(venueSlug: string, locale: string): string {
-  return `${venueGuestBase(venueSlug, locale)}/menu`;
+  return venueMainPath(venueSlug, locale);
 }
 
 export function venuePickupPath(venueSlug: string, locale: string): string {
@@ -40,5 +46,5 @@ export function venueStaffPath(
 }
 
 export function venueRootPath(venueSlug: string, locale = defaultLocale): string {
-  return venueMenuPath(venueSlug, locale);
+  return venueMainPath(venueSlug, locale);
 }

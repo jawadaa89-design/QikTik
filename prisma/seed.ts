@@ -410,7 +410,7 @@ async function main() {
     console.log(`  Venue:   ${venue.name} (${venue.slug})`);
     console.log(`  Tables:  ${tableCount}`);
     console.log(`  Menu:    ${itemCount} items`);
-    console.log(`  Browse:  http://localhost:3000/r/myrestaurant/ar/menu\n`);
+    console.log(`  Browse:  http://localhost:3000/r/myrestaurant/ar/main\n`);
     return;
   }
 
@@ -465,7 +465,7 @@ async function main() {
   console.log(`  Menu:    ${itemCount} items`);
   console.log(`  Demo:    Table 7 → ${DEMO_TOKEN}`);
   console.log("\n  Guest:   http://localhost:3000/r/myrestaurant/ar/t/" + DEMO_TOKEN);
-  console.log("  Browse:  http://localhost:3000/r/myrestaurant/ar/menu");
+  console.log("  Browse:  http://localhost:3000/r/myrestaurant/ar/main");
   console.log("  Kitchen: http://localhost:3000/r/myrestaurant/kitchen?station=MAIN_KITCHEN");
   console.log("  Waiter:  http://localhost:3000/r/myrestaurant/waiter?section=INSIDE");
   console.log("  Admin:   http://localhost:3000/r/myrestaurant/admin");
