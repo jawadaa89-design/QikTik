@@ -5,6 +5,7 @@ import { StaffAuthGate } from "@/components/StaffAuthGate";
 import { VenueProvider } from "@/components/VenueProvider";
 import { VenueThemeProvider } from "@/components/VenueThemeProvider";
 import { VenueFaviconLinks } from "@/components/VenueFaviconLinks";
+import { PoweredByQikTik } from "@/components/PoweredByQikTik";
 import { resolveVenue } from "@/lib/venue";
 import {
   brandFromVenue,
@@ -53,9 +54,14 @@ export default async function WaiterLayout({
           venueName={venue?.name ?? "Restaurant"}
         >
           <VenueThemeProvider brand={brand}>
-            <FeaturesProvider fetchOnMount venueSlug={venueSlug}>
-              <StaffAuthGate>{children}</StaffAuthGate>
-            </FeaturesProvider>
+            <div className="flex min-h-dvh flex-col">
+              <div className="flex-1">
+                <FeaturesProvider fetchOnMount venueSlug={venueSlug}>
+                  <StaffAuthGate>{children}</StaffAuthGate>
+                </FeaturesProvider>
+              </div>
+              <PoweredByQikTik />
+            </div>
           </VenueThemeProvider>
         </VenueProvider>
       </body>

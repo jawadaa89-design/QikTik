@@ -11,6 +11,7 @@ import {
   venueLogoSrc,
 } from "@/lib/venue-brand";
 import { VenueFaviconLinks } from "@/components/VenueFaviconLinks";
+import { PoweredByQikTik } from "@/components/PoweredByQikTik";
 import { venueSlugForLayout } from "@/lib/venue-request.server";
 
 /** Per-request venue from /r/{slug}/… header — avoid shared-cookie bleed across tabs. */
@@ -54,9 +55,14 @@ export default async function AdminLayout({
           venueName={venue?.name ?? "Restaurant"}
         >
           <VenueThemeProvider brand={brand}>
-            <FeaturesProvider fetchOnMount venueSlug={venueSlug}>
-              <StaffAuthGate>{children}</StaffAuthGate>
-            </FeaturesProvider>
+            <div className="flex min-h-dvh flex-col">
+              <div className="flex-1">
+                <FeaturesProvider fetchOnMount venueSlug={venueSlug}>
+                  <StaffAuthGate>{children}</StaffAuthGate>
+                </FeaturesProvider>
+              </div>
+              <PoweredByQikTik />
+            </div>
           </VenueThemeProvider>
         </VenueProvider>
       </body>

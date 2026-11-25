@@ -37,6 +37,7 @@ import {
   pickupMessages,
   staffGateMessages,
 } from "@/i18n/staff";
+import { poweredByQikTikHtml } from "@/components/PoweredByQikTik";
 
 /** Menu+alerts+pickup → combined board (waiter calls + pickup queues). */
 async function combinedBoardPath(venueId: string | undefined): Promise<string> {
@@ -245,6 +246,7 @@ function renderLogin(
     <input id="password" name="password" type="password" required autocomplete="off" />
     <button type="submit" data-i18n="unlock">Unlock</button>
   </form>
+  ${poweredByQikTikHtml()}
 </body>
 </html>`;
 }
@@ -598,6 +600,7 @@ function renderBoard(
   setInterval(softRefresh, 2000);
 })();
   </script>
+  ${poweredByQikTikHtml()}
 </body>
 </html>`;
 }

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { VenueProvider } from "@/components/VenueProvider";
 import { VenueThemeProvider } from "@/components/VenueThemeProvider";
 import { VenueFaviconLinks } from "@/components/VenueFaviconLinks";
+import { PoweredByQikTik } from "@/components/PoweredByQikTik";
 import { resolveVenue } from "@/lib/venue";
 import {
   brandFromVenue,
@@ -54,7 +55,12 @@ export default async function PickupLayout({
           venueSlug={venueSlug}
           venueName={venue?.name ?? "Restaurant"}
         >
-          <VenueThemeProvider brand={brand}>{children}</VenueThemeProvider>
+          <VenueThemeProvider brand={brand}>
+            <div className="flex min-h-dvh flex-col">
+              <div className="flex-1">{children}</div>
+              <PoweredByQikTik />
+            </div>
+          </VenueThemeProvider>
         </VenueProvider>
       </body>
     </html>

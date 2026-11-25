@@ -1,4 +1,5 @@
 import "../globals.css";
+import { PoweredByQikTik } from "@/components/PoweredByQikTik";
 
 export const metadata = {
   title: "QikTik Platform",
@@ -19,7 +20,12 @@ export default function PlatformLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <div className="flex min-h-dvh flex-col">
+          <div className="flex-1">{children}</div>
+          <PoweredByQikTik />
+        </div>
+      </body>
     </html>
   );
 }

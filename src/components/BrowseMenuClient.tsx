@@ -58,6 +58,8 @@ export function BrowseMenuClient({
     "idle"
   );
   const [callError, setCallError] = useState<string | null>(null);
+  /** Landing first — menu items only after guest taps the Menu box. */
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const current = categories.find((c) => c.id === activeCategory) ?? categories[0];
   const children = current?.children ?? [];
@@ -246,17 +248,42 @@ export function BrowseMenuClient({
               className="h-[4.5rem] w-[4.5rem] rounded-full object-cover ring-1 ring-brass/40"
               priority
             />
-            <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.22em] text-brass/80">
-              {t("menu")}
-            </p>
-            <h1 className="mt-0.5 font-display text-2xl font-semibold leading-tight text-ink">
+            <h1 className="mt-3 font-display text-2xl font-semibold leading-tight text-ink">
               {venueName}
             </h1>
             <VenueContactIcons />
           </div>
 
-          {(enableOrderAtTable || enablePickup || enableCallWaiter) && (
-            <div className="mt-4 space-y-2.5">
+          <div className="mt-6 space-y-2.5">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((open) => !open)}
+                aria-expanded={menuOpen}
+                className={`guest-panel inline-flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-center transition ${
+                  menuOpen
+                    ? "border-brass/45 bg-brass/15"
+                    : "hover:border-brass/35"
+                }`}
+              >
+                <span className="text-sm font-bold leading-tight text-ink">
+                  {menuOpen ? t("menu") : t("viewMenu")}
+                </span>
+              </button>
+
+              {enablePickup ? (
+                <Link
+                  href={`${venuePickupPath(venueSlug, locale)}/register`}
+                  className="btn-primary inline-flex w-full flex-col items-center justify-center gap-0.5 px-4 py-3.5 text-center"
+                >
+                  <span className="text-sm font-bold leading-tight">
+                    {tPickup("registerCta")}
+                  </span>
+                  <span className="text-xs font-medium leading-snug text-[#0c100e]/75">
+                    {tPickup("subtitle")}
+                  </span>
+                </Link>
+              ) : null}
+
               {enableOrderAtTable ? (
                 !orderFormOpen ? (
                   <button
@@ -314,20 +341,6 @@ export function BrowseMenuClient({
                     </div>
                   </form>
                 )
-              ) : null}
-
-              {enablePickup ? (
-                <Link
-                  href={`${venuePickupPath(venueSlug, locale)}/register`}
-                  className="btn-primary inline-flex w-full flex-col items-center justify-center gap-0.5 px-4 py-3.5 text-center"
-                >
-                  <span className="text-sm font-bold leading-tight">
-                    {tPickup("registerCta")}
-                  </span>
-                  <span className="text-xs font-medium leading-snug text-[#0c100e]/75">
-                    {tPickup("subtitle")}
-                  </span>
-                </Link>
               ) : null}
 
               {enableCallWaiter ? (
@@ -413,10 +426,9 @@ export function BrowseMenuClient({
                   </form>
                 )
               ) : null}
-            </div>
-          )}
+          </div>
 
-          {!comingSoon ? (
+          {menuOpen && !comingSoon ? (
             <input
               type="search"
               placeholder={t("search")}
@@ -428,7 +440,7 @@ export function BrowseMenuClient({
         </div>
       </header>
 
-      {comingSoon ? (
+      {!menuOpen ? null : comingSoon ? (
         <section className="flex flex-col items-center px-5 py-16 text-center">
           <p className="font-display text-2xl font-semibold text-ink animate-rise">
             {tMenu("comingSoon")}

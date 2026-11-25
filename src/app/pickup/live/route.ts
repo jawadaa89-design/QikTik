@@ -32,6 +32,7 @@ import {
   staffGateMessages,
 } from "@/i18n/staff";
 import { expireStaleReadyPickupTickets } from "@/lib/pickup-expire";
+import { poweredByQikTikHtml } from "@/components/PoweredByQikTik";
 import {
   brandFromVenue,
   venueFaviconLinkTags,
@@ -267,6 +268,7 @@ function renderLogin(
     <input id="password" name="password" type="password" required autocomplete="off" />
     <button type="submit" data-i18n="unlock">Unlock</button>
   </form>
+  ${poweredByQikTikHtml()}
 </body>
 </html>`;
 }
@@ -895,6 +897,7 @@ function renderBoard(
   setInterval(softRefresh, 2000);
 })();
   </script>
+  ${poweredByQikTikHtml()}
 </body>
 </html>`;
 }
