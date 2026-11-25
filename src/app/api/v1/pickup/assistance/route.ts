@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { apiError } from "@/lib/validation";
 import { requireFeature } from "@/lib/features";
+import { expireStaleStaffBoardItems } from "@/lib/pickup-expire";
 import { requireStaffVenue } from "@/lib/staff-auth";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +38,12 @@ export async function GET(req: NextRequest) {
   const resolved = await requireStaffVenue(req);
   if ("error" in resolved) return resolved.error;
   const { venue } = resolved;
+
+  try {
+    await expireStaleStaffBoardItems({ venueId: venue.id });
+  } catch {
+    /* queue still returns if expire fails */
+  }
 
   const blocked = await requireFeature("pickup", venue.id);
   if (blocked) return blocked;

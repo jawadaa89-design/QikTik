@@ -5,10 +5,10 @@ import { requireStaffSession } from "@/lib/staff-auth";
 
 /** Clear table password so guest can register a new one (orders stay). */
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ tableId: string }> }
 ) {
-    const { tableId } = await params;
+  const { tableId } = await params;
 
   const table = await prisma.table.findUnique({
     where: { id: tableId },

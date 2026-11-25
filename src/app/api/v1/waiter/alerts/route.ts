@@ -8,6 +8,13 @@ export async function GET(req: NextRequest) {
   if ("error" in resolved) return resolved.error;
   const { venue } = resolved;
 
+  try {
+    const { expireStaleStaffBoardItems } = await import("@/lib/pickup-expire");
+    await expireStaleStaffBoardItems({ venueId: venue.id });
+  } catch {
+    /* continue even if cleanup fails */
+  }
+
   const section = req.nextUrl.searchParams.get("section");
 
   let tableFilter: {
@@ -59,8 +66,14 @@ export async function PATCH(req: NextRequest) {
 
   // Mark a single alert read (must belong to this venue’s table)
   if (id) {
+    const venueTableIds = (
+      await prisma.table.findMany({
+        where: { venueId: venue.id },
+        select: { id: true },
+      })
+    ).map((t) => t.id);
     const alert = await prisma.waiterAlert.findFirst({
-      where: { id, table: { venueId: venue.id } },
+      where: { id, tableId: { in: venueTableIds } },
       select: { id: true },
     });
     if (!alert) return apiError("NOT_FOUND", "Alert not found", 404);

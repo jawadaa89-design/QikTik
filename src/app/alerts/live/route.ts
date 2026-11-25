@@ -124,6 +124,13 @@ async function loadCalls(venueSlug: string) {
       >,
     };
 
+  try {
+    const { expireStaleStaffBoardItems } = await import("@/lib/pickup-expire");
+    await expireStaleStaffBoardItems({ venueId: venue.id });
+  } catch {
+    /* board still loads if expire fails */
+  }
+
   const assistance = await prisma.pickupAssistanceCall.findMany({
     where: { venueId: venue.id, status: { in: ["OPEN", "ACKNOWLEDGED"] } },
     orderBy: [{ status: "asc" }, { createdAt: "asc" }],

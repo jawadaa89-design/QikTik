@@ -6,7 +6,7 @@ import { apiError, pickupRegisterSchema } from "@/lib/validation";
 import { requireFeature } from "@/lib/features";
 import { requireStaffVenue } from "@/lib/staff-auth";
 import { requireVenue } from "@/lib/venue";
-import { expireStaleReadyPickupTickets } from "@/lib/pickup-expire";
+import { expireStaleStaffBoardItems } from "@/lib/pickup-expire";
 
 export const dynamic = "force-dynamic";
 
@@ -139,7 +139,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    await expireStaleReadyPickupTickets({ venueId: venue.id });
+    await expireStaleStaffBoardItems({ venueId: venue.id });
   } catch {
     /* queue still returns if expire fails */
   }

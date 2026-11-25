@@ -13,6 +13,13 @@ export async function GET(req: NextRequest) {
   if ("error" in resolved) return resolved.error;
   const { venue } = resolved;
 
+  try {
+    const { expireStaleStaffBoardItems } = await import("@/lib/pickup-expire");
+    await expireStaleStaffBoardItems({ venueId: venue.id });
+  } catch {
+    /* continue even if cleanup fails */
+  }
+
   const section = req.nextUrl.searchParams.get("section") as DiningSection | "ALL" | null;
 
   const tables = await prisma.table.findMany({

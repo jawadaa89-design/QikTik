@@ -31,7 +31,7 @@ import {
   pickupMessages,
   staffGateMessages,
 } from "@/i18n/staff";
-import { expireStaleReadyPickupTickets } from "@/lib/pickup-expire";
+import { expireStaleStaffBoardItems } from "@/lib/pickup-expire";
 import { poweredByQikTikHtml } from "@/components/PoweredByQikTik";
 import {
   brandFromVenue,
@@ -198,7 +198,7 @@ async function loadBoard(venueSlug: string) {
     };
 
   try {
-    await expireStaleReadyPickupTickets({ venueId: venue.id });
+    await expireStaleStaffBoardItems({ venueId: venue.id });
   } catch {
     /* board still loads if expire fails */
   }
@@ -993,7 +993,7 @@ export async function POST(req: NextRequest) {
       );
       return clearStaffCookies(res);
     }
-    const token = createStaffSessionValue(venue.id);
+    const token = createStaffSessionValue(venue!.id);
     const host =
       req.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
       req.headers.get("host") ||
@@ -1067,11 +1067,22 @@ export async function POST(req: NextRequest) {
       }
     } else if (ticketId && ["READY", "COMPLETED", "CANCELLED", "WAITING"].includes(status)) {
       const { publish, RealtimeEvents } = await import("@/lib/realtime");
+      const existing = await prisma.pickupTicket.findUnique({
+        where: { id: ticketId },
+      });
+      if (!existing || (venue?.id && existing.venueId !== venue.id)) {
+        /* wrong venue / missing — skip */
+      } else {
       const ticket = await prisma.pickupTicket.update({
         where: { id: ticketId },
         data: {
           status: status as "READY" | "COMPLETED" | "CANCELLED" | "WAITING",
-          readyAt: status === "READY" ? new Date() : undefined,
+          readyAt:
+            status === "READY"
+              ? existing.readyAt ?? new Date()
+              : status === "WAITING"
+                ? null
+                : existing.readyAt,
         },
       });
       publish(RealtimeEvents.PICKUP_UPDATED, {
@@ -1094,6 +1105,7 @@ export async function POST(req: NextRequest) {
         } catch {
           /* ignore push failures */
         }
+      }
       }
     }
 
