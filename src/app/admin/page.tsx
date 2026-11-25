@@ -903,11 +903,12 @@ export default function AdminPage() {
 
           {tab === "dashboard" && dash && (
             <>
-              <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="md:pe-28">
                 <h2 className="font-display text-3xl font-semibold text-ink">
                   {dash.venue?.name ?? t.venueFallback}
                 </h2>
                 <VenueSummaryExport
+                  className="mt-3"
                   venueName={dash.venue?.name ?? venueName}
                   slug={venueSlug}
                   packageId={packageId}
