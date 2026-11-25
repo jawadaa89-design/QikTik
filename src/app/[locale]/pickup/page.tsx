@@ -9,6 +9,7 @@ import { DigitalMenuLink } from "@/components/DigitalMenuLink";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
 import { VenueLogo } from "@/components/VenueLogo";
+import { VenueContactIcons } from "@/components/VenueContactIcons";
 import { registerPickupServiceWorker } from "@/lib/guest-push";
 import { useVenueName, useVenueSlug } from "@/components/VenueProvider";
 import { venuePickupPath } from "@/lib/venue-paths";
@@ -116,6 +117,7 @@ export default function PickupLandingPage() {
         <h1 className="mt-4 text-center font-display text-3xl font-semibold text-ink">
           {venueName}
         </h1>
+        <VenueContactIcons />
         <div className="mt-16 flex w-full max-w-md flex-col items-center space-y-3">
           <DigitalMenuLink locale={locale} venueSlug={venueSlug} label={t("digitalMenu")} />
 
