@@ -102,23 +102,30 @@ export default function middleware(request: NextRequest) {
     (parts[0] === "alerts" && parts[1] === "live")
   ) {
     const slug =
-      request.cookies.get(VENUE_SLUG_COOKIE)?.value?.trim() || DEFAULT_VENUE_SLUG;
+      request.nextUrl.searchParams.get("venue")?.trim() ||
+      request.cookies.get(VENUE_SLUG_COOKIE)?.value?.trim() ||
+      DEFAULT_VENUE_SLUG;
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set(VENUE_SLUG_HEADER, slug);
     const res = NextResponse.next({ request: { headers: requestHeaders } });
     return withVenueCookie(res, slug);
   }
 
-  // Legacy staff roots → /r/{demo}/…
+  // Legacy staff roots → /r/{activeVenue}/… (cookie keeps multi-venue; else demo)
   if (parts[0] && STAFF_ROOTS.has(parts[0])) {
-    const dest = `/r/${DEFAULT_VENUE_SLUG}${pathOnly}${request.nextUrl.search}`;
-    return withVenueCookie(NextResponse.redirect(new URL(dest, request.url)), DEFAULT_VENUE_SLUG);
+    const slug =
+      request.cookies.get(VENUE_SLUG_COOKIE)?.value?.trim() || DEFAULT_VENUE_SLUG;
+    const dest = `/r/${slug}${pathOnly}${request.nextUrl.search}`;
+    return withVenueCookie(NextResponse.redirect(new URL(dest, request.url)), slug);
   }
 
-  // Legacy /{locale}/… guest paths → /r/{demo}/{locale}/…
+  // Legacy /{locale}/… guest paths → /r/{activeVenue}/{locale}/…
+  // Must not force DEFAULT — that wiped Coffee Up when guests followed /ar/pickup/…
   if (isLocale(parts[0])) {
-    const dest = `/r/${DEFAULT_VENUE_SLUG}${pathOnly}${request.nextUrl.search}`;
-    return withVenueCookie(NextResponse.redirect(new URL(dest, request.url)), DEFAULT_VENUE_SLUG);
+    const slug =
+      request.cookies.get(VENUE_SLUG_COOKIE)?.value?.trim() || DEFAULT_VENUE_SLUG;
+    const dest = `/r/${slug}${pathOnly}${request.nextUrl.search}`;
+    return withVenueCookie(NextResponse.redirect(new URL(dest, request.url)), slug);
   }
 
   return intlMiddleware(request);

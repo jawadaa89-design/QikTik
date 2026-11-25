@@ -11,6 +11,7 @@ import { useCart } from "@/components/CartProvider";
 import { useGuestAuth } from "@/components/GuestAuthProvider";
 import { useFeatures } from "@/components/FeaturesProvider";
 import { QikTikLogo } from "@/components/QikTikLogo";
+import { VenueLogo } from "@/components/VenueLogo";
 import type { MenuCategory, MenuItem } from "@/lib/demo-data";
 
 type Props = {
@@ -122,8 +123,7 @@ export function GuestMenuClient({
             <QikTikLogo className="absolute end-0 top-0 z-10" />
           </div>
           <div className="mt-2 flex flex-col items-center text-center">
-            <Image
-              src="/logo.png"
+            <VenueLogo
               alt={venueName}
               width={72}
               height={72}

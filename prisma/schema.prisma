@@ -129,6 +129,16 @@ model Venue {
   orderingEnabled   Boolean  @default(true) @map("ordering_enabled")
   /** Guest pickup registration + staff pickup queue. */
   pickupEnabled     Boolean  @default(true) @map("pickup_enabled")
+  /** Restaurant logo — Blob URL or /uploads/venues/… path */
+  logoUrl           String?  @map("logo_url")
+  /** Brand accent (buttons, highlights) */
+  accentColor       String   @default("#c4a35a") @map("accent_color")
+  /** Page / shell background */
+  backgroundColor   String   @default("#0c110f") @map("background_color")
+  /** Cards / panels */
+  surfaceColor      String   @default("#141a17") @map("surface_color")
+  /** Primary text */
+  textColor         String   @default("#f2efe8") @map("text_color")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 

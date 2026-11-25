@@ -9,12 +9,17 @@ import {
 } from "@/components/StaffLanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
 import { useFeatures } from "@/components/FeaturesProvider";
-import { useVenueSlug } from "@/components/VenueProvider";
+import { useVenueName, useVenueSlug } from "@/components/VenueProvider";
+import { useVenueLogoSrc } from "@/components/VenueThemeProvider";
 import type { Locale } from "@/i18n/staff";
 import type { PackageId } from "@/lib/features";
 import { venueStaffPath } from "@/lib/venue-paths";
+import {
+  DEFAULT_VENUE_BRAND,
+  type VenueBrand,
+} from "@/lib/venue-brand";
 
-type Tab = "dashboard" | "menu" | "tables" | "package";
+type Tab = "dashboard" | "menu" | "tables" | "package" | "branding";
 
 const PACKAGE_OPTIONS: PackageId[] = [
   "menu_only",
@@ -97,10 +102,20 @@ export default function AdminPage() {
     hasFeature,
     refresh: refreshFeatures,
   } = useFeatures();
+  const venueName = useVenueName();
+  const themeLogoSrc = useVenueLogoSrc();
   const [tab, setTab] = useState<Tab>("dashboard");
   const [dash, setDash] = useState<Dashboard | null>(null);
   const [packageBusy, setPackageBusy] = useState(false);
   const [packageMsg, setPackageMsg] = useState<string | null>(null);
+  const [brand, setBrand] = useState<VenueBrand>({ ...DEFAULT_VENUE_BRAND });
+  const [brandLogoFile, setBrandLogoFile] = useState<File | null>(null);
+  const [brandLogoPreview, setBrandLogoPreview] = useState<string | null>(null);
+  const [brandBusy, setBrandBusy] = useState(false);
+  const [brandMsg, setBrandMsg] = useState<string | null>(null);
+  const [staffPw, setStaffPw] = useState("");
+  const [staffPwBusy, setStaffPwBusy] = useState(false);
+  const [staffPwMsg, setStaffPwMsg] = useState<string | null>(null);
   const [menu, setMenu] = useState<MenuCategory[]>([]);
   const [tables, setTables] = useState<AdminTable[]>([]);
   const [editId, setEditId] = useState<string | null>(null);
@@ -176,6 +191,7 @@ export default function AdminPage() {
       if (guestLinksNeeded) loadDash();
     }
     if (tab === "package") void refreshFeatures();
+    if (tab === "branding") void loadBranding();
   }, [
     tab,
     loadDash,
@@ -185,6 +201,72 @@ export default function AdminPage() {
     tablesNeeded,
     guestLinksNeeded,
   ]);
+
+  async function loadBranding() {
+    try {
+      const res = await fetch("/api/v1/admin/venue/branding");
+      if (!res.ok) return;
+      const data = await res.json();
+      const next = (data.branding ?? data.venue?.branding) as
+        | VenueBrand
+        | undefined;
+      if (next) {
+        setBrand(next);
+        setBrandLogoPreview(next.logoUrl || null);
+        setBrandLogoFile(null);
+      }
+    } catch {
+      /* transient */
+    }
+  }
+
+  async function saveBranding() {
+    setBrandBusy(true);
+    setBrandMsg(null);
+    try {
+      if (brandLogoFile) {
+        const form = new FormData();
+        form.set("file", brandLogoFile);
+        const logoRes = await fetch("/api/v1/admin/venue/logo", {
+          method: "POST",
+          body: form,
+        });
+        if (!logoRes.ok) {
+          setBrandMsg(t.brandingUploadError);
+          return;
+        }
+        const logoData = await logoRes.json();
+        if (logoData.logoUrl) {
+          setBrand((prev) => ({ ...prev, logoUrl: logoData.logoUrl }));
+          setBrandLogoPreview(logoData.logoUrl);
+          setBrandLogoFile(null);
+        }
+      }
+
+      const res = await fetch("/api/v1/admin/venue/branding", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accentColor: brand.accentColor,
+          backgroundColor: brand.backgroundColor,
+          surfaceColor: brand.surfaceColor,
+          textColor: brand.textColor,
+        }),
+      });
+      if (!res.ok) {
+        setBrandMsg(t.brandingSaveError);
+        return;
+      }
+      const data = await res.json();
+      if (data.branding) setBrand(data.branding as VenueBrand);
+      setBrandMsg(t.brandingSaved);
+      window.setTimeout(() => setBrandMsg(null), 2000);
+    } catch {
+      setBrandMsg(t.brandingSaveError);
+    } finally {
+      setBrandBusy(false);
+    }
+  }
 
   async function copyText(text: string) {
     try {
@@ -532,6 +614,10 @@ export default function AdminPage() {
   async function uploadItemImage(itemId: string, file: File) {
     setImageBusy(true);
     try {
+      if (file.size > 4 * 1024 * 1024) {
+        window.alert(t.imageHint);
+        return;
+      }
       const body = new FormData();
       body.set("itemId", itemId);
       body.set("file", file);
@@ -539,8 +625,8 @@ export default function AdminPage() {
         method: "POST",
         body,
       });
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.imageUrl) {
         setEditImageUrl(data.imageUrl as string);
         setMenu((prev) =>
           prev.map((cat) => ({
@@ -549,6 +635,10 @@ export default function AdminPage() {
               i.id === itemId ? { ...i, imageUrl: data.imageUrl as string } : i
             ),
           }))
+        );
+      } else {
+        window.alert(
+          (data?.error?.message as string) || t.imageHint
         );
       }
     } finally {
@@ -657,6 +747,7 @@ export default function AdminPage() {
     ["dashboard", t.navDashboard],
     ["menu", t.navMenu],
     ["tables", tablesNavLabel],
+    ["branding", t.navBranding],
     ["package", t.navPackage],
   ] as const;
 
@@ -664,13 +755,31 @@ export default function AdminPage() {
     return <div className="min-h-dvh" />;
   }
 
+  const headerLogoSrc =
+    brandLogoPreview || brand.logoUrl || themeLogoSrc || "/logo.png";
+
   return (
     <div className="relative min-h-dvh">
       <QikTikLogo className="absolute end-4 top-4 z-20 hidden md:block" />
       <div className="flex min-h-dvh">
         <aside className="hidden w-56 shrink-0 border-e border-white/8 bg-[#0a0f0d] p-5 md:block">
-          <div>
-            <h1 className="font-display text-xl font-semibold text-ink">{t.title}</h1>
+          <div className="flex flex-col items-start gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={headerLogoSrc}
+              alt={venueName}
+              width={56}
+              height={56}
+              className="h-14 w-14 rounded-full object-cover ring-2 ring-brass/40 bg-[#f6f3ee]"
+            />
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brass">
+                {venueName}
+              </p>
+              <h1 className="mt-1 font-display text-xl font-semibold text-ink">
+                {t.title}
+              </h1>
+            </div>
           </div>
           <nav className="mt-8 space-y-1">
             {nav.map(([id, label]) => (
@@ -734,12 +843,30 @@ export default function AdminPage() {
         </aside>
 
         <main className="flex-1 p-4 md:p-8">
-          <div className="relative mb-5 flex flex-wrap items-center gap-2 ps-24 pe-24 md:hidden">
+          <div className="mb-4 flex items-center gap-3 md:hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={headerLogoSrc}
+              alt={venueName}
+              width={44}
+              height={44}
+              className="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-brass/40 bg-[#f6f3ee]"
+            />
+            <div className="min-w-0">
+              <p className="truncate text-[11px] font-semibold uppercase tracking-[0.14em] text-brass">
+                {venueName}
+              </p>
+              <p className="truncate font-display text-lg font-semibold text-ink">
+                {t.title}
+              </p>
+            </div>
+            <QikTikLogo className="ms-auto shrink-0" />
+          </div>
+          <div className="relative mb-5 flex flex-wrap items-center gap-2 md:hidden">
             <StaffLanguageSwitcher
               locale={locale}
               onChange={setStaffLocale}
               label={t.language}
-              className="absolute start-0 top-0.5 z-10"
             />
             {nav.map(([id, label]) => (
               <button
@@ -752,7 +879,6 @@ export default function AdminPage() {
                 {label}
               </button>
             ))}
-            <QikTikLogo className="absolute end-0 top-0.5" />
           </div>
 
           {tab === "dashboard" && dash && (
@@ -1783,6 +1909,200 @@ export default function AdminPage() {
                   </div>
                 </>
               )}
+            </>
+          )}
+
+          {tab === "branding" && (
+            <>
+              <h2 className="font-display text-3xl font-semibold text-ink">
+                {t.brandingTitle}
+              </h2>
+              <p className="mt-1 text-sm text-ink-soft/50">{t.brandingHint}</p>
+
+              <div className="guest-panel mt-5 space-y-4 rounded-2xl p-5">
+                <label className="block">
+                  <span className="text-xs font-semibold text-ink-soft">
+                    {t.brandingLogo}
+                  </span>
+                  <div className="mt-2 flex flex-wrap items-center gap-4">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={
+                        brandLogoFile
+                          ? URL.createObjectURL(brandLogoFile)
+                          : brandLogoPreview || brand.logoUrl || "/logo.png"
+                      }
+                      alt=""
+                      width={64}
+                      height={64}
+                      className="h-16 w-16 rounded-full object-cover"
+                      style={{ border: `2px solid ${brand.accentColor}` }}
+                    />
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="text-sm text-ink-soft file:me-3 file:rounded-lg file:border-0 file:bg-brass/20 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brass"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] ?? null;
+                        setBrandLogoFile(file);
+                      }}
+                    />
+                  </div>
+                </label>
+
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {(
+                    [
+                      ["accentColor", t.brandingAccent],
+                      ["backgroundColor", t.brandingBackground],
+                      ["surfaceColor", t.brandingSurface],
+                      ["textColor", t.brandingText],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <label key={key} className="block">
+                      <span className="text-xs text-ink-soft/70">{label}</span>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={brand[key]}
+                          onChange={(e) =>
+                            setBrand((prev) => ({
+                              ...prev,
+                              [key]: e.target.value,
+                            }))
+                          }
+                          className="h-10 w-10 cursor-pointer rounded-lg border border-white/10 bg-transparent p-0.5"
+                        />
+                        <input
+                          value={brand[key]}
+                          onChange={(e) =>
+                            setBrand((prev) => ({
+                              ...prev,
+                              [key]: e.target.value,
+                            }))
+                          }
+                          className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-2 py-2 font-mono text-xs text-ink outline-none focus:border-brass/40"
+                        />
+                      </div>
+                    </label>
+                  ))}
+                </div>
+
+                <div
+                  className="overflow-hidden rounded-xl border border-white/10"
+                  style={{
+                    background: brand.backgroundColor,
+                    color: brand.textColor,
+                  }}
+                >
+                  <div
+                    className="flex items-center gap-3 border-b border-white/10 px-3 py-3"
+                    style={{ background: brand.surfaceColor }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={
+                        brandLogoFile
+                          ? URL.createObjectURL(brandLogoFile)
+                          : brandLogoPreview || brand.logoUrl || "/logo.png"
+                      }
+                      alt=""
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 rounded-full object-cover"
+                      style={{ border: `2px solid ${brand.accentColor}` }}
+                    />
+                    <div>
+                      <p
+                        className="text-[10px] font-bold uppercase tracking-[0.18em]"
+                        style={{ color: brand.accentColor }}
+                      >
+                        {t.brandingPreview}
+                      </p>
+                      <p className="text-sm font-semibold">
+                        {dash?.venue?.name ?? t.venueFallback}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={brandBusy}
+                  onClick={() => void saveBranding()}
+                  className="btn-primary px-4 py-2.5 text-sm font-bold disabled:opacity-55"
+                >
+                  {brandBusy ? "…" : t.brandingSave}
+                </button>
+                {brandMsg ? (
+                  <p className="text-sm font-semibold text-brass">{brandMsg}</p>
+                ) : null}
+
+                <div className="border-t border-white/8 pt-4">
+                  <p className="text-xs font-semibold text-ink-soft">
+                    Staff password
+                  </p>
+                  <p className="mt-1 text-xs text-ink-soft/50">
+                    Unlock password for this restaurant only (admin + boards).
+                    Demo “My Restaurant” can still use the global demo password.
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-end gap-2">
+                    <label className="min-w-[12rem] flex-1">
+                      <span className="text-xs text-ink-soft/70">New password</span>
+                      <input
+                        type="password"
+                        minLength={4}
+                        value={staffPw}
+                        onChange={(e) => setStaffPw(e.target.value)}
+                        className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-ink outline-none focus:border-brass/40"
+                        autoComplete="new-password"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      disabled={staffPwBusy || staffPw.trim().length < 4}
+                      onClick={() => {
+                        void (async () => {
+                          setStaffPwBusy(true);
+                          setStaffPwMsg(null);
+                          try {
+                            const res = await fetch(
+                              "/api/v1/admin/staff-password",
+                              {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ password: staffPw }),
+                              }
+                            );
+                            if (!res.ok) {
+                              const data = await res.json().catch(() => null);
+                              setStaffPwMsg(
+                                data?.error?.message || "Could not save"
+                              );
+                              return;
+                            }
+                            setStaffPw("");
+                            setStaffPwMsg("Staff password updated");
+                            window.setTimeout(() => setStaffPwMsg(null), 2000);
+                          } catch {
+                            setStaffPwMsg("Could not save");
+                          } finally {
+                            setStaffPwBusy(false);
+                          }
+                        })();
+                      }}
+                      className="btn-primary px-4 py-2.5 text-sm font-bold disabled:opacity-55"
+                    >
+                      {staffPwBusy ? "…" : "Update password"}
+                    </button>
+                  </div>
+                  {staffPwMsg ? (
+                    <p className="mt-2 text-sm font-semibold text-brass">
+                      {staffPwMsg}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
             </>
           )}
 

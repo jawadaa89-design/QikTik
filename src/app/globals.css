@@ -4,19 +4,35 @@
   --font-sans: "Cairo", "Noto Sans Hebrew", ui-sans-serif, sans-serif;
   --font-display: "Fraunces", "Cairo", serif;
 
-  --color-ink: #f2efe8;
+  --color-ink: var(--brand-text, #f2efe8);
   --color-ink-soft: #c8c4bb;
-  --color-brass: #f97316;
+  --color-brass: var(--brand-accent, #f97316);
   --color-brass-deep: #fb923c;
   --color-brass-glow: #fdba74;
   --color-mist: #121214;
   --color-mist-deep: #070708;
   --color-paper: #141416;
-  --color-panel: #1a1a1e;
+  --color-panel: var(--brand-surface, #1a1a1e);
   --color-panel-2: #222226;
   --color-alert: #d47272;
   --color-ready: #5fad86;
   --color-line: color-mix(in oklab, white 10%, transparent);
+}
+
+:root {
+  --brand-accent: #c4a35a;
+  --brand-bg: #0c110f;
+  --brand-surface: #141a17;
+  --brand-text: #f2efe8;
+}
+
+.venue-theme {
+  color: var(--brand-text, #f2efe8);
+  background-color: var(--brand-bg, #0c110f);
+  /* Home Screen / PWA: clear status bar (clock, battery) under translucent chrome */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
 }
 
 html {
@@ -80,14 +96,22 @@ body > * {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
 .guest-shell {
   @apply mx-auto min-h-dvh max-w-md;
 }
 
+/* Language / logo pinned to a page — keep below status bar when parent isn’t padded */
+.safe-top {
+  top: max(0.75rem, env(safe-area-inset-top, 0px));
+}
+
 .guest-panel {
   /* rgba fallbacks first — color-mix(oklab) is unreliable on some iPad Safari builds */
-  background: rgba(26, 26, 30, 0.92);
-  background: color-mix(in oklab, var(--color-panel) 92%, transparent);
+  background: color-mix(in oklab, var(--brand-surface, #1a1a1e) 92%, transparent);
   backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border: 1px solid color-mix(in oklab, white 8%, transparent);
@@ -95,7 +119,11 @@ body > * {
 
 .btn-primary {
   @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition;
-  background: linear-gradient(135deg, var(--color-brass) 0%, #c2410c 100%);
+  background: linear-gradient(
+    135deg,
+    var(--brand-accent, var(--color-brass)) 0%,
+    color-mix(in oklab, var(--brand-accent, #c2410c) 70%, black) 100%
+  );
   color: #0c100e;
   box-shadow: 0 1px 0 color-mix(in oklab, white 28%, transparent) inset;
 }

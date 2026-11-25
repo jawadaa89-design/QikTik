@@ -7,8 +7,20 @@ import {
 } from "@/lib/features";
 import { apiError } from "@/lib/validation";
 import { generateTableToken } from "@/lib/utils";
+import {
+  brandFromVenue,
+  DEFAULT_VENUE_BRAND,
+  normalizeHexColor,
+} from "@/lib/venue-brand";
+import { hashStaffPassword } from "@/lib/staff-auth";
 
 export const dynamic = "force-dynamic";
+
+const hex = z
+  .string()
+  .trim()
+  .regex(/^#?[0-9a-fA-F]{6}$/)
+  .optional();
 
 const createVenueSchema = z.object({
   name: z.string().trim().min(2).max(80),
@@ -23,6 +35,12 @@ const createVenueSchema = z.object({
     .enum(["menu_only", "menu_alerts", "menu_alerts_pickup", "menu_ordering"])
     .default("menu_only"),
   password: z.string().min(1),
+  /** Staff / admin unlock password for this restaurant only */
+  staffPassword: z.string().trim().min(4).max(72),
+  accentColor: hex,
+  backgroundColor: hex,
+  surfaceColor: hex,
+  textColor: hex,
 });
 
 function platformPasswordOk(password: string): boolean {
@@ -60,6 +78,11 @@ export async function POST(req: NextRequest) {
   }
 
   const features = featuresFromPackageId(packageId as PackageId);
+  const withHash = (v: string | undefined, fallback: string) =>
+    normalizeHexColor(
+      v ? (v.startsWith("#") ? v : `#${v}`) : fallback,
+      fallback
+    );
 
   const venue = await prisma.venue.create({
     data: {
@@ -71,6 +94,19 @@ export async function POST(req: NextRequest) {
       alertsEnabled: features.alerts,
       orderingEnabled: features.ordering,
       pickupEnabled: features.pickup,
+      accentColor: withHash(
+        parsed.data.accentColor,
+        DEFAULT_VENUE_BRAND.accentColor
+      ),
+      backgroundColor: withHash(
+        parsed.data.backgroundColor,
+        DEFAULT_VENUE_BRAND.backgroundColor
+      ),
+      surfaceColor: withHash(
+        parsed.data.surfaceColor,
+        DEFAULT_VENUE_BRAND.surfaceColor
+      ),
+      textColor: withHash(parsed.data.textColor, DEFAULT_VENUE_BRAND.textColor),
     },
   });
 
@@ -85,14 +121,13 @@ export async function POST(req: NextRequest) {
     })),
   });
 
-  const demoHash = `demo:${process.env.STAFF_DEMO_PASSWORD?.trim() || "qiktik2026"}`;
   await prisma.user.create({
     data: {
       venueId: venue.id,
       email: `admin@${slug}.local`,
       name: "Admin",
       role: "ADMIN",
-      passwordHash: demoHash,
+      passwordHash: hashStaffPassword(parsed.data.staffPassword),
     },
   });
 
@@ -103,10 +138,12 @@ export async function POST(req: NextRequest) {
         name: venue.name,
         slug: venue.slug,
         packageId,
+        branding: brandFromVenue(venue),
         urls: {
           menu: `/r/${slug}/ar/menu`,
           admin: `/r/${slug}/admin`,
           pickup: `/r/${slug}/ar/pickup`,
+          staffPickupBoard: `/r/${slug}/pickup`,
         },
       },
     },
@@ -133,13 +170,24 @@ export async function GET(req: NextRequest) {
       alertsEnabled: true,
       orderingEnabled: true,
       pickupEnabled: true,
+      logoUrl: true,
+      accentColor: true,
+      backgroundColor: true,
+      surfaceColor: true,
+      textColor: true,
       createdAt: true,
     },
   });
 
   return Response.json({
     venues: venues.map((v) => ({
-      ...v,
+      id: v.id,
+      name: v.name,
+      slug: v.slug,
+      alertsEnabled: v.alertsEnabled,
+      orderingEnabled: v.orderingEnabled,
+      pickupEnabled: v.pickupEnabled,
+      branding: brandFromVenue(v),
       createdAt: v.createdAt.toISOString(),
       urls: {
         menu: `/r/${v.slug}/ar/menu`,

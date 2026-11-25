@@ -1,10 +1,12 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { QikTikLogo } from "@/components/QikTikLogo";
 import type { PackageId } from "@/lib/features";
+import { DEFAULT_VENUE_BRAND } from "@/lib/venue-brand";
 
 type Created = {
+  id: string;
   name: string;
   slug: string;
   urls: { menu: string; admin: string; pickup: string };
@@ -19,12 +21,25 @@ const PACKAGES: { id: PackageId; label: string }[] = [
 
 export default function PlatformPage() {
   const [password, setPassword] = useState("");
+  const [staffPassword, setStaffPassword] = useState("");
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [packageId, setPackageId] = useState<PackageId>("menu_only");
+  const [accentColor, setAccentColor] = useState(DEFAULT_VENUE_BRAND.accentColor);
+  const [backgroundColor, setBackgroundColor] = useState(
+    DEFAULT_VENUE_BRAND.backgroundColor
+  );
+  const [surfaceColor, setSurfaceColor] = useState(DEFAULT_VENUE_BRAND.surfaceColor);
+  const [textColor, setTextColor] = useState(DEFAULT_VENUE_BRAND.textColor);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<Created | null>(null);
+
+  const logoPreview = useMemo(() => {
+    if (!logoFile) return "/logo.png";
+    return URL.createObjectURL(logoFile);
+  }, [logoFile]);
 
   function onNameChange(value: string) {
     setName(value);
@@ -42,16 +57,50 @@ export default function PlatformPage() {
       const res = await fetch("/api/v1/platform/venues", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, slug, packageId, password }),
+        body: JSON.stringify({
+          name,
+          slug,
+          packageId,
+          password,
+          staffPassword,
+          accentColor,
+          backgroundColor,
+          surfaceColor,
+          textColor,
+        }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
         setError(data?.error?.message || "Could not create venue");
         return;
       }
-      setCreated(data.venue);
+
+      const venue = data.venue as Created;
+      if (logoFile && venue?.id) {
+        const form = new FormData();
+        form.set("password", password);
+        form.set("venueId", venue.id);
+        form.set("file", logoFile);
+        const logoRes = await fetch("/api/v1/platform/venues/logo", {
+          method: "POST",
+          body: form,
+        });
+        if (!logoRes.ok) {
+          const logoData = await logoRes.json().catch(() => null);
+          setError(
+            logoData?.error?.message ||
+              "Venue created, but logo upload failed — upload again from Admin → Branding"
+          );
+          setCreated(venue);
+          return;
+        }
+      }
+
+      setCreated(venue);
       setName("");
       setSlug("");
+      setStaffPassword("");
+      setLogoFile(null);
     } catch {
       setError("Network error");
     } finally {
@@ -88,6 +137,21 @@ export default function PlatformPage() {
             onChange={(e) => setPassword(e.target.value)}
             className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-ink outline-none focus:border-brass/40"
             autoComplete="off"
+          />
+        </label>
+        <label className="block">
+          <span className="text-xs font-semibold text-ink-soft">
+            Staff password for this restaurant
+          </span>
+          <input
+            type="password"
+            required
+            minLength={4}
+            value={staffPassword}
+            onChange={(e) => setStaffPassword(e.target.value)}
+            className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-ink outline-none focus:border-brass/40"
+            autoComplete="new-password"
+            placeholder="Used for admin + pickup board unlock"
           />
         </label>
         <label className="block">
@@ -130,6 +194,70 @@ export default function PlatformPage() {
           </select>
         </label>
 
+        <div className="border-t border-white/8 pt-4">
+          <p className="text-xs font-semibold text-ink-soft">Branding</p>
+          <label className="mt-3 block">
+            <span className="text-xs text-ink-soft/70">Logo</span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="mt-1.5 block w-full text-sm text-ink-soft file:me-3 file:rounded-lg file:border-0 file:bg-brass/20 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brass"
+              onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
+
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <ColorField
+              label="Accent"
+              value={accentColor}
+              onChange={setAccentColor}
+            />
+            <ColorField
+              label="Background"
+              value={backgroundColor}
+              onChange={setBackgroundColor}
+            />
+            <ColorField
+              label="Surface"
+              value={surfaceColor}
+              onChange={setSurfaceColor}
+            />
+            <ColorField label="Text" value={textColor} onChange={setTextColor} />
+          </div>
+
+          <div
+            className="mt-4 overflow-hidden rounded-xl border border-white/10"
+            style={{ background: backgroundColor, color: textColor }}
+          >
+            <div
+              className="flex items-center gap-3 border-b border-white/10 px-3 py-3"
+              style={{ background: surfaceColor }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={logoPreview}
+                alt=""
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-full object-cover"
+                style={{ border: `2px solid ${accentColor}` }}
+              />
+              <div className="min-w-0">
+                <p
+                  className="text-[10px] font-bold uppercase tracking-[0.18em]"
+                  style={{ color: accentColor }}
+                >
+                  Guest menu
+                </p>
+                <p className="truncate text-sm font-semibold">
+                  {name || "Restaurant name"}
+                </p>
+              </div>
+            </div>
+            <p className="px-3 py-2 text-xs opacity-70">Preview of guest header</p>
+          </div>
+        </div>
+
         {error ? (
           <p className="rounded-xl border border-alert/30 bg-alert/10 px-3 py-2 text-sm text-alert">
             {error}
@@ -147,9 +275,7 @@ export default function PlatformPage() {
 
       {created ? (
         <div className="guest-panel mt-6 space-y-2 rounded-2xl p-5">
-          <p className="font-semibold text-ink">
-            Created {created.name}
-          </p>
+          <p className="font-semibold text-ink">Created {created.name}</p>
           <a
             href={created.urls.menu}
             className="block break-all text-sm text-brass hover:underline"
@@ -171,6 +297,36 @@ export default function PlatformPage() {
         </a>
       </p>
     </div>
+  );
+}
+
+function ColorField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs text-ink-soft/70">{label}</span>
+      <div className="mt-1.5 flex items-center gap-2">
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-10 w-10 cursor-pointer rounded-lg border border-white/10 bg-transparent p-0.5"
+        />
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-2 font-mono text-xs text-ink outline-none focus:border-brass/40"
+          pattern="^#[0-9A-Fa-f]{6}$"
+        />
+      </div>
+    </label>
   );
 }
 

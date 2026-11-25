@@ -8,15 +8,16 @@ import { CallWaiterBellIcon } from "@/components/CallWaiterBellIcon";
 import { DigitalMenuLink } from "@/components/DigitalMenuLink";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
+import { VenueLogo } from "@/components/VenueLogo";
 import { registerPickupServiceWorker } from "@/lib/guest-push";
-import { useVenueSlug } from "@/components/VenueProvider";
-
-const venueName = process.env.NEXT_PUBLIC_VENUE_NAME ?? "My Restaurant";
+import { useVenueName, useVenueSlug } from "@/components/VenueProvider";
+import { venuePickupPath } from "@/lib/venue-paths";
 
 export default function PickupLandingPage() {
   const t = useTranslations("pickup");
   const locale = useLocale();
   const venueSlug = useVenueSlug();
+  const venueName = useVenueName();
 
   useEffect(() => {
     void registerPickupServiceWorker();
@@ -105,8 +106,7 @@ export default function PickupLandingPage() {
         <QikTikLogo className="absolute end-0 top-0 z-10" />
       </div>
       <div className="mx-auto mb-6 flex w-full max-w-md flex-col items-center">
-        <Image
-          src="/logo.png"
+        <VenueLogo
           alt={venueName}
           width={96}
           height={96}
@@ -120,7 +120,7 @@ export default function PickupLandingPage() {
           <DigitalMenuLink locale={locale} venueSlug={venueSlug} label={t("digitalMenu")} />
 
           <Link
-            href={`/${locale}/pickup/register`}
+            href={`${venuePickupPath(venueSlug, locale)}/register`}
             className="btn-primary inline-flex w-full flex-col items-center justify-center gap-0.5 px-4 py-3.5 text-center"
           >
             <span className="text-sm font-bold leading-tight">{t("registerCta")}</span>

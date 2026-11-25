@@ -1,14 +1,29 @@
 import "../globals.css";
+import { VenueProvider } from "@/components/VenueProvider";
+import { VenueThemeProvider } from "@/components/VenueThemeProvider";
+import { resolveVenue } from "@/lib/venue";
+import { brandFromVenue } from "@/lib/venue-brand";
+import { venueSlugForLayout } from "@/lib/venue-request.server";
 
 export const metadata = {
   title: "QikTik Pickup Queue",
 };
 
+export const dynamic = "force-dynamic";
+
 /**
  * Staff board auth lives in /pickup/live (SSR). Do not wrap with StaffAuthGate
  * here — that would force a second unlock before the redirect to live.
  */
-export default function PickupLayout({ children }: { children: React.ReactNode }) {
+export default async function PickupLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const venueSlug = await venueSlugForLayout();
+  const venue = await resolveVenue({ slug: venueSlug });
+  const brand = brandFromVenue(venue);
+
   return (
     <html lang="ar" suppressHydrationWarning>
       <head>
@@ -19,7 +34,14 @@ export default function PickupLayout({ children }: { children: React.ReactNode }
           rel="stylesheet"
         />
       </head>
-      <body className="staff-ink antialiased">{children}</body>
+      <body className="staff-ink antialiased">
+        <VenueProvider
+          venueSlug={venueSlug}
+          venueName={venue?.name ?? "Restaurant"}
+        >
+          <VenueThemeProvider brand={brand}>{children}</VenueThemeProvider>
+        </VenueProvider>
+      </body>
     </html>
   );
 }

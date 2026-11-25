@@ -2,9 +2,14 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { VenueProvider } from "@/components/VenueProvider";
+import { VenueThemeProvider } from "@/components/VenueThemeProvider";
 import { locales, isRtl, type Locale } from "@/i18n/config";
+import { headers } from "next/headers";
 import { venueSlugFromCookies } from "@/lib/venue-cookie.server";
 import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
+import { resolveVenue } from "@/lib/venue";
+import { brandFromVenue, venueLogoSrc } from "@/lib/venue-brand";
+import { VENUE_SLUG_HEADER } from "@/lib/venue-paths";
 
 type Props = {
   children: React.ReactNode;
@@ -21,7 +26,12 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale);
   const messages = await getMessages();
   const dir = isRtl(locale as Locale) ? "rtl" : "ltr";
-  const venueSlug = (await venueSlugFromCookies()) || DEFAULT_VENUE_SLUG;
+  const headerSlug = (await headers()).get(VENUE_SLUG_HEADER)?.trim();
+  const venueSlug =
+    headerSlug || (await venueSlugFromCookies()) || DEFAULT_VENUE_SLUG;
+  const venue = await resolveVenue({ slug: venueSlug });
+  const brand = brandFromVenue(venue);
+  const iconHref = venueLogoSrc(brand);
 
   return (
     <html lang={locale} dir={dir}>
@@ -29,7 +39,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <link rel="apple-touch-icon" href="/logo.png" />
+        <link rel="apple-touch-icon" href={iconHref} />
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -39,8 +49,13 @@ export default async function LocaleLayout({ children, params }: Props) {
         />
       </head>
       <body>
-        <VenueProvider venueSlug={venueSlug}>
-          <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+        <VenueProvider
+          venueSlug={venueSlug}
+          venueName={venue?.name ?? "Restaurant"}
+        >
+          <VenueThemeProvider brand={brand}>
+            <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+          </VenueThemeProvider>
         </VenueProvider>
       </body>
     </html>

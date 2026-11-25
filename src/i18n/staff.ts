@@ -677,6 +677,19 @@ export type AdminMessages = {
   navTables: string;
   navLinks: string;
   navPackage: string;
+  navBranding: string;
+  brandingTitle: string;
+  brandingHint: string;
+  brandingLogo: string;
+  brandingAccent: string;
+  brandingBackground: string;
+  brandingSurface: string;
+  brandingText: string;
+  brandingSave: string;
+  brandingSaved: string;
+  brandingSaveError: string;
+  brandingUploadError: string;
+  brandingPreview: string;
   linkKitchen: string;
   linkWaiter: string;
   linkPickup: string;
@@ -792,6 +805,19 @@ const adminEn: AdminMessages = {
   navTables: "Tables",
   navLinks: "Guest links",
   navPackage: "Package",
+  navBranding: "Branding",
+  brandingTitle: "Branding",
+  brandingHint: "Logo and colors for the guest and staff experience.",
+  brandingLogo: "Logo",
+  brandingAccent: "Accent",
+  brandingBackground: "Background",
+  brandingSurface: "Surface",
+  brandingText: "Text",
+  brandingSave: "Save branding",
+  brandingSaved: "Branding saved",
+  brandingSaveError: "Could not save branding",
+  brandingUploadError: "Could not upload logo",
+  brandingPreview: "Guest header preview",
   linkKitchen: "Kitchen",
   linkWaiter: "Waiter",
   linkPickup: "Pickup queue",
@@ -929,6 +955,19 @@ const adminAr: AdminMessages = {
   navTables: "الطاولات",
   navLinks: "روابط الضيوف",
   navPackage: "الباقة",
+  navBranding: "الهوية",
+  brandingTitle: "الهوية البصرية",
+  brandingHint: "الشعار والألوان لواجهة الضيوف والطاقم.",
+  brandingLogo: "الشعار",
+  brandingAccent: "لون التمييز",
+  brandingBackground: "الخلفية",
+  brandingSurface: "السطح",
+  brandingText: "النص",
+  brandingSave: "حفظ الهوية",
+  brandingSaved: "تم حفظ الهوية",
+  brandingSaveError: "تعذر حفظ الهوية",
+  brandingUploadError: "تعذر رفع الشعار",
+  brandingPreview: "معاينة ترويسة الضيف",
   linkKitchen: "المطبخ",
   linkWaiter: "النادل",
   linkPickup: "طابور الاستلام",
@@ -1066,6 +1105,19 @@ const adminHe: AdminMessages = {
   navTables: "שולחנות",
   navLinks: "קישורי אורחים",
   navPackage: "חבילה",
+  navBranding: "מיתוג",
+  brandingTitle: "מיתוג",
+  brandingHint: "לוגו וצבעים לחוויית האורחים והצוות.",
+  brandingLogo: "לוגו",
+  brandingAccent: "הדגשה",
+  brandingBackground: "רקע",
+  brandingSurface: "משטח",
+  brandingText: "טקסט",
+  brandingSave: "שמירת מיתוג",
+  brandingSaved: "המיתוג נשמר",
+  brandingSaveError: "לא ניתן לשמור מיתוג",
+  brandingUploadError: "לא ניתן להעלות לוגו",
+  brandingPreview: "תצוגה מקדימה של כותרת אורח",
   linkKitchen: "מטבח",
   linkWaiter: "מלצר",
   linkPickup: "תור איסוף",
@@ -1203,6 +1255,19 @@ const adminRu: AdminMessages = {
   navTables: "Столы",
   navLinks: "Ссылки гостей",
   navPackage: "Пакет",
+  navBranding: "Брендинг",
+  brandingTitle: "Брендинг",
+  brandingHint: "Логотип и цвета для гостевого и staff-интерфейса.",
+  brandingLogo: "Логотип",
+  brandingAccent: "Акцент",
+  brandingBackground: "Фон",
+  brandingSurface: "Поверхность",
+  brandingText: "Текст",
+  brandingSave: "Сохранить брендинг",
+  brandingSaved: "Брендинг сохранён",
+  brandingSaveError: "Не удалось сохранить брендинг",
+  brandingUploadError: "Не удалось загрузить логотип",
+  brandingPreview: "Превью шапки гостя",
   linkKitchen: "Кухня",
   linkWaiter: "Официант",
   linkPickup: "Очередь самовывоза",

@@ -22,6 +22,12 @@ function lanHosts(): string[] {
 const nextConfig: NextConfig = {
   // Allow phone/LAN access in dev (hosts refresh when Next restarts)
   allowedDevOrigins: lanHosts(),
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
+      { protocol: "https", hostname: "*.blob.vercel-storage.com" },
+    ],
+  },
   eslint: {
     // Deploy unblocked; fix no-html-link-for-pages separately
     ignoreDuringBuilds: true,

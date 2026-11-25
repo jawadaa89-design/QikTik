@@ -2,19 +2,26 @@ import "../globals.css";
 import { FeaturesProvider } from "@/components/FeaturesProvider";
 import { StaffAuthGate } from "@/components/StaffAuthGate";
 import { VenueProvider } from "@/components/VenueProvider";
-import { venueSlugFromCookies } from "@/lib/venue-cookie.server";
-import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
+import { VenueThemeProvider } from "@/components/VenueThemeProvider";
+import { resolveVenue } from "@/lib/venue";
+import { brandFromVenue } from "@/lib/venue-brand";
+import { venueSlugForLayout } from "@/lib/venue-request.server";
 
 export const metadata = {
   title: "QikTik Admin",
 };
+
+/** Per-request venue from /r/{slug}/… header — avoid shared-cookie bleed across tabs. */
+export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const venueSlug = (await venueSlugFromCookies()) || DEFAULT_VENUE_SLUG;
+  const venueSlug = await venueSlugForLayout();
+  const venue = await resolveVenue({ slug: venueSlug });
+  const brand = brandFromVenue(venue);
 
   return (
     <html lang="ar" suppressHydrationWarning>
@@ -27,10 +34,15 @@ export default async function AdminLayout({
         />
       </head>
       <body className="antialiased">
-        <VenueProvider venueSlug={venueSlug}>
-          <FeaturesProvider fetchOnMount venueSlug={venueSlug}>
-            <StaffAuthGate>{children}</StaffAuthGate>
-          </FeaturesProvider>
+        <VenueProvider
+          venueSlug={venueSlug}
+          venueName={venue?.name ?? "Restaurant"}
+        >
+          <VenueThemeProvider brand={brand}>
+            <FeaturesProvider fetchOnMount venueSlug={venueSlug}>
+              <StaffAuthGate>{children}</StaffAuthGate>
+            </FeaturesProvider>
+          </VenueThemeProvider>
         </VenueProvider>
       </body>
     </html>

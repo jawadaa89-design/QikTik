@@ -1,50 +1,53 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
 import {
   STAFF_SESSION_COOKIE,
   STAFF_TOKEN_COOKIE,
   createStaffSessionValue,
-  demoStaffPassword,
   staffSessionCookieOptions,
   verifyStaffPassword,
 } from "@/lib/staff-auth";
+import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
+import { VENUE_SLUG_COOKIE } from "@/lib/venue-paths";
 
-/** Map unlock "next" to a safe staff board path. */
-function resolveStaffDest(nextPath: string): string {
-  const path = (nextPath || "/pickup").split("?")[0] || "/pickup";
-  // Preserve /r/{slug}/… staff destinations (multi-venue)
+/** Map unlock "next" to a safe staff board path under /r/{slug}/… */
+function resolveStaffDest(nextPath: string, fallbackSlug: string): {
+  path: string;
+  slug: string;
+} {
+  const path = (nextPath || "/admin").split("?")[0] || "/admin";
   const venueMatch = path.match(/^\/r\/([^/]+)(\/.*)?$/);
   if (venueMatch) {
     const slug = venueMatch[1];
     const rest = venueMatch[2] || "";
-    if (rest.startsWith("/kitchen")) return `/r/${slug}/kitchen`;
-    if (rest.startsWith("/waiter")) return `/r/${slug}/waiter`;
-    if (rest.startsWith("/admin")) return `/r/${slug}/admin`;
-    if (rest.startsWith("/alerts")) return `/r/${slug}/alerts`;
-    if (rest.startsWith("/pickup")) return `/r/${slug}/pickup`;
-    return `/r/${slug}/admin`;
+    if (rest.startsWith("/kitchen")) return { path: `/r/${slug}/kitchen`, slug };
+    if (rest.startsWith("/waiter")) return { path: `/r/${slug}/waiter`, slug };
+    if (rest.startsWith("/admin")) return { path: `/r/${slug}/admin`, slug };
+    if (rest.startsWith("/alerts")) return { path: `/r/${slug}/alerts`, slug };
+    if (rest.startsWith("/pickup")) return { path: `/r/${slug}/pickup`, slug };
+    return { path: `/r/${slug}/admin`, slug };
   }
-  if (path.startsWith("/kitchen")) return "/kitchen";
-  if (path.startsWith("/waiter")) return "/waiter";
-  if (path.startsWith("/admin")) return "/admin";
-  // /alerts/live redirects to /pickup/live when pickup package is on
-  if (path.startsWith("/alerts")) return "/alerts/live";
-  // Canonical pickup board (SSR) — works on iPad / PC / phone
-  return "/pickup/live";
+
+  const slug = fallbackSlug || DEFAULT_VENUE_SLUG;
+  if (path.startsWith("/kitchen")) return { path: `/r/${slug}/kitchen`, slug };
+  if (path.startsWith("/waiter")) return { path: `/r/${slug}/waiter`, slug };
+  if (path.startsWith("/alerts")) return { path: `/r/${slug}/alerts`, slug };
+  if (path.startsWith("/pickup")) return { path: `/r/${slug}/pickup`, slug };
+  return { path: `/r/${slug}/admin`, slug };
 }
 
-/**
- * GET/POST /api/v1/staff/unlock-redirect
- * Native HTML form unlock for iPad Safari (no JS click handlers required).
- * Sets cookie + redirects to the requested staff board with a one-time URL token.
- */
 async function unlockAndRedirect(
   req: NextRequest,
   password: string | null,
-  nextPath: string
+  nextPath: string,
+  venueSlugHint?: string | null
 ) {
-  const trimmed = password?.trim() ?? "";
-  const destPath = resolveStaffDest(nextPath);
-  // Prefer request Host so iPad on http://10.0.0.x is not redirected to localhost
+  const cookieSlug =
+    venueSlugHint?.trim() ||
+    req.cookies.get(VENUE_SLUG_COOKIE)?.value?.trim() ||
+    DEFAULT_VENUE_SLUG;
+  const { path: destPath, slug } = resolveStaffDest(nextPath, cookieSlug);
+
   const host =
     req.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
     req.headers.get("host") ||
@@ -54,13 +57,17 @@ async function unlockAndRedirect(
     (req.nextUrl.protocol === "https:" ? "https" : "http");
   const dest = new URL(destPath, `${proto}://${host}`);
 
+  const venue =
+    (await prisma.venue.findUnique({ where: { slug } })) ||
+    (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
+
+  const trimmed = password?.trim() ?? "";
   let ok = false;
-  if (trimmed) {
+  if (trimmed && venue?.id) {
     try {
-      ok = await verifyStaffPassword(trimmed);
+      ok = await verifyStaffPassword(trimmed, venue.id);
     } catch {
-      // Neon/DB blip — still accept demo password for local staff boards
-      ok = trimmed === demoStaffPassword();
+      ok = false;
     }
   }
 
@@ -69,12 +76,16 @@ async function unlockAndRedirect(
     const res = NextResponse.redirect(dest, 303);
     res.cookies.set(STAFF_SESSION_COOKIE, "", { path: "/", maxAge: 0 });
     res.cookies.set(STAFF_TOKEN_COOKIE, "", { path: "/", maxAge: 0 });
+    res.cookies.set(VENUE_SLUG_COOKIE, slug, {
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
+    });
     return res;
   }
 
   const token = createStaffSessionValue();
   dest.searchParams.delete("staff_error");
-  // Pickup live board reads access_token; React boards read staff_token.
   dest.searchParams.set("access_token", token);
   dest.searchParams.set("staff_token", token);
 
@@ -85,32 +96,42 @@ async function unlockAndRedirect(
     ...cookieOpts,
     httpOnly: false,
   });
+  res.cookies.set(VENUE_SLUG_COOKIE, slug, {
+    path: "/",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 365,
+  });
   return res;
 }
 
 export async function GET(req: NextRequest) {
   const password = req.nextUrl.searchParams.get("password");
-  const next = req.nextUrl.searchParams.get("next") || "/pickup";
-  return unlockAndRedirect(req, password, next);
+  const next = req.nextUrl.searchParams.get("next") || "/admin";
+  const venue = req.nextUrl.searchParams.get("venue");
+  return unlockAndRedirect(req, password, next, venue);
 }
 
 export async function POST(req: NextRequest) {
   const contentType = req.headers.get("content-type") || "";
   let password: string | null = null;
-  let next = "/pickup";
+  let next = "/admin";
+  let venue: string | null = null;
 
   if (contentType.includes("application/json")) {
     const body = (await req.json().catch(() => null)) as {
       password?: string;
       next?: string;
+      venue?: string;
     } | null;
     password = body?.password ?? null;
-    next = body?.next || "/pickup";
+    next = body?.next || "/admin";
+    venue = body?.venue ?? null;
   } else {
     const form = await req.formData().catch(() => null);
     password = form ? String(form.get("password") ?? "") : null;
-    next = form ? String(form.get("next") ?? "/pickup") : "/pickup";
+    next = form ? String(form.get("next") ?? "/admin") : "/admin";
+    venue = form ? String(form.get("venue") ?? "") : null;
   }
 
-  return unlockAndRedirect(req, password, next);
+  return unlockAndRedirect(req, password, next, venue);
 }

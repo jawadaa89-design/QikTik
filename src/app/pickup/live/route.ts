@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import {
   createStaffSessionValue,
-  demoStaffPassword,
   staffSessionCookieOptions,
   verifyStaffPassword,
   verifyStaffSessionValue,
@@ -10,13 +9,18 @@ import {
 import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
 import { VENUE_SLUG_COOKIE, VENUE_SLUG_HEADER } from "@/lib/venue-paths";
 
-function venueSlugFromReq(req: NextRequest): string {
+function venueSlugFromReq(
+  req: NextRequest,
+  formVenue?: string | null
+): string {
+  const fromForm = formVenue?.trim();
+  if (fromForm) return fromForm.toLowerCase();
   const fromHeader = req.headers.get(VENUE_SLUG_HEADER)?.trim();
-  if (fromHeader) return fromHeader;
+  if (fromHeader) return fromHeader.toLowerCase();
   const fromQuery = req.nextUrl.searchParams.get("venue")?.trim();
-  if (fromQuery) return fromQuery;
+  if (fromQuery) return fromQuery.toLowerCase();
   const fromCookie = req.cookies.get(VENUE_SLUG_COOKIE)?.value?.trim();
-  if (fromCookie) return fromCookie;
+  if (fromCookie) return fromCookie.toLowerCase();
   return DEFAULT_VENUE_SLUG;
 }
 import {
@@ -28,6 +32,7 @@ import {
   staffGateMessages,
 } from "@/i18n/staff";
 import { expireStaleReadyPickupTickets } from "@/lib/pickup-expire";
+import { brandFromVenue, venueLogoSrc } from "@/lib/venue-brand";
 
 const LOCALE_JSON = JSON.stringify({
   key: STAFF_LOCALE_KEY,
@@ -159,7 +164,14 @@ async function loadBoard(venueSlug: string) {
   const venue =
     (await prisma.venue.findUnique({ where: { slug: venueSlug } })) ||
     (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
-  if (!venue) return { venue: null, waiting: [], ready: [], assistance: [] };
+  if (!venue)
+    return {
+      venue: null,
+      brand: brandFromVenue(null),
+      waiting: [],
+      ready: [],
+      assistance: [],
+    };
 
   try {
     await expireStaleReadyPickupTickets({ venueId: venue.id });
@@ -181,10 +193,22 @@ async function loadBoard(venueSlug: string) {
       orderBy: [{ status: "asc" }, { createdAt: "asc" }],
     }),
   ]);
-  return { venue, waiting, ready, assistance };
+  return {
+    venue,
+    brand: brandFromVenue(venue),
+    waiting,
+    ready,
+    assistance,
+  };
 }
 
-function renderLogin(error?: string) {
+function renderLogin(
+  venueSlug: string,
+  error?: string,
+  logoSrc = "/logo.png",
+  venueName = "Staff"
+) {
+  const boardPath = `/r/${esc(venueSlug)}/pickup`;
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -211,16 +235,17 @@ function renderLogin(error?: string) {
   ${i18nBootScript("login")}
 </head>
 <body>
-  <form class="card" method="POST" action="/pickup/live">
+  <form class="card" method="POST" action="${boardPath}">
+    <input type="hidden" name="venue" value="${esc(venueSlug)}" />
     <div class="top">
       <div class="badge" data-i18n="badge">Staff</div>
       ${langSelectHtml()}
     </div>
     <div class="brand">
-      <img src="/logo.png" alt="" width="56" height="56" />
+      <img src="${esc(logoSrc)}" alt="" width="56" height="56" />
       <h1 data-i18n="title">Staff login</h1>
     </div>
-    <p data-i18n="hint">Enter the staff password to open this board.</p>
+    <p>${esc(venueName)} — enter this restaurant’s staff password.</p>
     ${error ? `<div class="err">${esc(error)}</div>` : ""}
     <label class="field" for="password" data-i18n="password">Staff password</label>
     <input id="password" name="password" type="password" required autocomplete="off" />
@@ -236,7 +261,10 @@ function renderBoard(
 ) {
   // Prefer same-document URL so soft-refresh / POSTs stay on /r/{slug}/pickup.
   const refreshUrl = `?access_token=${encodeURIComponent(token)}`;
-  const { waiting, ready, assistance, venue } = data;
+  const { waiting, ready, assistance, venue, brand } = data;
+  const logoSrc = venueLogoSrc(brand ?? brandFromVenue(venue));
+  const venueSlug = venue?.slug || DEFAULT_VENUE_SLUG;
+  const boardBase = `/r/${esc(venueSlug)}/pickup`;
 
   const ticketCard = (
     t: {
@@ -303,28 +331,32 @@ function renderBoard(
   <title>Pickup queue — ${esc(venue?.name || "QikTik")}</title>
   <style>
     :root{
-      --bg:#0e1210;
-      --panel:rgba(22,28,24,.92);
+      --bg:${esc(brand?.backgroundColor ?? "#0e1210")};
+      --panel:${esc(brand?.surfaceColor ?? "#161c18")};
       --line:rgba(255,255,255,.08);
-      --ink:#eef2ef;
+      --ink:${esc(brand?.textColor ?? "#eef2ef")};
       --muted:rgba(200,196,187,.55);
-      --orange:#f97316;
+      --orange:${esc(brand?.accentColor ?? "#f97316")};
       --green:#5fad86;
       --red:#d47272;
+      --brand-accent:var(--orange);
+      --brand-bg:var(--bg);
+      --brand-surface:var(--panel);
+      --brand-text:var(--ink);
     }
     *{box-sizing:border-box}
     body{
       margin:0;min-height:100vh;color:var(--ink);
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
       background:
-        radial-gradient(ellipse 80% 50% at 10% -10%,rgba(249,115,22,.14),transparent 55%),
+        radial-gradient(ellipse 80% 50% at 10% -10%,color-mix(in srgb,var(--orange) 22%,transparent),transparent 55%),
         radial-gradient(ellipse 60% 40% at 100% 0%,rgba(95,173,134,.1),transparent 50%),
         var(--bg);
     }
     header{
       padding:18px 20px 16px;
       border-bottom:1px solid var(--line);
-      background:rgba(10,14,12,.78);
+      background:color-mix(in srgb,var(--bg) 78%,black);
       backdrop-filter:blur(10px);
     }
     .header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
@@ -332,8 +364,8 @@ function renderBoard(
     .header-brand img{
       width:56px;height:56px;border-radius:999px;object-fit:cover;flex-shrink:0;
       margin-inline-end:8px;
-      border:2px solid rgba(249,115,22,.45);background:#f6f3ee;
-      box-shadow:0 0 0 4px rgba(249,115,22,.08);
+      border:2px solid color-mix(in srgb,var(--orange) 45%,transparent);background:#f6f3ee;
+      box-shadow:0 0 0 4px color-mix(in srgb,var(--orange) 12%,transparent);
     }
     .header-brand > div{padding-inline-start:4px}
     .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--orange);opacity:.9;font-weight:700}
@@ -471,7 +503,7 @@ function renderBoard(
   <header>
     <div class="header-top">
       <div class="header-brand">
-        <img src="/logo.png" alt="${esc(venueName)}" width="56" height="56" />
+        <img src="${esc(logoSrc)}" alt="${esc(venueName)}" width="56" height="56" />
         <div>
           <div class="eyebrow" data-i18n="floor">My Restaurant · Pickup</div>
           <h1 data-i18n="title">Pickup queue</h1>
@@ -562,9 +594,8 @@ function renderBoard(
   <div class="footer">
     <a href="${refreshUrl}" id="refresh-link" data-i18n="refresh">Refresh now</a>
     ·
-    <a href="/pickup/live?lock=1" data-i18n="lock">Lock</a>
+    <a href="${boardBase}?lock=1" data-i18n="lock">Lock</a>
   </div>
-  <audio id="alert-audio" preload="auto" playsinline></audio>
   <script>
 (function () {
   var REFRESH_URL = ${JSON.stringify(refreshUrl)};
@@ -572,16 +603,10 @@ function renderBoard(
   var SEEN_KEY = "qiktik_assist_seen";
   var SOUND_KEY = "qiktik_sound_on";
   var audioCtx = null;
-  var keepAliveOsc = null;
-  var keepAliveGain = null;
   var soundReady = false;
   var alertEl = document.getElementById("call-alert");
   var soundBanner = document.getElementById("sound-banner");
-  var alertAudio = document.getElementById("alert-audio");
   var alertVisible = false;
-
-  // Tiny WAV beep (unlocked via HTMLAudioElement — more reliable on iOS after gesture)
-  alertAudio.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
 
   function soundWasEnabled() {
     try { return localStorage.getItem(SOUND_KEY) === "1"; } catch (e) { return false; }
@@ -610,66 +635,45 @@ function renderBoard(
   }
   function wasSeen(id) { return seenSet().indexOf(id) !== -1; }
 
-  function keepAudioAlive() {
+  // Prefer ambient/transient so iPad music mixes (or ducks briefly) instead of
+  // being paused by HTMLAudioElement "playback" / a forever keep-alive tone.
+  function preferMixableSession() {
     try {
-      if (!audioCtx) return;
-      if (audioCtx.state === "suspended") audioCtx.resume();
-      if (keepAliveOsc) return;
-      keepAliveOsc = audioCtx.createOscillator();
-      keepAliveGain = audioCtx.createGain();
-      keepAliveGain.gain.value = 0.00001;
-      keepAliveOsc.frequency.value = 40;
-      keepAliveOsc.connect(keepAliveGain);
-      keepAliveGain.connect(audioCtx.destination);
-      keepAliveOsc.start();
+      if (navigator.audioSession && typeof navigator.audioSession.type === "string") {
+        navigator.audioSession.type = "ambient";
+      }
     } catch (e) {}
   }
 
   function primeSound(fromGesture) {
     try {
+      preferMixableSession();
       var AC = window.AudioContext || window.webkitAudioContext;
       if (AC) {
         if (!audioCtx || audioCtx.state === "closed") {
           audioCtx = new AC();
-          keepAliveOsc = null;
-          keepAliveGain = null;
         }
         if (audioCtx.state === "suspended") audioCtx.resume();
-        keepAudioAlive();
-      }
-      // Unlock HTMLAudioElement during the same gesture
-      if (fromGesture) {
-        alertAudio.muted = true;
-        var p = alertAudio.play();
-        if (p && p.then) {
-          p.then(function () {
-            alertAudio.pause();
-            alertAudio.currentTime = 0;
-            alertAudio.muted = false;
-          }).catch(function () {});
-        }
       }
       if (fromGesture || (audioCtx && audioCtx.state === "running")) markSoundEnabled();
     } catch (e) {}
   }
 
   function playBeep() {
+    preferMixableSession();
     try {
-      if (audioCtx && audioCtx.state === "suspended") {
-        audioCtx.resume().then(function () { keepAudioAlive(); beepNow(); }).catch(function () { beepHtml(); });
+      if (!audioCtx) return;
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume().then(function () { beepNow(); }).catch(function () {});
         return;
       }
       beepNow();
-      beepHtml();
-    } catch (e) {
-      beepHtml();
-    }
+    } catch (e) {}
   }
 
   function beepNow() {
     try {
       if (!audioCtx) return;
-      keepAudioAlive();
       var now = audioCtx.currentTime;
       var tones = [880, 1175, 880];
       for (var i = 0; i < tones.length; i++) {
@@ -679,7 +683,7 @@ function renderBoard(
         osc.frequency.value = tones[i];
         var t0 = now + i * 0.2;
         gain.gain.setValueAtTime(0.0001, t0);
-        gain.gain.exponentialRampToValueAtTime(0.32, t0 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.28, t0 + 0.02);
         gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.16);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -687,15 +691,6 @@ function renderBoard(
         osc.stop(t0 + 0.18);
       }
       if (navigator.vibrate) navigator.vibrate([180, 80, 180, 80, 320]);
-    } catch (e) {}
-  }
-
-  function beepHtml() {
-    try {
-      alertAudio.muted = false;
-      alertAudio.currentTime = 0;
-      var p = alertAudio.play();
-      if (p && p.catch) p.catch(function () {});
     } catch (e) {}
   }
 
@@ -745,13 +740,30 @@ function renderBoard(
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState === "visible") {
       primeSound(false);
-      keepAudioAlive();
     }
   });
 
   for (var i = 0; i < OPEN_CALLS.length; i++) {
     showAlert(OPEN_CALLS[i]);
     break;
+  }
+
+  var BOARD_BASE = ${JSON.stringify(boardBase)};
+  var LOGIN_HREF = BOARD_BASE + "?lock=1";
+
+  function isStaffLoginHtml(doc) {
+    return !!(
+      doc.querySelector('input[name="password"]') ||
+      (doc.title && /unlock/i.test(doc.title))
+    );
+  }
+
+  function goToStaffLogin() {
+    try {
+      window.location.replace(LOGIN_HREF);
+    } catch (e) {
+      window.location.href = LOGIN_HREF;
+    }
   }
 
   // Update queue HTML without full reload (full reload kills iOS AudioContext).
@@ -762,6 +774,11 @@ function renderBoard(
       .then(function (r) { return r.text(); })
       .then(function (html) {
         var doc = new DOMParser().parseFromString(html, "text/html");
+        // Session locked/expired — login page has no board <main>; redirect fully.
+        if (isStaffLoginHtml(doc) || !doc.querySelector("main")) {
+          goToStaffLogin();
+          return;
+        }
         var newMain = doc.querySelector("main");
         var curMain = document.querySelector("main");
         var dataEl = doc.getElementById("open-calls-data");
@@ -805,10 +822,15 @@ function renderBoard(
       redirect: "follow"
     })
       .then(function (r) {
-        if (!r.ok) throw new Error("post-failed");
-        hideAlert();
-        softRefresh();
-        keepAudioAlive();
+        return r.text().then(function (html) {
+          var doc = new DOMParser().parseFromString(html, "text/html");
+          if (!r.ok || isStaffLoginHtml(doc) || !doc.querySelector("main")) {
+            goToStaffLogin();
+            return;
+          }
+          hideAlert();
+          softRefresh();
+        });
       })
       .catch(function () {
         form.submit();
@@ -820,7 +842,6 @@ function renderBoard(
     refreshLink.addEventListener("click", function (e) {
       e.preventDefault();
       softRefresh();
-      keepAudioAlive();
     });
   }
 
@@ -863,22 +884,33 @@ function renderBoard(
 export async function GET(req: NextRequest) {
   const wantLock = req.nextUrl.searchParams.get("lock") === "1";
   const token = wantLock ? null : tokenFromQueryOrForm(req);
+  const slug = venueSlugFromReq(req);
+  const venue =
+    (await prisma.venue.findUnique({ where: { slug } })) ||
+    (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
+  const logoSrc = venueLogoSrc(brandFromVenue(venue));
+  const venueName = venue?.name || "Staff";
 
   if (!token) {
-    const res = new NextResponse(renderLogin(), {
+    const res = new NextResponse(renderLogin(slug, undefined, logoSrc, venueName), {
       headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+    });
+    res.cookies.set(VENUE_SLUG_COOKIE, slug, {
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
     });
     return clearStaffCookies(res);
   }
 
   try {
-    const data = await loadBoard(venueSlugFromReq(req));
+    const data = await loadBoard(slug);
     return new NextResponse(renderBoard(token, data), {
       headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
     });
   } catch (e) {
     const res = new NextResponse(
-      renderLogin("Database error — try unlock again"),
+      renderLogin(slug, "Database error — try unlock again", logoSrc, venueName),
       {
         status: 500,
         headers: { "Content-Type": "text/html; charset=utf-8" },
@@ -902,19 +934,31 @@ export async function POST(req: NextRequest) {
   const status = form ? String(form.get("status") ?? "") : "";
   const assistanceId = form ? String(form.get("assistance_id") ?? "") : "";
   const assistanceStatus = form ? String(form.get("assistance_status") ?? "") : "";
+  const formVenue = form ? String(form.get("venue") ?? "") : "";
+  const slug = venueSlugFromReq(req, formVenue);
+  const venue =
+    (await prisma.venue.findUnique({ where: { slug } })) ||
+    (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
+  const logoSrc = venueLogoSrc(brandFromVenue(venue));
+  const venueName = venue?.name || "Staff";
 
   // Unlock
   if (password) {
     let ok = false;
-    try {
-      ok = await verifyStaffPassword(password);
-    } catch {
-      ok = password.trim() === demoStaffPassword();
+    if (venue?.id) {
+      try {
+        ok = await verifyStaffPassword(password, venue.id);
+      } catch {
+        ok = false;
+      }
     }
     if (!ok) {
-      const res = new NextResponse(renderLogin("Wrong staff password"), {
-        headers: { "Content-Type": "text/html; charset=utf-8" },
-      });
+      const res = new NextResponse(
+        renderLogin(slug, "Wrong staff password", logoSrc, venueName),
+        {
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        }
+      );
       return clearStaffCookies(res);
     }
     const token = createStaffSessionValue();
@@ -924,7 +968,6 @@ export async function POST(req: NextRequest) {
       req.nextUrl.host;
     const proto =
       req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "http";
-    const slug = venueSlugFromReq(req);
     const dest = new URL(
       `/r/${slug}/pickup?access_token=${encodeURIComponent(token)}`,
       `${proto}://${host}`
@@ -946,9 +989,12 @@ export async function POST(req: NextRequest) {
 
   const token = tokenFromQueryOrForm(req, accessToken);
   if (!token) {
-    const res = new NextResponse(renderLogin("Session expired"), {
-      headers: { "Content-Type": "text/html; charset=utf-8" },
-    });
+    const res = new NextResponse(
+      renderLogin(slug, "Session expired", logoSrc, venueName),
+      {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      }
+    );
     return clearStaffCookies(res);
   }
 
@@ -1054,7 +1100,6 @@ export async function POST(req: NextRequest) {
     req.nextUrl.host;
   const proto =
     req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "http";
-  const slug = venueSlugFromReq(req);
   const dest = new URL(
     `/r/${slug}/pickup?access_token=${encodeURIComponent(token)}`,
     `${proto}://${host}`

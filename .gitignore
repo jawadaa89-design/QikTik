@@ -34,9 +34,13 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# uploaded menu images (keep folder)
+# uploaded images (keep folders)
 public/uploads/menu/*
 !public/uploads/menu/.gitkeep
+public/uploads/menu/**/*
+!public/uploads/menu/**/.gitkeep
+public/uploads/venues/*
+!public/uploads/venues/.gitkeep
 
 # typescript
 next-env.d.ts

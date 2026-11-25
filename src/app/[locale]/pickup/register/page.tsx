@@ -7,10 +7,10 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
+import { VenueLogo } from "@/components/VenueLogo";
 import { primeGuestPickupAudio } from "@/lib/guest-pickup-alert-audio";
-import { useVenueSlug } from "@/components/VenueProvider";
-
-const venueName = process.env.NEXT_PUBLIC_VENUE_NAME ?? "My Restaurant";
+import { useVenueName, useVenueSlug } from "@/components/VenueProvider";
+import { venuePickupPath } from "@/lib/venue-paths";
 
 type Mode = "register" | "reconnect";
 
@@ -19,6 +19,7 @@ export default function PickupRegisterPage() {
   const locale = useLocale();
   const router = useRouter();
   const venueSlug = useVenueSlug();
+  const venueName = useVenueName();
 
   const [mode, setMode] = useState<Mode>("register");
   const [customerName, setCustomerName] = useState("");
@@ -69,7 +70,7 @@ export default function PickupRegisterPage() {
         setError(data?.error?.message ?? t("errorGeneric"));
         return;
       }
-      router.push(`/${locale}/pickup/${data.ticket.id}`);
+      router.push(`${venuePickupPath(venueSlug, locale)}/${data.ticket.id}`);
     } catch {
       setError(t("errorGeneric"));
     } finally {
@@ -126,7 +127,7 @@ export default function PickupRegisterPage() {
         setError(data?.error?.message ?? t("errorGeneric"));
         return;
       }
-      router.push(`/${locale}/pickup/${data.ticket.id}`);
+      router.push(`${venuePickupPath(venueSlug, locale)}/${data.ticket.id}`);
     } catch {
       setError(t("errorGeneric"));
     } finally {
@@ -141,8 +142,7 @@ export default function PickupRegisterPage() {
         <QikTikLogo className="absolute end-0 top-0 z-10" />
       </div>
       <div className="mx-auto mb-6 flex w-full max-w-md flex-col items-center">
-        <Image
-          src="/logo.png"
+        <VenueLogo
           alt={venueName}
           width={96}
           height={96}
@@ -288,7 +288,7 @@ export default function PickupRegisterPage() {
       </div>
 
       <p className="mt-6 text-center text-sm">
-        <Link href={`/${locale}/pickup`} className="text-ink-soft/50 hover:text-brass">
+        <Link href={venuePickupPath(venueSlug, locale)} className="text-ink-soft/50 hover:text-brass">
           {t("backHome")}
         </Link>
       </p>

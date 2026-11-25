@@ -7,9 +7,13 @@ import { useStaffLocale } from "@/components/StaffLanguageSwitcher";
 import { staffGateMessages } from "@/i18n/staff";
 import {
   clearStaffToken,
+  ensureStaffApiFetchPatch,
   getStaffToken,
   setStaffToken,
+  STAFF_AUTH_REQUIRED_EVENT,
 } from "@/lib/staff-client";
+import { useVenueSlug } from "@/components/VenueProvider";
+import { venuePickupPath, venueStaffPath } from "@/lib/venue-paths";
 
 /** Marks a successful unlock in this browser tab (survives URL token strip + Strict Mode). */
 const STAFF_GATE_OK_KEY = "qiktik_staff_gate_ok";
@@ -26,6 +30,7 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { locale } = useStaffLocale();
+  const venueSlug = useVenueSlug();
   const t = staffGateMessages[locale] ?? staffGateMessages.en;
 
   const staffError = searchParams.get("staff_error") === "1";
@@ -105,7 +110,31 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
 
   const showGuestPickupEscape =
     pathname === "/pickup" || (pathname?.startsWith("/pickup/") ?? false);
-  const nextPath = pathname?.startsWith("/") ? pathname : "/pickup";
+
+  function boardFromPath(path: string | null): "admin" | "pickup" | "alerts" | "kitchen" | "waiter" {
+    if (!path) return "admin";
+    if (path.includes("/kitchen")) return "kitchen";
+    if (path.includes("/waiter")) return "waiter";
+    if (path.includes("/alerts")) return "alerts";
+    if (path.includes("/pickup")) return "pickup";
+    return "admin";
+  }
+
+  // Prefer browser URL (/r/{slug}/…) — usePathname is the rewritten internal path.
+  const [browserPath, setBrowserPath] = useState<string | null>(null);
+  useLayoutEffect(() => {
+    try {
+      setBrowserPath(window.location.pathname);
+    } catch {
+      setBrowserPath(null);
+    }
+  }, [pathname]);
+
+  const nextPath =
+    browserPath && browserPath.startsWith("/r/")
+      ? browserPath
+      : venueStaffPath(venueSlug, boardFromPath(pathname));
+  const guestPickupHref = venuePickupPath(venueSlug, locale === "he" || locale === "ru" || locale === "en" ? locale : "ar");
 
   useEffect(() => {
     if (!unlocked) return;
@@ -117,6 +146,26 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
       window.removeEventListener("keydown", prime, true);
     };
   }, [unlocked]);
+
+  // API 401 STAFF_AUTH_REQUIRED → show login (fetch patch lives in staff-client).
+  useEffect(() => {
+    ensureStaffApiFetchPatch();
+    const showLogin = () => {
+      clearStaffToken();
+      try {
+        sessionStorage.removeItem(STAFF_GATE_OK_KEY);
+      } catch {
+        /* ignore */
+      }
+      setUnlocked(false);
+      setReady(true);
+    };
+
+    window.addEventListener(STAFF_AUTH_REQUIRED_EVENT, showLogin);
+    return () => {
+      window.removeEventListener(STAFF_AUTH_REQUIRED_EVENT, showLogin);
+    };
+  }, []);
 
   if (!ready) {
     return (
@@ -176,7 +225,7 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
 
           {showGuestPickupEscape && (
             <a
-              href="/ar/pickup"
+              href={guestPickupHref}
               style={{
                 display: "block",
                 marginTop: 16,
@@ -207,6 +256,7 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
             style={{ marginTop: 20 }}
           >
             <input type="hidden" name="next" value={nextPath} />
+            <input type="hidden" name="venue" value={venueSlug} />
             <label
               htmlFor="qiktik-staff-password"
               style={{

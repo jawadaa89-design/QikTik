@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import {
   createStaffSessionValue,
-  demoStaffPassword,
   staffSessionCookieOptions,
   verifyStaffPassword,
   verifyStaffSessionValue,
@@ -10,14 +9,20 @@ import {
 import { hasFeature } from "@/lib/features";
 import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
 import { VENUE_SLUG_COOKIE, VENUE_SLUG_HEADER } from "@/lib/venue-paths";
+import { brandFromVenue, venueLogoSrc } from "@/lib/venue-brand";
 
-function venueSlugFromReq(req: NextRequest): string {
+function venueSlugFromReq(
+  req: NextRequest,
+  formVenue?: string | null
+): string {
+  const fromForm = formVenue?.trim();
+  if (fromForm) return fromForm.toLowerCase();
   const fromHeader = req.headers.get(VENUE_SLUG_HEADER)?.trim();
-  if (fromHeader) return fromHeader;
+  if (fromHeader) return fromHeader.toLowerCase();
   const fromQuery = req.nextUrl.searchParams.get("venue")?.trim();
-  if (fromQuery) return fromQuery;
+  if (fromQuery) return fromQuery.toLowerCase();
   const fromCookie = req.cookies.get(VENUE_SLUG_COOKIE)?.value?.trim();
-  if (fromCookie) return fromCookie;
+  if (fromCookie) return fromCookie.toLowerCase();
   return DEFAULT_VENUE_SLUG;
 }
 import {
@@ -96,13 +101,20 @@ async function loadCalls(venueSlug: string) {
   const venue =
     (await prisma.venue.findUnique({ where: { slug: venueSlug } })) ||
     (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
-  if (!venue) return { venue: null, assistance: [] as Awaited<ReturnType<typeof prisma.pickupAssistanceCall.findMany>> };
+  if (!venue)
+    return {
+      venue: null,
+      brand: brandFromVenue(null),
+      assistance: [] as Awaited<
+        ReturnType<typeof prisma.pickupAssistanceCall.findMany>
+      >,
+    };
 
   const assistance = await prisma.pickupAssistanceCall.findMany({
     where: { venueId: venue.id, status: { in: ["OPEN", "ACKNOWLEDGED"] } },
     orderBy: [{ status: "asc" }, { createdAt: "asc" }],
   });
-  return { venue, assistance };
+  return { venue, brand: brandFromVenue(venue), assistance };
 }
 
 function langSelectHtml() {
@@ -179,7 +191,13 @@ function i18nBootScript(mode: "board" | "login") {
 </script>`;
 }
 
-function renderLogin(error?: string) {
+function renderLogin(
+  venueSlug: string,
+  error?: string,
+  logoSrc = "/logo.png",
+  venueName = "Staff"
+) {
+  const boardPath = `/r/${esc(venueSlug)}/alerts`;
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -205,16 +223,17 @@ function renderLogin(error?: string) {
   ${i18nBootScript("login")}
 </head>
 <body>
-  <form class="card" method="POST" action="/alerts/live">
+  <form class="card" method="POST" action="${boardPath}">
+    <input type="hidden" name="venue" value="${esc(venueSlug)}" />
     <div class="top">
       <div class="badge" data-i18n="badge">Staff</div>
       ${langSelectHtml()}
     </div>
     <div class="brand">
-      <img src="/logo.png" alt="" width="56" height="56" />
+      <img src="${esc(logoSrc)}" alt="" width="56" height="56" />
       <h1 data-i18n="title">Staff login</h1>
     </div>
-    <p data-i18n="hint">Enter the staff password to open this board.</p>
+    <p>${esc(venueName)} — enter this restaurant’s staff password.</p>
     ${error ? `<div class="err">${esc(error)}</div>` : ""}
     <label class="field" for="password" data-i18n="password">Staff password</label>
     <input id="password" name="password" type="password" required autocomplete="off" />
@@ -229,8 +248,10 @@ function renderBoard(
   data: Awaited<ReturnType<typeof loadCalls>>
 ) {
   const refreshUrl = `?access_token=${encodeURIComponent(token)}`;
-  const { assistance, venue } = data;
+  const { assistance, venue, brand } = data;
   const venueName = venue?.name || "My Restaurant";
+  const b = brand ?? brandFromVenue(venue);
+  const logoSrc = venueLogoSrc(b);
 
   const assistAction = (id: string, status: string, i18nKey: string, fallback: string, cls: string) => `
     <form method="POST" action="">
@@ -258,13 +279,13 @@ function renderBoard(
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Alerts — ${esc(venueName)}</title>
   <style>
-    :root{--bg:#0e1210;--panel:rgba(22,28,24,.92);--line:rgba(255,255,255,.08);--ink:#eef2ef;--muted:rgba(200,196,187,.55);--orange:#f97316;--red:#d47272}
+    :root{--bg:${esc(b.backgroundColor)};--panel:${esc(b.surfaceColor)};--line:rgba(255,255,255,.08);--ink:${esc(b.textColor)};--muted:rgba(200,196,187,.55);--orange:${esc(b.accentColor)};--red:#d47272;--brand-accent:${esc(b.accentColor)};--brand-bg:${esc(b.backgroundColor)};--brand-surface:${esc(b.surfaceColor)};--brand-text:${esc(b.textColor)}}
     *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(ellipse 80% 50% at 10% -10%,rgba(249,115,22,.14),transparent 55%),var(--bg)}
-    header{padding:18px 20px 16px;border-bottom:1px solid var(--line);background:rgba(10,14,12,.78)}
+    body{margin:0;min-height:100vh;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(ellipse 80% 50% at 10% -10%,color-mix(in srgb,var(--orange) 22%,transparent),transparent 55%),var(--bg)}
+    header{padding:18px 20px 16px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 78%,black)}
     .header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
     .header-brand{display:flex;align-items:center;gap:22px;min-width:0}
-    .header-brand img{width:56px;height:56px;border-radius:999px;object-fit:cover;border:2px solid rgba(249,115,22,.45);background:#f6f3ee}
+    .header-brand img{width:56px;height:56px;border-radius:999px;object-fit:cover;border:2px solid color-mix(in srgb,var(--orange) 45%,transparent);background:#f6f3ee}
     .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--orange);font-weight:700}
     h1{margin:4px 0 0;font-size:clamp(22px,4vw,30px);font-weight:750}
     .hint{margin:8px 0 0;color:var(--muted);font-size:13px}
@@ -322,7 +343,7 @@ function renderBoard(
   <header>
     <div class="header-top">
       <div class="header-brand">
-        <img src="/logo.png" alt="${esc(venueName)}" width="56" height="56" />
+        <img src="${esc(logoSrc)}" alt="${esc(venueName)}" width="56" height="56" />
         <div>
           <div class="eyebrow" data-i18n="assistanceSection">Waiter calls</div>
           <h1 data-i18n="callWaiterTitle">Call a waiter</h1>
@@ -365,9 +386,8 @@ function renderBoard(
   <div class="footer">
     <a href="${refreshUrl}" id="refresh-link" data-i18n="refresh">Refresh now</a>
     ·
-    <a href="/alerts/live?lock=1" data-i18n="lock">Lock</a>
+    <a href="/r/${esc(venue?.slug || DEFAULT_VENUE_SLUG)}/alerts?lock=1" data-i18n="lock">Lock</a>
   </div>
-  <audio id="alert-audio" preload="auto" playsinline></audio>
   <script>
 (function () {
   var REFRESH_URL = ${JSON.stringify(refreshUrl)};
@@ -378,9 +398,7 @@ function renderBoard(
   var soundReady = false;
   var alertEl = document.getElementById("call-alert");
   var soundBanner = document.getElementById("sound-banner");
-  var alertAudio = document.getElementById("alert-audio");
   var alertVisible = false;
-  alertAudio.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
 
   function soundWasEnabled() { try { return localStorage.getItem(SOUND_KEY) === "1"; } catch (e) { return false; } }
   function markSoundEnabled() {
@@ -400,22 +418,36 @@ function renderBoard(
     try { sessionStorage.setItem(SEEN_KEY, JSON.stringify(s.slice(-40))); } catch (e) {}
   }
   function wasSeen(id) { return seenSet().indexOf(id) !== -1; }
+  function preferMixableSession() {
+    try {
+      if (navigator.audioSession && typeof navigator.audioSession.type === "string") {
+        navigator.audioSession.type = "ambient";
+      }
+    } catch (e) {}
+  }
   function primeSound(fromGesture) {
     try {
+      preferMixableSession();
       var AC = window.AudioContext || window.webkitAudioContext;
       if (AC) {
         if (!audioCtx || audioCtx.state === "closed") audioCtx = new AC();
         if (audioCtx.state === "suspended") audioCtx.resume();
       }
-      if (fromGesture) {
-        alertAudio.muted = true;
-        var p = alertAudio.play();
-        if (p && p.then) p.then(function () { alertAudio.pause(); alertAudio.currentTime = 0; alertAudio.muted = false; }).catch(function () {});
-      }
       if (fromGesture || (audioCtx && audioCtx.state === "running")) markSoundEnabled();
     } catch (e) {}
   }
   function playBeep() {
+    preferMixableSession();
+    try {
+      if (!audioCtx) return;
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume().then(function () { beepNow(); }).catch(function () {});
+        return;
+      }
+      beepNow();
+    } catch (e) {}
+  }
+  function beepNow() {
     try {
       if (!audioCtx) return;
       var now = audioCtx.currentTime;
@@ -426,7 +458,7 @@ function renderBoard(
         osc.frequency.value = freq;
         var t0 = now + i * 0.2;
         gain.gain.setValueAtTime(0.0001, t0);
-        gain.gain.exponentialRampToValueAtTime(0.32, t0 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.28, t0 + 0.02);
         gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.16);
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(t0); osc.stop(t0 + 0.18);
@@ -455,11 +487,33 @@ function renderBoard(
   document.addEventListener("pointerdown", function () { primeSound(true); }, true);
   for (var i = 0; i < OPEN_CALLS.length; i++) { showAlert(OPEN_CALLS[i]); break; }
 
+  var BOARD_BASE = ${JSON.stringify(`/r/${venue?.slug || DEFAULT_VENUE_SLUG}/alerts`)};
+  var LOGIN_HREF = BOARD_BASE + "?lock=1";
+
+  function isStaffLoginHtml(doc) {
+    return !!(
+      doc.querySelector('input[name="password"]') ||
+      (doc.title && /unlock/i.test(doc.title))
+    );
+  }
+
+  function goToStaffLogin() {
+    try {
+      window.location.replace(LOGIN_HREF);
+    } catch (e) {
+      window.location.href = LOGIN_HREF;
+    }
+  }
+
   function softRefresh() {
     fetch(REFRESH_URL, { credentials: "same-origin", cache: "no-store" })
       .then(function (r) { return r.text(); })
       .then(function (html) {
         var doc = new DOMParser().parseFromString(html, "text/html");
+        if (isStaffLoginHtml(doc) || !doc.querySelector("main")) {
+          goToStaffLogin();
+          return;
+        }
         var newMain = doc.querySelector("main");
         var curMain = document.querySelector("main");
         var dataEl = doc.getElementById("open-calls-data");
@@ -498,9 +552,15 @@ function renderBoard(
       redirect: "follow"
     })
       .then(function (r) {
-        if (!r.ok) throw new Error("post-failed");
-        hideAlert();
-        softRefresh();
+        return r.text().then(function (html) {
+          var doc = new DOMParser().parseFromString(html, "text/html");
+          if (!r.ok || isStaffLoginHtml(doc) || !doc.querySelector("main")) {
+            goToStaffLogin();
+            return;
+          }
+          hideAlert();
+          softRefresh();
+        });
       })
       .catch(function () { form.submit(); });
   }, true);
@@ -537,16 +597,28 @@ function renderBoard(
 export async function GET(req: NextRequest) {
   const wantLock = req.nextUrl.searchParams.get("lock") === "1";
   const token = wantLock ? null : tokenFromQueryOrForm(req);
+  const slug = venueSlugFromReq(req);
+  const venue =
+    (await prisma.venue.findUnique({ where: { slug } })) ||
+    (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
+  const logoSrc = venueLogoSrc(brandFromVenue(venue));
+  const venueName = venue?.name || "Staff";
+
   if (!token) {
-    return clearStaffCookies(
-      new NextResponse(renderLogin(), {
+    const res = clearStaffCookies(
+      new NextResponse(renderLogin(slug, undefined, logoSrc, venueName), {
         headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
       })
     );
+    res.cookies.set(VENUE_SLUG_COOKIE, slug, {
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+    return res;
   }
   try {
-    const data = await loadCalls(venueSlugFromReq(req));
-    const slug = venueSlugFromReq(req);
+    const data = await loadCalls(slug);
     const boardPath = await combinedBoardPath(data.venue?.id);
     if (boardPath !== "/alerts/live") {
       const dest = new URL(
@@ -560,10 +632,13 @@ export async function GET(req: NextRequest) {
     });
   } catch {
     return clearStaffCookies(
-      new NextResponse(renderLogin("Database error — try unlock again"), {
-        status: 500,
-        headers: { "Content-Type": "text/html; charset=utf-8" },
-      })
+      new NextResponse(
+        renderLogin(slug, "Database error — try unlock again", logoSrc, venueName),
+        {
+          status: 500,
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        }
+      )
     );
   }
 }
@@ -574,30 +649,35 @@ export async function POST(req: NextRequest) {
   const accessToken = form ? String(form.get("access_token") ?? "") : "";
   const assistanceId = form ? String(form.get("assistance_id") ?? "") : "";
   const assistanceStatus = form ? String(form.get("assistance_status") ?? "") : "";
+  const formVenue = form ? String(form.get("venue") ?? "") : "";
+  const slug = venueSlugFromReq(req, formVenue);
+  const venue =
+    (await prisma.venue.findUnique({ where: { slug } })) ||
+    (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
+  const logoSrc = venueLogoSrc(brandFromVenue(venue));
+  const venueName = venue?.name || "Staff";
 
   if (password) {
     let ok = false;
-    try {
-      ok = await verifyStaffPassword(password);
-    } catch {
-      ok = password.trim() === demoStaffPassword();
+    if (venue?.id) {
+      try {
+        ok = await verifyStaffPassword(password, venue.id);
+      } catch {
+        ok = false;
+      }
     }
     if (!ok) {
       return clearStaffCookies(
-        new NextResponse(renderLogin("Wrong staff password"), {
-          headers: { "Content-Type": "text/html; charset=utf-8" },
-        })
+        new NextResponse(
+          renderLogin(slug, "Wrong staff password", logoSrc, venueName),
+          {
+            headers: { "Content-Type": "text/html; charset=utf-8" },
+          }
+        )
       );
     }
     const token = createStaffSessionValue();
-    const venue =
-      (await prisma.venue.findUnique({
-        where: { slug: venueSlugFromReq(req) },
-      })) ||
-      (await prisma.venue.findUnique({ where: { slug: DEFAULT_VENUE_SLUG } })) ||
-      (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
     const boardPath = await combinedBoardPath(venue?.id);
-    const slug = venueSlugFromReq(req);
     const publicBoard =
       boardPath.includes("pickup") ? `/r/${slug}/pickup` : `/r/${slug}/alerts`;
     const dest = new URL(
@@ -622,7 +702,7 @@ export async function POST(req: NextRequest) {
   const token = tokenFromQueryOrForm(req, accessToken);
   if (!token) {
     return clearStaffCookies(
-      new NextResponse(renderLogin("Session expired"), {
+      new NextResponse(renderLogin(slug, "Session expired", logoSrc, venueName), {
         headers: { "Content-Type": "text/html; charset=utf-8" },
       })
     );
@@ -656,10 +736,6 @@ export async function POST(req: NextRequest) {
     /* show board anyway */
   }
 
-  const slug = venueSlugFromReq(req);
-  const venue =
-    (await prisma.venue.findUnique({ where: { slug } })) ||
-    (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
   const boardPath = await combinedBoardPath(venue?.id);
   const publicBoard =
     boardPath.includes("pickup") ? `/r/${slug}/pickup` : `/r/${slug}/alerts`;

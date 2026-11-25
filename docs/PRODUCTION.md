@@ -26,6 +26,7 @@ Legacy `/{locale}/…` and `/admin` redirect into `/r/myrestaurant/…`.
    - `STAFF_COOKIE_SECURE=true`
    - `STAFF_DEMO_PASSWORD` — strong password (not the local demo)
    - `PLATFORM_ADMIN_PASSWORD` — for `/platform` venue creation
+   - `BLOB_READ_WRITE_TOKEN` — Vercel Blob (logos + menu photos; survives redeploy)
    - VAPID keys + `VAPID_SUBJECT=mailto:push@qiktik.tech`
 3. In Vercel → **Domains**, add **`app.qiktik.tech` only** (do **not** add bare `qiktik.tech` — that would replace the existing website).
 4. In **GoDaddy** → DNS for `qiktik.tech`:

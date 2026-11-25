@@ -1,12 +1,16 @@
-import Image from "next/image";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { QikTikLogo } from "@/components/QikTikLogo";
+import { VenueLogo } from "@/components/VenueLogo";
 import { defaultLocale, localeNames, locales, type Locale } from "@/i18n/config";
 import { getVenueFeatures } from "@/lib/features";
+import { venueSlugFromCookies } from "@/lib/venue-cookie.server";
+import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
+import { resolveVenue } from "@/lib/venue";
+import { VENUE_SLUG_HEADER, venueTablePath, venuePickupPath } from "@/lib/venue-paths";
 
 const DEMO_TOKEN = "t_table7demo2026";
-const venueName = process.env.NEXT_PUBLIC_VENUE_NAME ?? "My Restaurant";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -19,7 +23,12 @@ export default async function LocaleHome({ params }: Props) {
   const t = await getTranslations("language");
   const tCommon = await getTranslations("common");
   const tPickup = await getTranslations("pickup");
-  const features = await getVenueFeatures();
+  const headerSlug = (await headers()).get(VENUE_SLUG_HEADER)?.trim();
+  const venueSlug =
+    headerSlug || (await venueSlugFromCookies()) || DEFAULT_VENUE_SLUG;
+  const venue = await resolveVenue({ slug: venueSlug });
+  const venueName = venue?.name ?? "Restaurant";
+  const features = await getVenueFeatures(venue?.id);
 
   return (
     <main className="guest-shell flex flex-col px-5 pb-10 pt-10">
@@ -28,8 +37,7 @@ export default async function LocaleHome({ params }: Props) {
         <div className="absolute -bottom-12 -end-6 h-44 w-44 rounded-full bg-ready/10 blur-3xl" />
         <QikTikLogo className="absolute top-3 end-3 z-10" />
         <div className="relative flex flex-col items-center">
-          <Image
-            src="/logo.png"
+          <VenueLogo
             alt={venueName}
             width={176}
             height={176}
@@ -51,7 +59,7 @@ export default async function LocaleHome({ params }: Props) {
           {locales.map((loc) => (
             <Link
               key={loc}
-              href={`/${loc}/t/${DEMO_TOKEN}`}
+              href={venueTablePath(venueSlug, loc, DEMO_TOKEN)}
               className="guest-panel flex items-center justify-between rounded-2xl px-4 py-3.5 transition hover:border-brass/35"
             >
               <span className="font-semibold text-ink">{localeNames[loc as Locale]}</span>
@@ -64,7 +72,7 @@ export default async function LocaleHome({ params }: Props) {
       {features.pickup ? (
         <section className="mt-6 animate-rise-delay-2">
           <Link
-            href={`/${defaultLocale}/pickup`}
+            href={venuePickupPath(venueSlug, defaultLocale)}
             className="guest-panel flex items-center justify-between rounded-2xl px-4 py-3.5 transition hover:border-brass/35"
           >
             <span className="font-semibold text-ink">{tPickup("homeLink")}</span>

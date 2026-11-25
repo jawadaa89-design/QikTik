@@ -1,60 +1,60 @@
 import { NextRequest } from "next/server";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 import { prisma } from "@/lib/db";
 import { apiError } from "@/lib/validation";
 import { requireStaffSession } from "@/lib/staff-auth";
+import { resolveVenue } from "@/lib/venue";
+import {
+  assertVenueImageFile,
+  storeMenuItemImage,
+} from "@/lib/venue-image-storage";
 
-const MAX_BYTES = 4 * 1024 * 1024;
-const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+export const dynamic = "force-dynamic";
 
-/** Upload a menu item image → public/uploads/menu/… */
+/** Upload a menu item image → Vercel Blob (prod) or public/uploads/menu/{venueId}/ (local). */
 export async function POST(req: NextRequest) {
-  const denied = await requireStaffSession();
+  const denied = await requireStaffSession(req);
   if (denied) return denied;
 
   const form = await req.formData().catch(() => null);
   if (!form) return apiError("VALIDATION_ERROR", "Expected multipart form", 400);
 
-  const itemId = String(form.get("itemId") ?? "");
+  const itemId = String(form.get("itemId") ?? "").trim();
   const file = form.get("file");
 
   if (!itemId) return apiError("VALIDATION_ERROR", "itemId required", 400);
   if (!(file instanceof File)) {
     return apiError("VALIDATION_ERROR", "file required", 400);
   }
-  if (!ALLOWED.has(file.type)) {
-    return apiError("VALIDATION_ERROR", "Use JPEG, PNG, WebP, or GIF", 400);
-  }
-  if (file.size > MAX_BYTES) {
-    return apiError("VALIDATION_ERROR", "Image must be under 4MB", 400);
-  }
 
-  const item = await prisma.menuItem.findUnique({ where: { id: itemId } });
-  if (!item) return apiError("NOT_FOUND", "Menu item not found", 404);
+  const fileError = assertVenueImageFile(file);
+  if (fileError) return apiError("VALIDATION_ERROR", fileError, 400);
 
-  const ext =
-    file.type === "image/png"
-      ? "png"
-      : file.type === "image/webp"
-        ? "webp"
-        : file.type === "image/gif"
-          ? "gif"
-          : "jpg";
+  const venue = await resolveVenue({ req });
+  if (!venue) return apiError("VENUE_NOT_FOUND", "Venue not found", 404);
 
-  const dir = path.join(process.cwd(), "public", "uploads", "menu");
-  await mkdir(dir, { recursive: true });
-
-  const filename = `${itemId}-${Date.now()}.${ext}`;
-  const diskPath = path.join(dir, filename);
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(diskPath, buffer);
-
-  const imageUrl = `/uploads/menu/${filename}`;
-  await prisma.menuItem.update({
+  const item = await prisma.menuItem.findUnique({
     where: { id: itemId },
-    data: { imageUrl },
+    include: { category: { select: { venueId: true } } },
   });
+  if (!item) return apiError("NOT_FOUND", "Menu item not found", 404);
+  if (item.category.venueId !== venue.id) {
+    return apiError("FORBIDDEN", "Item does not belong to this venue", 403);
+  }
 
-  return Response.json({ ok: true, imageUrl });
+  try {
+    const imageUrl = await storeMenuItemImage(venue.id, item.id, file);
+    await prisma.menuItem.update({
+      where: { id: item.id },
+      data: { imageUrl },
+    });
+
+    return Response.json({
+      ok: true,
+      imageUrl,
+      storage: process.env.BLOB_READ_WRITE_TOKEN?.trim() ? "blob" : "local",
+    });
+  } catch (e) {
+    console.error("[menu-upload]", e);
+    return apiError("UPLOAD_FAILED", "Could not store image", 500);
+  }
 }

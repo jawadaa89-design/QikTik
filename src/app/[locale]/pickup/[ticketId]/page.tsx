@@ -9,6 +9,7 @@ import { CallWaiterBellIcon } from "@/components/CallWaiterBellIcon";
 import { DigitalMenuLink } from "@/components/DigitalMenuLink";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
+import { VenueLogo } from "@/components/VenueLogo";
 import { useLiveEvents } from "@/hooks/useLiveEvents";
 import {
   playGuestPickupBeep,
@@ -24,8 +25,8 @@ import {
   subscribeGuestPickupPush,
   type GuestPushBlocker,
 } from "@/lib/guest-push";
-
-const venueName = process.env.NEXT_PUBLIC_VENUE_NAME ?? "My Restaurant";
+import { useVenueName, useVenueSlug } from "@/components/VenueProvider";
+import { venuePickupPath } from "@/lib/venue-paths";
 
 /** Soft first-visit prompt: dismissed or subscribed for this ticket. */
 const PUSH_PROMPT_LS_PREFIX = "qiktik-push-prompt:";
@@ -97,6 +98,8 @@ function vibratePing() {
 }
 
 export default function PickupWaitingPage() {
+  const venueName = useVenueName();
+  const venueSlug = useVenueSlug();
   const t = useTranslations("pickup");
   const tCommon = useTranslations("common");
   const locale = useLocale();
@@ -667,8 +670,7 @@ export default function PickupWaitingPage() {
         <QikTikLogo className="absolute end-0 top-0 z-10" />
       </div>
       <div className="mx-auto mb-6 flex w-full max-w-md flex-col items-center">
-        <Image
-          src="/logo.png"
+        <VenueLogo
           alt={venueName}
           width={80}
           height={80}
@@ -679,7 +681,11 @@ export default function PickupWaitingPage() {
           {venueName}
         </h1>
         <div className="mt-4 flex w-full max-w-md justify-center">
-          <DigitalMenuLink locale={locale} label={t("digitalMenu")} />
+          <DigitalMenuLink
+            locale={locale}
+            venueSlug={venueSlug}
+            label={t("digitalMenu")}
+          />
         </div>
       </div>
 
@@ -1032,7 +1038,7 @@ export default function PickupWaitingPage() {
       </div>
 
       <p className="mt-6 text-center text-sm">
-        <Link href={`/${locale}/pickup`} className="text-ink-soft/50 hover:text-brass">
+        <Link href={venuePickupPath(venueSlug, locale)} className="text-ink-soft/50 hover:text-brass">
           {t("registerAnother")}
         </Link>
       </p>

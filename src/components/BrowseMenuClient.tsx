@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { CallWaiterBellIcon } from "@/components/CallWaiterBellIcon";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
+import { VenueLogo } from "@/components/VenueLogo";
 import { formatPrice } from "@/lib/utils";
 import { useVenueSlug } from "@/components/VenueProvider";
 import type { MenuCategory, MenuItem } from "@/lib/demo-data";
@@ -232,8 +233,7 @@ export function BrowseMenuClient({
             <QikTikLogo className="absolute end-0 top-0 z-10" />
           </div>
           <div className="mt-2 flex flex-col items-center text-center">
-            <Image
-              src="/logo.png"
+            <VenueLogo
               alt={venueName}
               width={72}
               height={72}

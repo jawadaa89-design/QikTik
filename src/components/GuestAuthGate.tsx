@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useGuestAuth } from "@/components/GuestAuthProvider";
 import { useFeatures } from "@/components/FeaturesProvider";
 import { QikTikLogo } from "@/components/QikTikLogo";
+import { VenueLogo } from "@/components/VenueLogo";
 import { TABLE_LOCK_MS } from "@/lib/table-lock";
 import {
   getChosenLanguage,
@@ -15,13 +16,13 @@ import {
   setLanguagePicked,
 } from "@/lib/guest-lang";
 import { locales, localeNames, type Locale } from "@/i18n/config";
-
-const venueName = process.env.NEXT_PUBLIC_VENUE_NAME ?? "My Restaurant";
+import { useVenueName } from "@/components/VenueProvider";
 
 export function GuestAuthGate({ children }: { children: React.ReactNode }) {
   const t = useTranslations("auth");
   const tLang = useTranslations("language");
   const locale = useLocale() as Locale;
+  const venueName = useVenueName();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -227,8 +228,7 @@ export function GuestAuthGate({ children }: { children: React.ReactNode }) {
           <QikTikLogo className="absolute top-3 end-3 z-10" />
 
           <div className="relative flex flex-col items-center pt-2 animate-rise">
-            <Image
-              src="/logo.png"
+            <VenueLogo
               alt={venueName}
               width={176}
               height={176}
@@ -296,8 +296,7 @@ export function GuestAuthGate({ children }: { children: React.ReactNode }) {
         </label>
         <QikTikLogo className="absolute top-3 end-5 z-10" />
         <div className="mx-auto mb-6 flex justify-center animate-rise">
-          <Image
-            src="/logo.png"
+          <VenueLogo
             alt={venueName}
             width={72}
             height={72}
@@ -413,8 +412,7 @@ export function GuestAuthGate({ children }: { children: React.ReactNode }) {
       <div className="guest-shell relative flex min-h-dvh flex-col px-5 pb-10 pt-8">
         <QikTikLogo className="absolute top-3 end-5 z-10" />
         <div className="mx-auto mb-6 flex w-full max-w-md justify-center">
-          <Image
-            src="/logo.png"
+          <VenueLogo
             alt={venueName}
             width={72}
             height={72}
