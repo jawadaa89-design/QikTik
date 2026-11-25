@@ -238,7 +238,7 @@ export function BrowseMenuClient({
         <div className="relative animate-rise">
           <div className="relative flex items-center justify-between gap-3">
             <LanguageSwitcher className="z-10 shrink-0 [&_select]:h-8 [&_select]:py-0" />
-            <QikTikLogo className="z-10 !h-8 !w-auto !rounded-xl !p-0" />
+            <QikTikLogo className="z-10 !h-6 !w-auto !rounded-md !p-0" />
           </div>
           <div className="mt-5 flex flex-col items-center text-center">
             <VenueLogo
