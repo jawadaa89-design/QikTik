@@ -3,16 +3,29 @@ import { FeaturesProvider } from "@/components/FeaturesProvider";
 import { StaffAuthGate } from "@/components/StaffAuthGate";
 import { VenueProvider } from "@/components/VenueProvider";
 import { VenueThemeProvider } from "@/components/VenueThemeProvider";
+import type { Metadata } from "next";
 import { resolveVenue } from "@/lib/venue";
-import { brandFromVenue } from "@/lib/venue-brand";
+import {
+  brandFromVenue,
+  venueIconsMetadata,
+  venueLogoSrc,
+} from "@/lib/venue-brand";
+import { VenueFaviconLinks } from "@/components/VenueFaviconLinks";
 import { venueSlugForLayout } from "@/lib/venue-request.server";
-
-export const metadata = {
-  title: "QikTik Admin",
-};
 
 /** Per-request venue from /r/{slug}/… header — avoid shared-cookie bleed across tabs. */
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const venueSlug = await venueSlugForLayout();
+  const venue = await resolveVenue({ slug: venueSlug });
+  const brand = brandFromVenue(venue);
+  const name = venue?.name?.trim() || "Restaurant";
+  return {
+    title: `${name} · Admin`,
+    icons: venueIconsMetadata(venueLogoSrc(brand)),
+  };
+}
 
 export default async function AdminLayout({
   children,
@@ -22,10 +35,12 @@ export default async function AdminLayout({
   const venueSlug = await venueSlugForLayout();
   const venue = await resolveVenue({ slug: venueSlug });
   const brand = brandFromVenue(venue);
+  const logoHref = venueLogoSrc(brand);
 
   return (
     <html lang="ar" suppressHydrationWarning>
       <head>
+        <VenueFaviconLinks href={logoHref} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

@@ -139,6 +139,16 @@ model Venue {
   surfaceColor      String   @default("#141a17") @map("surface_color")
   /** Primary text */
   textColor         String   @default("#f2efe8") @map("text_color")
+  /** Guest-facing contact phone — shown as icon on digital menu when set */
+  phone             String?
+  /** Waze / maps deep link — guest menu icon when set */
+  wazeUrl           String?  @map("waze_url")
+  /** Instagram profile/page URL — guest menu icon when set */
+  instagramUrl      String?  @map("instagram_url")
+  /** Facebook page URL — guest menu icon when set */
+  facebookUrl       String?  @map("facebook_url")
+  /** TikTok profile URL — guest menu icon when set */
+  tiktokUrl         String?  @map("tiktok_url")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 

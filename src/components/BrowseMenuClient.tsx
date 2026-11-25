@@ -8,6 +8,7 @@ import { CallWaiterBellIcon } from "@/components/CallWaiterBellIcon";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
 import { VenueLogo } from "@/components/VenueLogo";
+import { VenueContactIcons } from "@/components/VenueContactIcons";
 import { formatPrice } from "@/lib/utils";
 import { useVenueSlug } from "@/components/VenueProvider";
 import type { MenuCategory, MenuItem } from "@/lib/demo-data";
@@ -246,6 +247,7 @@ export function BrowseMenuClient({
             <h1 className="mt-0.5 font-display text-2xl font-semibold leading-tight text-ink">
               {venueName}
             </h1>
+            <VenueContactIcons />
           </div>
 
           {(enableOrderAtTable || enableCallWaiter) && (

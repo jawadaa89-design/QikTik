@@ -32,7 +32,11 @@ import {
   staffGateMessages,
 } from "@/i18n/staff";
 import { expireStaleReadyPickupTickets } from "@/lib/pickup-expire";
-import { brandFromVenue, venueLogoSrc } from "@/lib/venue-brand";
+import {
+  brandFromVenue,
+  venueFaviconLinkTags,
+  venueLogoSrc,
+} from "@/lib/venue-brand";
 
 const LOCALE_JSON = JSON.stringify({
   key: STAFF_LOCALE_KEY,
@@ -93,11 +97,21 @@ function i18nBootScript(mode: "board" | "login") {
       var ak = a.getAttribute("data-i18n-aria");
       if (ak && t[ak] != null) a.setAttribute("aria-label", t[ak]);
     }
+    var pt = CFG.pickup[loc] || CFG.pickup.en;
     var hint = document.getElementById("board-hint");
     if (hint && MODE === "board") {
       var venue = hint.getAttribute("data-venue") || "";
-      var pt = CFG.pickup[loc] || CFG.pickup.en;
       hint.textContent = venue ? (venue + " · " + pt.liveSuffix) : pt.liveSuffix;
+    }
+    var floorEl = document.getElementById("board-floor");
+    if (floorEl && MODE === "board") {
+      var floorVenue =
+        floorEl.getAttribute("data-venue") ||
+        (hint && hint.getAttribute("data-venue")) ||
+        "";
+      floorEl.textContent = floorVenue
+        ? floorVenue + " · " + pt.floor
+        : pt.floor;
     }
     var sel = document.getElementById("staff-lang");
     if (sel && sel.value !== loc) sel.value = loc;
@@ -214,7 +228,8 @@ function renderLogin(
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Pickup board — unlock</title>
+  <title>${esc(venueName)} · Pickup unlock</title>
+  ${venueFaviconLinkTags(logoSrc)}
   <style>
     body{margin:0;min-height:100vh;background:#101012;color:#eef2ef;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:flex;align-items:center;justify-content:center;padding:24px}
     .card{width:100%;max-width:420px;background:#1a1f18;border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:24px;position:relative}
@@ -229,7 +244,8 @@ function renderLogin(
     .err{margin-top:12px;padding:10px 12px;border-radius:12px;border:1px solid rgba(212,114,114,.4);background:rgba(212,114,114,.12);color:#f0a0a0;font-size:14px}
     .badge{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#f97316;font-weight:600}
     .lang{display:inline-flex;position:relative}
-    .lang select{appearance:none;-webkit-appearance:none;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#eef2ef;font-size:12px;font-weight:600;padding:8px 28px 8px 12px}
+    .lang select{appearance:none;-webkit-appearance:none;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#1a211c;color:#f2efe8;font-size:12px;font-weight:600;padding:8px 28px 8px 12px}
+    .lang select option{background:#fff;color:#111}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
   </style>
   ${i18nBootScript("login")}
@@ -321,7 +337,7 @@ function renderBoard(
       }))
   );
 
-  const venueName = venue?.name || "My Restaurant";
+  const venueName = venue?.name || "Restaurant";
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -329,6 +345,7 @@ function renderBoard(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Pickup queue — ${esc(venue?.name || "QikTik")}</title>
+  ${venueFaviconLinkTags(logoSrc)}
   <style>
     :root{
       --bg:${esc(brand?.backgroundColor ?? "#0e1210")};
@@ -447,9 +464,10 @@ function renderBoard(
     .lang{display:inline-flex;position:relative;flex-shrink:0}
     .lang select{
       appearance:none;-webkit-appearance:none;border-radius:12px;
-      border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
-      color:#eef2ef;font-size:12px;font-weight:600;padding:8px 28px 8px 12px
+      border:1px solid rgba(255,255,255,.2);background:#1a211c;
+      color:#f2efe8;font-size:12px;font-weight:600;padding:8px 28px 8px 12px
     }
+    .lang select option{background:#fff;color:#111}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
     #sound-banner{display:none;margin:12px 16px 0;padding:12px 14px;border-radius:12px;border:1px solid rgba(249,115,22,.45);background:rgba(249,115,22,.14);color:#f97316;font-size:14px;font-weight:600;text-align:center;cursor:pointer}
     #sound-banner.show{display:block}
@@ -505,7 +523,7 @@ function renderBoard(
       <div class="header-brand">
         <img src="${esc(logoSrc)}" alt="${esc(venueName)}" width="56" height="56" />
         <div>
-          <div class="eyebrow" data-i18n="floor">My Restaurant · Pickup</div>
+          <div class="eyebrow" id="board-floor" data-venue="${esc(venueName)}">${esc(venueName)} · Pickup</div>
           <h1 data-i18n="title">Pickup queue</h1>
         </div>
       </div>

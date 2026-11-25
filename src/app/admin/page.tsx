@@ -8,6 +8,7 @@ import {
   useStaffLocale,
 } from "@/components/StaffLanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
+import { LinkQrActions } from "@/components/LinkQrActions";
 import { useFeatures } from "@/components/FeaturesProvider";
 import { useVenueName, useVenueSlug } from "@/components/VenueProvider";
 import { useVenueLogoSrc } from "@/components/VenueThemeProvider";
@@ -251,6 +252,11 @@ export default function AdminPage() {
           backgroundColor: brand.backgroundColor,
           surfaceColor: brand.surfaceColor,
           textColor: brand.textColor,
+          phone: brand.phone?.trim() || null,
+          wazeUrl: brand.wazeUrl?.trim() || null,
+          instagramUrl: brand.instagramUrl?.trim() || null,
+          facebookUrl: brand.facebookUrl?.trim() || null,
+          tiktokUrl: brand.tiktokUrl?.trim() || null,
         }),
       });
       if (!res.ok) {
@@ -974,13 +980,16 @@ export default function AdminPage() {
                   >
                     {dash.menuGuestUrl}
                   </a>
-                  <button
-                    type="button"
-                    onClick={() => void copyText(dash.menuGuestUrl)}
-                    className="mt-3 rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
-                  >
-                    {copiedLink ? t.linkCopied : t.copyLink}
-                  </button>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void copyText(dash.menuGuestUrl)}
+                      className="rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
+                    >
+                      {copiedLink ? t.linkCopied : t.copyLink}
+                    </button>
+                    <LinkQrActions href={dash.menuGuestUrl} label={t.menuGuestTitle} />
+                  </div>
                 </div>
               ) : null}
 
@@ -998,13 +1007,16 @@ export default function AdminPage() {
                   >
                     {dash.alertsBoardUrl}
                   </a>
-                  <button
-                    type="button"
-                    onClick={() => void copyText(dash.alertsBoardUrl)}
-                    className="mt-3 rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
-                  >
-                    {copiedLink ? t.linkCopied : t.copyLink}
-                  </button>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void copyText(dash.alertsBoardUrl)}
+                      className="rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
+                    >
+                      {copiedLink ? t.linkCopied : t.copyLink}
+                    </button>
+                    <LinkQrActions href={dash.alertsBoardUrl} label={t.alertsBoardTitle} />
+                  </div>
                 </div>
               ) : null}
 
@@ -1022,13 +1034,16 @@ export default function AdminPage() {
                   >
                     {dash.pickupGuestUrl}
                   </a>
-                  <button
-                    type="button"
-                    onClick={() => void copyText(dash.pickupGuestUrl)}
-                    className="mt-3 rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
-                  >
-                    {copiedLink ? t.linkCopied : t.copyLink}
-                  </button>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void copyText(dash.pickupGuestUrl)}
+                      className="rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
+                    >
+                      {copiedLink ? t.linkCopied : t.copyLink}
+                    </button>
+                    <LinkQrActions href={dash.pickupGuestUrl} label={t.pickupGuestTitle} />
+                  </div>
                 </div>
               ) : null}
 
@@ -1737,13 +1752,16 @@ export default function AdminPage() {
                       >
                         {dash.menuGuestUrl}
                       </a>
-                      <button
-                        type="button"
-                        onClick={() => void copyText(dash.menuGuestUrl)}
-                        className="mt-3 rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
-                      >
-                        {copiedLink ? t.linkCopied : t.copyLink}
-                      </button>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void copyText(dash.menuGuestUrl)}
+                          className="rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
+                        >
+                          {copiedLink ? t.linkCopied : t.copyLink}
+                        </button>
+                        <LinkQrActions href={dash.menuGuestUrl} label={t.menuGuestTitle} />
+                      </div>
                     </div>
                   ) : null}
                   {pickupOn && dash?.pickupGuestUrl ? (
@@ -1760,13 +1778,16 @@ export default function AdminPage() {
                       >
                         {dash.pickupGuestUrl}
                       </a>
-                      <button
-                        type="button"
-                        onClick={() => void copyText(dash.pickupGuestUrl)}
-                        className="mt-3 rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
-                      >
-                        {copiedLink ? t.linkCopied : t.copyLink}
-                      </button>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void copyText(dash.pickupGuestUrl)}
+                          className="rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
+                        >
+                          {copiedLink ? t.linkCopied : t.copyLink}
+                        </button>
+                        <LinkQrActions href={dash.pickupGuestUrl} label={t.pickupGuestTitle} />
+                      </div>
                     </div>
                   ) : null}
                   <div className="guest-panel mt-5 overflow-x-auto rounded-2xl">
@@ -1792,14 +1813,21 @@ export default function AdminPage() {
                               {statusLabel(row.status)}
                             </td>
                             <td className="px-4 py-3">
-                              <a
-                                href={row.guestUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="break-all text-brass hover:underline"
-                              >
-                                {row.guestUrl}
-                              </a>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <a
+                                  href={row.guestUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="break-all text-brass hover:underline"
+                                >
+                                  {row.guestUrl}
+                                </a>
+                                <LinkQrActions
+                                  href={row.guestUrl}
+                                  label={`Table ${row.number}`}
+                                  compact
+                                />
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -1828,13 +1856,16 @@ export default function AdminPage() {
                       >
                         {dash.menuGuestUrl}
                       </a>
-                      <button
-                        type="button"
-                        onClick={() => void copyText(dash.menuGuestUrl)}
-                        className="mt-3 rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
-                      >
-                        {copiedLink ? t.linkCopied : t.copyLink}
-                      </button>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void copyText(dash.menuGuestUrl)}
+                          className="rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
+                        >
+                          {copiedLink ? t.linkCopied : t.copyLink}
+                        </button>
+                        <LinkQrActions href={dash.menuGuestUrl} label={t.menuGuestTitle} />
+                      </div>
                     </div>
                   ) : null}
                   {alertsOn && dash?.alertsBoardUrl ? (
@@ -1851,13 +1882,16 @@ export default function AdminPage() {
                       >
                         {dash.alertsBoardUrl}
                       </a>
-                      <button
-                        type="button"
-                        onClick={() => void copyText(dash.alertsBoardUrl)}
-                        className="mt-3 rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
-                      >
-                        {copiedLink ? t.linkCopied : t.copyLink}
-                      </button>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void copyText(dash.alertsBoardUrl)}
+                          className="rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
+                        >
+                          {copiedLink ? t.linkCopied : t.copyLink}
+                        </button>
+                        <LinkQrActions href={dash.alertsBoardUrl} label={t.alertsBoardTitle} />
+                      </div>
                     </div>
                   ) : null}
                   {pickupOn && dash?.pickupGuestUrl ? (
@@ -1873,13 +1907,16 @@ export default function AdminPage() {
                       >
                         {dash.pickupGuestUrl}
                       </a>
-                      <button
-                        type="button"
-                        onClick={() => void copyText(dash.pickupGuestUrl)}
-                        className="mt-3 rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
-                      >
-                        {copiedLink ? t.linkCopied : t.copyLink}
-                      </button>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void copyText(dash.pickupGuestUrl)}
+                          className="rounded-lg border border-brass/35 bg-brass/10 px-3 py-1.5 text-xs font-bold text-brass"
+                        >
+                          {copiedLink ? t.linkCopied : t.copyLink}
+                        </button>
+                        <LinkQrActions href={dash.pickupGuestUrl} label={t.pickupGuestTitle} />
+                      </div>
                     </div>
                   ) : null}
                 </>
@@ -1988,6 +2025,80 @@ export default function AdminPage() {
                   ))}
                 </div>
 
+                <div className="space-y-3 border-t border-white/8 pt-4">
+                  <div>
+                    <p className="text-xs font-semibold text-ink-soft">
+                      {t.brandingGuestLinks}
+                    </p>
+                    <p className="mt-0.5 text-xs text-ink-soft/50">
+                      {t.brandingGuestLinksHint}
+                    </p>
+                  </div>
+
+                  <label className="block">
+                    <span className="text-xs text-ink-soft/70">
+                      {t.brandingPhone}
+                    </span>
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      placeholder={t.brandingPhonePlaceholder}
+                      value={brand.phone ?? ""}
+                      onChange={(e) =>
+                        setBrand((prev) => ({
+                          ...prev,
+                          phone: e.target.value || null,
+                        }))
+                      }
+                      className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-ink outline-none focus:border-brass/40"
+                    />
+                  </label>
+
+                  {(
+                    [
+                      [
+                        "wazeUrl",
+                        t.brandingWaze,
+                        t.brandingWazePlaceholder,
+                      ],
+                      [
+                        "instagramUrl",
+                        t.brandingInstagram,
+                        t.brandingInstagramPlaceholder,
+                      ],
+                      [
+                        "facebookUrl",
+                        t.brandingFacebook,
+                        t.brandingFacebookPlaceholder,
+                      ],
+                      [
+                        "tiktokUrl",
+                        t.brandingTiktok,
+                        t.brandingTiktokPlaceholder,
+                      ],
+                    ] as const
+                  ).map(([key, label, placeholder]) => (
+                    <label key={key} className="block">
+                      <span className="text-xs text-ink-soft/70">{label}</span>
+                      <input
+                        type="url"
+                        inputMode="url"
+                        autoComplete="url"
+                        placeholder={placeholder}
+                        value={brand[key] ?? ""}
+                        onChange={(e) =>
+                          setBrand((prev) => ({
+                            ...prev,
+                            [key]: e.target.value || null,
+                          }))
+                        }
+                        className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-ink outline-none focus:border-brass/40"
+                      />
+                    </label>
+                  ))}
+                </div>
+
                 <div
                   className="overflow-hidden rounded-xl border border-white/10"
                   style={{
@@ -2022,6 +2133,9 @@ export default function AdminPage() {
                       <p className="text-sm font-semibold">
                         {dash?.venue?.name ?? t.venueFallback}
                       </p>
+                      {brand.phone?.trim() ? (
+                        <p className="mt-0.5 text-xs opacity-70">{brand.phone}</p>
+                      ) : null}
                     </div>
                   </div>
                 </div>

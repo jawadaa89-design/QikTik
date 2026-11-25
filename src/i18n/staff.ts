@@ -685,6 +685,18 @@ export type AdminMessages = {
   brandingBackground: string;
   brandingSurface: string;
   brandingText: string;
+  brandingGuestLinks: string;
+  brandingGuestLinksHint: string;
+  brandingPhone: string;
+  brandingPhonePlaceholder: string;
+  brandingWaze: string;
+  brandingWazePlaceholder: string;
+  brandingInstagram: string;
+  brandingInstagramPlaceholder: string;
+  brandingFacebook: string;
+  brandingFacebookPlaceholder: string;
+  brandingTiktok: string;
+  brandingTiktokPlaceholder: string;
   brandingSave: string;
   brandingSaved: string;
   brandingSaveError: string;
@@ -813,6 +825,19 @@ const adminEn: AdminMessages = {
   brandingBackground: "Background",
   brandingSurface: "Surface",
   brandingText: "Text",
+  brandingGuestLinks: "Guest menu icons",
+  brandingGuestLinksHint:
+    "Each filled field shows an icon on the guest menu. Leave blank to hide.",
+  brandingPhone: "Venue phone number",
+  brandingPhonePlaceholder: "+972 …",
+  brandingWaze: "Waze location",
+  brandingWazePlaceholder: "https://waze.com/ul/…",
+  brandingInstagram: "Instagram page",
+  brandingInstagramPlaceholder: "https://instagram.com/… or @handle",
+  brandingFacebook: "Facebook page",
+  brandingFacebookPlaceholder: "https://facebook.com/…",
+  brandingTiktok: "TikTok page",
+  brandingTiktokPlaceholder: "https://tiktok.com/@… or @handle",
   brandingSave: "Save branding",
   brandingSaved: "Branding saved",
   brandingSaveError: "Could not save branding",
@@ -963,6 +988,19 @@ const adminAr: AdminMessages = {
   brandingBackground: "الخلفية",
   brandingSurface: "السطح",
   brandingText: "النص",
+  brandingGuestLinks: "أيقونات قائمة الضيوف",
+  brandingGuestLinksHint:
+    "كل حقل مملوء يظهر كأيقونة في قائمة الضيوف. اتركه فارغًا للإخفاء.",
+  brandingPhone: "رقم هاتف المطعم",
+  brandingPhonePlaceholder: "+972 …",
+  brandingWaze: "موقع Waze",
+  brandingWazePlaceholder: "https://waze.com/ul/…",
+  brandingInstagram: "صفحة إنستغرام",
+  brandingInstagramPlaceholder: "https://instagram.com/… أو @handle",
+  brandingFacebook: "صفحة فيسبوك",
+  brandingFacebookPlaceholder: "https://facebook.com/…",
+  brandingTiktok: "صفحة تيك توك",
+  brandingTiktokPlaceholder: "https://tiktok.com/@… أو @handle",
   brandingSave: "حفظ الهوية",
   brandingSaved: "تم حفظ الهوية",
   brandingSaveError: "تعذر حفظ الهوية",
@@ -1113,6 +1151,19 @@ const adminHe: AdminMessages = {
   brandingBackground: "רקע",
   brandingSurface: "משטח",
   brandingText: "טקסט",
+  brandingGuestLinks: "אייקונים בתפריט האורחים",
+  brandingGuestLinksHint:
+    "כל שדה שמולא מוצג כאייקון בתפריט האורחים. השאירו ריק להסתרה.",
+  brandingPhone: "טלפון המקום",
+  brandingPhonePlaceholder: "+972 …",
+  brandingWaze: "מיקום Waze",
+  brandingWazePlaceholder: "https://waze.com/ul/…",
+  brandingInstagram: "עמוד אינסטגרם",
+  brandingInstagramPlaceholder: "https://instagram.com/… או @handle",
+  brandingFacebook: "עמוד פייסבוק",
+  brandingFacebookPlaceholder: "https://facebook.com/…",
+  brandingTiktok: "עמוד טיקטוק",
+  brandingTiktokPlaceholder: "https://tiktok.com/@… או @handle",
   brandingSave: "שמירת מיתוג",
   brandingSaved: "המיתוג נשמר",
   brandingSaveError: "לא ניתן לשמור מיתוג",
@@ -1263,6 +1314,19 @@ const adminRu: AdminMessages = {
   brandingBackground: "Фон",
   brandingSurface: "Поверхность",
   brandingText: "Текст",
+  brandingGuestLinks: "Иконки гостевого меню",
+  brandingGuestLinksHint:
+    "Каждое заполненное поле показывается иконкой в гостевом меню. Оставьте пустым, чтобы скрыть.",
+  brandingPhone: "Телефон заведения",
+  brandingPhonePlaceholder: "+972 …",
+  brandingWaze: "Локация Waze",
+  brandingWazePlaceholder: "https://waze.com/ul/…",
+  brandingInstagram: "Страница Instagram",
+  brandingInstagramPlaceholder: "https://instagram.com/… или @handle",
+  brandingFacebook: "Страница Facebook",
+  brandingFacebookPlaceholder: "https://facebook.com/…",
+  brandingTiktok: "Страница TikTok",
+  brandingTiktokPlaceholder: "https://tiktok.com/@… или @handle",
   brandingSave: "Сохранить брендинг",
   brandingSaved: "Брендинг сохранён",
   brandingSaveError: "Не удалось сохранить брендинг",
@@ -1446,7 +1510,7 @@ export type PickupMessages = {
 
 const pickupEn: PickupMessages = {
   title: "Pickup queue",
-  floor: "My Restaurant · Pickup",
+  floor: "Pickup",
   language: "Language",
   hint: "Mark guest orders ready when the counter can hand them off.",
   loading: "Loading…",
@@ -1485,7 +1549,7 @@ const pickupEn: PickupMessages = {
 
 const pickupAr: PickupMessages = {
   title: "طابور الاستلام",
-  floor: "مطعمي · الاستلام",
+  floor: "الاستلام",
   language: "اللغة",
   hint: "علّم الطلبات جاهزة عندما يمكن تسليمها من الكاونتر.",
   loading: "جاري التحميل…",
@@ -1524,7 +1588,7 @@ const pickupAr: PickupMessages = {
 
 const pickupHe: PickupMessages = {
   title: "תור איסוף",
-  floor: "המסעדה שלי · איסוף",
+  floor: "איסוף",
   language: "שפה",
   hint: "סמנו הזמנות כמוכנות כשאפשר למסור בדלפק.",
   loading: "טוען…",
@@ -1563,7 +1627,7 @@ const pickupHe: PickupMessages = {
 
 const pickupRu: PickupMessages = {
   title: "Очередь самовывоза",
-  floor: "Мой ресторан · Самовывоз",
+  floor: "Самовывоз",
   language: "Язык",
   hint: "Отметьте заказ готовым, когда его можно выдать на стойке.",
   loading: "Загрузка…",

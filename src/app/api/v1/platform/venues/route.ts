@@ -2,7 +2,9 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import {
+  featuresFromFlags,
   featuresFromPackageId,
+  packageIdFromFeatures,
   type PackageId,
 } from "@/lib/features";
 import { apiError } from "@/lib/validation";
@@ -13,6 +15,10 @@ import {
   normalizeHexColor,
 } from "@/lib/venue-brand";
 import { hashStaffPassword } from "@/lib/staff-auth";
+import {
+  platformPasswordOk,
+  venuePublicUrls,
+} from "@/lib/platform-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -42,14 +48,6 @@ const createVenueSchema = z.object({
   surfaceColor: hex,
   textColor: hex,
 });
-
-function platformPasswordOk(password: string): boolean {
-  const expected =
-    process.env.PLATFORM_ADMIN_PASSWORD?.trim() ||
-    process.env.STAFF_DEMO_PASSWORD?.trim() ||
-    "qiktik2026";
-  return password.trim() === expected;
-}
 
 /**
  * POST /api/v1/platform/venues — create a new restaurant (platform admin).
@@ -139,12 +137,7 @@ export async function POST(req: NextRequest) {
         slug: venue.slug,
         packageId,
         branding: brandFromVenue(venue),
-        urls: {
-          menu: `/r/${slug}/ar/menu`,
-          admin: `/r/${slug}/admin`,
-          pickup: `/r/${slug}/ar/pickup`,
-          staffPickupBoard: `/r/${slug}/pickup`,
-        },
+        urls: venuePublicUrls(slug),
       },
     },
     { status: 201 }
@@ -180,19 +173,22 @@ export async function GET(req: NextRequest) {
   });
 
   return Response.json({
-    venues: venues.map((v) => ({
-      id: v.id,
-      name: v.name,
-      slug: v.slug,
-      alertsEnabled: v.alertsEnabled,
-      orderingEnabled: v.orderingEnabled,
-      pickupEnabled: v.pickupEnabled,
-      branding: brandFromVenue(v),
-      createdAt: v.createdAt.toISOString(),
-      urls: {
-        menu: `/r/${v.slug}/ar/menu`,
-        admin: `/r/${v.slug}/admin`,
-      },
-    })),
+    venues: venues.map((v) => {
+      const packageId = packageIdFromFeatures(
+        featuresFromFlags(v.alertsEnabled, v.orderingEnabled, v.pickupEnabled)
+      );
+      return {
+        id: v.id,
+        name: v.name,
+        slug: v.slug,
+        packageId,
+        alertsEnabled: v.alertsEnabled,
+        orderingEnabled: v.orderingEnabled,
+        pickupEnabled: v.pickupEnabled,
+        branding: brandFromVenue(v),
+        createdAt: v.createdAt.toISOString(),
+        urls: venuePublicUrls(v.slug),
+      };
+    }),
   });
 }

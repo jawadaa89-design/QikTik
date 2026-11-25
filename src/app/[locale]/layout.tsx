@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -8,7 +9,12 @@ import { headers } from "next/headers";
 import { venueSlugFromCookies } from "@/lib/venue-cookie.server";
 import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
 import { resolveVenue } from "@/lib/venue";
-import { brandFromVenue, venueLogoSrc } from "@/lib/venue-brand";
+import {
+  brandFromVenue,
+  venueIconsMetadata,
+  venueLogoSrc,
+} from "@/lib/venue-brand";
+import { VenueFaviconLinks } from "@/components/VenueFaviconLinks";
 import { VENUE_SLUG_HEADER } from "@/lib/venue-paths";
 
 type Props = {
@@ -18,6 +24,19 @@ type Props = {
 
 /** Venue data is per-request; avoid build-time DB prerender. */
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const headerSlug = (await headers()).get(VENUE_SLUG_HEADER)?.trim();
+  const venueSlug =
+    headerSlug || (await venueSlugFromCookies()) || DEFAULT_VENUE_SLUG;
+  const venue = await resolveVenue({ slug: venueSlug });
+  const brand = brandFromVenue(venue);
+  const name = venue?.name?.trim() || "Restaurant";
+  return {
+    title: name,
+    icons: venueIconsMetadata(venueLogoSrc(brand)),
+  };
+}
 
 export default async function LocaleLayout({ children, params }: Props) {
   const { locale } = await params;
@@ -39,7 +58,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <link rel="apple-touch-icon" href={iconHref} />
+        <VenueFaviconLinks href={iconHref} />
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

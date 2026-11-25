@@ -17,11 +17,30 @@ const hex = z
   .trim()
   .regex(/^#?[0-9a-fA-F]{6}$/, "Expected hex color like #c4a35a");
 
+const optionalContact = z
+  .string()
+  .trim()
+  .max(500)
+  .nullable()
+  .optional()
+  .transform((v) => (v == null ? v : v === "" ? null : v));
+
 const brandingSchema = z.object({
   accentColor: hex.optional(),
   backgroundColor: hex.optional(),
   surfaceColor: hex.optional(),
   textColor: hex.optional(),
+  phone: z
+    .string()
+    .trim()
+    .max(40)
+    .nullable()
+    .optional()
+    .transform((v) => (v == null ? v : v === "" ? null : v)),
+  wazeUrl: optionalContact,
+  instagramUrl: optionalContact,
+  facebookUrl: optionalContact,
+  tiktokUrl: optionalContact,
   logoUrl: z
     .string()
     .trim()
@@ -56,7 +75,7 @@ export async function GET(req: NextRequest) {
   });
 }
 
-/** PATCH /api/v1/admin/venue/branding — update colors (and optional logoUrl). */
+/** PATCH /api/v1/admin/venue/branding — update colors, contact links, logoUrl. */
 export async function PATCH(req: NextRequest) {
   const denied = await requireStaffSession(req);
   if (denied) return denied;
@@ -81,6 +100,11 @@ export async function PATCH(req: NextRequest) {
     backgroundColor?: string;
     surfaceColor?: string;
     textColor?: string;
+    phone?: string | null;
+    wazeUrl?: string | null;
+    instagramUrl?: string | null;
+    facebookUrl?: string | null;
+    tiktokUrl?: string | null;
     logoUrl?: string | null;
   } = {};
 
@@ -118,6 +142,21 @@ export async function PATCH(req: NextRequest) {
   }
   if (parsed.data.logoUrl !== undefined) {
     data.logoUrl = parsed.data.logoUrl;
+  }
+  if (parsed.data.phone !== undefined) {
+    data.phone = parsed.data.phone;
+  }
+  if (parsed.data.wazeUrl !== undefined) {
+    data.wazeUrl = parsed.data.wazeUrl;
+  }
+  if (parsed.data.instagramUrl !== undefined) {
+    data.instagramUrl = parsed.data.instagramUrl;
+  }
+  if (parsed.data.facebookUrl !== undefined) {
+    data.facebookUrl = parsed.data.facebookUrl;
+  }
+  if (parsed.data.tiktokUrl !== undefined) {
+    data.tiktokUrl = parsed.data.tiktokUrl;
   }
 
   const updated = await prisma.venue.update({

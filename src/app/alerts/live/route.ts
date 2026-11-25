@@ -9,7 +9,11 @@ import {
 import { hasFeature } from "@/lib/features";
 import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
 import { VENUE_SLUG_COOKIE, VENUE_SLUG_HEADER } from "@/lib/venue-paths";
-import { brandFromVenue, venueLogoSrc } from "@/lib/venue-brand";
+import {
+  brandFromVenue,
+  venueFaviconLinkTags,
+  venueLogoSrc,
+} from "@/lib/venue-brand";
 
 function venueSlugFromReq(
   req: NextRequest,
@@ -203,7 +207,8 @@ function renderLogin(
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Alerts board — unlock</title>
+  <title>${esc(venueName)} · Alerts unlock</title>
+  ${venueFaviconLinkTags(logoSrc)}
   <style>
     body{margin:0;min-height:100vh;background:#101012;color:#eef2ef;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:flex;align-items:center;justify-content:center;padding:24px}
     .card{width:100%;max-width:420px;background:#1a1f18;border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:24px}
@@ -217,7 +222,8 @@ function renderLogin(
     button{width:100%;margin-top:16px;min-height:52px;border:0;border-radius:12px;padding:14px;font-size:16px;font-weight:700;background:linear-gradient(135deg,#f97316,#c2410c);color:#0c100e}
     .err{margin-top:12px;padding:10px 12px;border-radius:12px;border:1px solid rgba(212,114,114,.4);background:rgba(212,114,114,.12);color:#f0a0a0;font-size:14px}
     .badge{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#f97316;font-weight:600}
-    .lang select{appearance:none;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#eef2ef;font-size:12px;font-weight:600;padding:8px 28px 8px 12px}
+    .lang select{appearance:none;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#1a211c;color:#f2efe8;font-size:12px;font-weight:600;padding:8px 28px 8px 12px}
+    .lang select option{background:#fff;color:#111}
     .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
   </style>
   ${i18nBootScript("login")}
@@ -278,6 +284,7 @@ function renderBoard(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Alerts — ${esc(venueName)}</title>
+  ${venueFaviconLinkTags(logoSrc)}
   <style>
     :root{--bg:${esc(b.backgroundColor)};--panel:${esc(b.surfaceColor)};--line:rgba(255,255,255,.08);--ink:${esc(b.textColor)};--muted:rgba(200,196,187,.55);--orange:${esc(b.accentColor)};--red:#d47272;--brand-accent:${esc(b.accentColor)};--brand-bg:${esc(b.backgroundColor)};--brand-surface:${esc(b.surfaceColor)};--brand-text:${esc(b.textColor)}}
     *{box-sizing:border-box}
@@ -306,7 +313,8 @@ function renderBoard(
     .empty{padding:36px 16px;text-align:center;border-radius:14px;border:1px dashed rgba(255,255,255,.1);color:rgba(200,196,187,.42);font-size:14px}
     .footer{padding:8px 16px 24px;text-align:center;font-size:12px;color:rgba(200,196,187,.4)}
     a{color:var(--orange);text-decoration:none}
-    .lang select{appearance:none;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#eef2ef;font-size:12px;font-weight:600;padding:8px 28px 8px 12px}
+    .lang select{appearance:none;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#1a211c;color:#f2efe8;font-size:12px;font-weight:600;padding:8px 28px 8px 12px}
+    .lang select option{background:#fff;color:#111}
     .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
     #sound-banner{display:none;margin:12px 16px 0;padding:12px 14px;border-radius:12px;border:1px solid rgba(249,115,22,.45);background:rgba(249,115,22,.14);color:#f97316;font-size:14px;font-weight:600;text-align:center;cursor:pointer}
     #sound-banner.show{display:block}

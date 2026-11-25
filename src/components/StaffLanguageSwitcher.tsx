@@ -74,15 +74,20 @@ export function StaffLanguageSwitcher({
         aria-label={label}
         value={locale}
         onChange={(e) => onChange(e.target.value as Locale)}
-        className="appearance-none rounded-xl border border-white/10 bg-white/[0.06] py-1.5 pe-8 ps-3 text-xs font-semibold tracking-wide text-ink outline-none"
+        className="appearance-none rounded-xl border border-white/20 bg-[#1a211c] py-1.5 pe-8 ps-3 text-xs font-semibold tracking-wide text-[#f2efe8] outline-none"
       >
         {locales.map((loc) => (
-          <option key={loc} value={loc} className="bg-[#161c19] text-ink">
+          <option
+            key={loc}
+            value={loc}
+            // Native OS menus ignore theme vars — force readable black-on-white.
+            style={{ backgroundColor: "#ffffff", color: "#111111" }}
+          >
             {localeNames[loc]}
           </option>
         ))}
       </select>
-      <span className="pointer-events-none absolute end-2.5 top-1/2 -translate-y-1/2 text-[10px] text-ink-soft/50">
+      <span className="pointer-events-none absolute end-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[#f2efe8]/70">
         ▾
       </span>
     </label>

@@ -5,16 +5,9 @@ import {
   assertLogoFile,
   storeVenueLogo,
 } from "@/lib/venue-logo-storage";
+import { platformPasswordOk } from "@/lib/platform-auth";
 
 export const dynamic = "force-dynamic";
-
-function platformPasswordOk(password: string): boolean {
-  const expected =
-    process.env.PLATFORM_ADMIN_PASSWORD?.trim() ||
-    process.env.STAFF_DEMO_PASSWORD?.trim() ||
-    "qiktik2026";
-  return password.trim() === expected;
-}
 
 /** POST /api/v1/platform/venues/logo — platform password + venueId + file. */
 export async function POST(req: NextRequest) {
