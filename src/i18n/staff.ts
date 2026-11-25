@@ -208,7 +208,8 @@ const en: WaiterMessages = {
   pickupCallWaiterComment: "Comment",
   pickupCallWaiterDismiss: "Got it",
   featureDisabledTitle: "Ordering not in your package",
-  featureDisabledBody: "Table ordering is turned off. Enable it under Admin → Package.",
+  featureDisabledBody:
+    "Table ordering is turned off. Request it under Admin → Package (email QikTik).",
 };
 
 const ar: WaiterMessages = {
@@ -575,7 +576,8 @@ const kitchenEn: KitchenMessages = {
     READY: "Ready",
   },
   featureDisabledTitle: "Ordering not in your package",
-  featureDisabledBody: "Kitchen display needs table ordering. Enable it under Admin → Package.",
+  featureDisabledBody:
+    "Kitchen display needs table ordering. Request it under Admin → Package (email QikTik).",
 };
 
 const kitchenAr: KitchenMessages = {
@@ -790,6 +792,12 @@ export type AdminMessages = {
   statuses: Record<"FREE" | "ACTIVE" | "BILL_REQUESTED" | "DISABLED", string>;
   packageTitle: string;
   packageHint: string;
+  packageContactLine: string;
+  packageActiveBadge: string;
+  packageRequestBadge: string;
+  packageAlreadyActive: string;
+  packageContactOpened: string;
+  packageContactError: string;
   packageMenuOnly: string;
   packageMenuAlerts: string;
   packageMenuAlertsPickup: string;
@@ -859,7 +867,7 @@ const adminEn: AdminMessages = {
   noPickupTickets: "No pickup tickets yet",
   menuOnlyDashHint: "This venue is on Menu only — manage the digital menu below. Alerts, ordering, and pickup need a package upgrade.",
   manageMenuCta: "Open menu",
-  openPackageCta: "Change package",
+  openPackageCta: "View packages",
   menuTitle: "Menu",
   editLocale: "Edit language",
   nameLabel: "Name",
@@ -919,7 +927,7 @@ const adminEn: AdminMessages = {
   tablesHint: "Program NTAG215 with the guest URL. Print the same URL as QR.",
   orderingRequiredTitle: "Table ordering not in this package",
   orderingRequiredBody:
-    "Table sessions, floor status, and per-table guest URLs need the Ordering package. Switch package to enable them.",
+    "Table sessions, floor status, and per-table guest URLs need the Ordering package. Request it under Package (email QikTik).",
   menuGuestTitle: "Guest menu link",
   menuGuestHint:
     "Main guest link for this restaurant — share or print this menu URL / QR.",
@@ -949,7 +957,13 @@ const adminEn: AdminMessages = {
   },
   packageTitle: "Customer package",
   packageHint:
-    "Digital Menu is always included. Pick the guest experience this venue should offer.",
+    "Digital Menu is always included. Tap another package to email QikTik and request activation — we turn it on from the platform.",
+  packageContactLine: "Questions or upgrades:",
+  packageActiveBadge: "Active",
+  packageRequestBadge: "Request",
+  packageAlreadyActive: "This package is already active",
+  packageContactOpened: "Opening your email to contact QikTik…",
+  packageContactError: "Could not open email — write to jawadaa@qiktik.tech",
   packageMenuOnly: "Menu only",
   packageMenuAlerts: "Menu + alerts system",
   packageMenuAlertsPickup: "Menu + alerts + pickup",
@@ -1022,7 +1036,7 @@ const adminAr: AdminMessages = {
   menuOnlyDashHint:
     "هذا المطعم على باقة القائمة فقط — أدِر القائمة الرقمية أدناه. طلب الطاولات والاستلام يحتاجان ترقية الباقة.",
   manageMenuCta: "فتح القائمة",
-  openPackageCta: "تغيير الباقة",
+  openPackageCta: "عرض الباقات",
   menuTitle: "القائمة",
   editLocale: "لغة التعديل",
   nameLabel: "الاسم",
@@ -1111,7 +1125,14 @@ const adminAr: AdminMessages = {
     DISABLED: "معطّلة",
   },
   packageTitle: "باقة العميل",
-  packageHint: "القائمة الرقمية دائماً مشمولة. اختر الميزات الاختيارية لهذا المطعم.",
+  packageHint:
+    "القائمة الرقمية دائماً مشمولة. اضغط باقة أخرى لمراسلة QikTik وطلب التفعيل — نفعّلها من المنصة.",
+  packageContactLine: "أسئلة أو ترقية:",
+  packageActiveBadge: "مفعّلة",
+  packageRequestBadge: "طلب",
+  packageAlreadyActive: "هذه الباقة مفعّلة حالياً",
+  packageContactOpened: "جارٍ فتح البريد لمراسلة QikTik…",
+  packageContactError: "تعذر فتح البريد — راسل jawadaa@qiktik.tech",
   packageMenuOnly: "القائمة فقط",
   packageMenuAlerts: "القائمة + نظام التنبيهات",
   packageMenuAlertsPickup: "القائمة + التنبيهات + الاستلام",
@@ -1184,7 +1205,7 @@ const adminHe: AdminMessages = {
   menuOnlyDashHint:
     "המקום בחבילת תפריט בלבד — נהלו את התפריט הדיגיטלי למטה. הזמנות שולחן ואיסוף דורשים שדרוג חבילה.",
   manageMenuCta: "פתחו תפריט",
-  openPackageCta: "שינוי חבילה",
+  openPackageCta: "צפייה בחבילות",
   menuTitle: "תפריט",
   editLocale: "שפת עריכה",
   nameLabel: "שם",
@@ -1273,7 +1294,14 @@ const adminHe: AdminMessages = {
     DISABLED: "מושבת",
   },
   packageTitle: "חבילת לקוח",
-  packageHint: "תפריט דיגיטלי תמיד כלול. בחרו אילו תוספות המקום מקבל.",
+  packageHint:
+    "תפריט דיגיטלי תמיד כלול. לחצו על חבילה אחרת כדי לשלוח מייל ל-QikTik ולבקש הפעלה — אנחנו מפעילים מהפלטפורמה.",
+  packageContactLine: "שאלות או שדרוג:",
+  packageActiveBadge: "פעיל",
+  packageRequestBadge: "בקשה",
+  packageAlreadyActive: "החבילה הזו כבר פעילה",
+  packageContactOpened: "פותחים את המייל ליצירת קשר עם QikTik…",
+  packageContactError: "לא ניתן לפתוח מייל — כתבו ל-jawadaa@qiktik.tech",
   packageMenuOnly: "תפריט בלבד",
   packageMenuAlerts: "תפריט + מערכת התראות",
   packageMenuAlertsPickup: "תפריט + התראות + איסוף",
@@ -1346,7 +1374,7 @@ const adminRu: AdminMessages = {
   menuOnlyDashHint:
     "Заведение на пакете «Только меню» — управляйте цифровым меню ниже. Заказы со столов и самовывоз требуют апгрейда пакета.",
   manageMenuCta: "Открыть меню",
-  openPackageCta: "Сменить пакет",
+  openPackageCta: "Смотреть пакеты",
   menuTitle: "Меню",
   editLocale: "Язык правки",
   nameLabel: "Название",
@@ -1436,7 +1464,13 @@ const adminRu: AdminMessages = {
   },
   packageTitle: "Пакет клиента",
   packageHint:
-    "Цифровое меню всегда включено. Выберите доп. функции для заведения.",
+    "Цифровое меню всегда включено. Нажмите другой пакет, чтобы написать QikTik и запросить активацию — мы включим его с платформы.",
+  packageContactLine: "Вопросы или апгрейд:",
+  packageActiveBadge: "Активен",
+  packageRequestBadge: "Запрос",
+  packageAlreadyActive: "Этот пакет уже активен",
+  packageContactOpened: "Открываем почту для связи с QikTik…",
+  packageContactError: "Не удалось открыть почту — напишите на jawadaa@qiktik.tech",
   packageMenuOnly: "Только меню",
   packageMenuAlerts: "Меню + система оповещений",
   packageMenuAlertsPickup: "Меню + оповещения + самовывоз",
@@ -1538,7 +1572,8 @@ const pickupEn: PickupMessages = {
   linkWaiter: "Waiter",
   linkAdmin: "Admin",
   featureDisabledTitle: "Pickup not in your package",
-  featureDisabledBody: "Pickup is turned off. Enable it under Admin → Package.",
+  featureDisabledBody:
+    "Pickup is turned off. Request it under Admin → Package (email QikTik).",
 };
 
 const pickupAr: PickupMessages = {

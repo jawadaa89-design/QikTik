@@ -284,23 +284,36 @@ export default function AdminPage() {
     }
   }
 
-  async function savePackage(next: PackageId) {
+  function requestPackageUpgrade(next: PackageId) {
+    if (next === packageId) {
+      setPackageMsg(t.packageAlreadyActive);
+      return;
+    }
     setPackageBusy(true);
     setPackageMsg(null);
     try {
-      const res = await fetch("/api/v1/admin/features", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packageId: next }),
-      });
-      if (!res.ok) {
-        setPackageMsg(t.packageSaveError);
-        return;
-      }
-      await refreshFeatures();
-      setPackageMsg(t.packageSaved);
+      const subject = encodeURIComponent(
+        `Package request: ${venueName} (${venueSlug})`
+      );
+      const body = encodeURIComponent(
+        [
+          "Hi QikTik,",
+          "",
+          "Please activate the following package for our restaurant.",
+          "",
+          `Venue: ${venueName}`,
+          `Slug: ${venueSlug}`,
+          `Admin: /r/${venueSlug}/admin`,
+          `Current package: ${packageLabel(packageId)}`,
+          `Requested package: ${packageLabel(next)}`,
+          "",
+          "Thank you.",
+        ].join("\n")
+      );
+      window.location.href = `mailto:jawadaa@qiktik.tech?subject=${subject}&body=${body}`;
+      setPackageMsg(t.packageContactOpened);
     } catch {
-      setPackageMsg(t.packageSaveError);
+      setPackageMsg(t.packageContactError);
     } finally {
       setPackageBusy(false);
     }
@@ -2160,23 +2173,43 @@ export default function AdminPage() {
                 {t.packageTitle}
               </h2>
               <p className="mt-1 text-sm text-ink-soft/50">{t.packageHint}</p>
+              <p className="mt-2 text-sm text-ink-soft/55">
+                {t.packageContactLine}{" "}
+                <a
+                  href="mailto:jawadaa@qiktik.tech"
+                  className="font-semibold text-brass hover:underline"
+                >
+                  jawadaa@qiktik.tech
+                </a>
+              </p>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {PACKAGE_OPTIONS.map((id) => {
-                  const selected = packageId === id;
+                  const active = packageId === id;
                   return (
                     <button
                       key={id}
                       type="button"
-                      disabled={packageBusy}
-                      onClick={() => void savePackage(id)}
+                      disabled={packageBusy || active}
+                      onClick={() => requestPackageUpgrade(id)}
                       className={`rounded-2xl border px-4 py-4 text-start transition ${
-                        selected
+                        active
                           ? "border-brass/60 bg-brass/15"
-                          : "border-white/10 bg-white/[0.03] hover:border-brass/30"
+                          : "border-white/10 bg-white/[0.03] hover:border-brass/30 disabled:opacity-55"
                       }`}
                     >
-                      <p className="font-semibold text-ink">{packageLabel(id)}</p>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-semibold text-ink">{packageLabel(id)}</p>
+                        {active ? (
+                          <span className="shrink-0 rounded-lg bg-ready/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ready">
+                            {t.packageActiveBadge}
+                          </span>
+                        ) : (
+                          <span className="shrink-0 rounded-lg bg-brass/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brass">
+                            {t.packageRequestBadge}
+                          </span>
+                        )}
+                      </div>
                       <p className="mt-1 text-xs text-ink-soft/50">
                         {packageDesc(id)}
                       </p>

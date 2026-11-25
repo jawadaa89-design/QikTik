@@ -78,6 +78,9 @@ export default function PlatformPage() {
   const [resetPwById, setResetPwById] = useState<Record<string, string>>({});
   const [resetBusyId, setResetBusyId] = useState<string | null>(null);
   const [resetMsgById, setResetMsgById] = useState<Record<string, string>>({});
+  const [pkgDraftById, setPkgDraftById] = useState<Record<string, PackageId>>({});
+  const [pkgBusyId, setPkgBusyId] = useState<string | null>(null);
+  const [pkgMsgById, setPkgMsgById] = useState<Record<string, string>>({});
 
   const logoPreview = useMemo(() => {
     if (!logoFile) return "/logo.png";
@@ -225,6 +228,55 @@ export default function PlatformPage() {
     }
   }
 
+  async function activatePackage(venue: VenueRow) {
+    const next =
+      pkgDraftById[venue.id] || venue.packageId || ("menu_only" as PackageId);
+    if (next === venue.packageId) {
+      setPkgMsgById((m) => ({
+        ...m,
+        [venue.id]: "Already on this package",
+      }));
+      return;
+    }
+    setPkgBusyId(venue.id);
+    setPkgMsgById((m) => ({ ...m, [venue.id]: "" }));
+    try {
+      const res = await fetch("/api/v1/platform/venues/package", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          password,
+          venueId: venue.id,
+          packageId: next,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setPkgMsgById((m) => ({
+          ...m,
+          [venue.id]: data?.error?.message || "Package update failed",
+        }));
+        return;
+      }
+      setVenues((list) =>
+        list.map((row) =>
+          row.id === venue.id
+            ? { ...row, packageId: (data.packageId as PackageId) || next }
+            : row
+        )
+      );
+      setPkgDraftById((m) => ({ ...m, [venue.id]: next }));
+      setPkgMsgById((m) => ({
+        ...m,
+        [venue.id]: `Activated: ${PACKAGE_LABEL[next]}`,
+      }));
+    } catch {
+      setPkgMsgById((m) => ({ ...m, [venue.id]: "Network error" }));
+    } finally {
+      setPkgBusyId(null);
+    }
+  }
+
   return (
     <div className="relative mx-auto min-h-dvh max-w-2xl px-4 py-10">
       <QikTikLogo className="absolute end-4 top-4" />
@@ -303,6 +355,9 @@ export default function PlatformPage() {
               const pkg =
                 (v.packageId && PACKAGE_LABEL[v.packageId]) || "Package";
               const resetMsg = resetMsgById[v.id];
+              const pkgDraft =
+                pkgDraftById[v.id] || v.packageId || ("menu_only" as PackageId);
+              const pkgMsg = pkgMsgById[v.id];
               return (
                 <section
                   key={v.id}
@@ -360,6 +415,52 @@ export default function PlatformPage() {
                         </div>
                       );
                     })}
+                  </div>
+
+                  <div className="mt-4 border-t border-white/8 pt-4">
+                    <p className="text-xs font-semibold text-ink-soft">
+                      Activate package
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-ink-soft/45">
+                      Venue admins request upgrades by email; only platform can turn them on.
+                    </p>
+                    <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                      <select
+                        value={pkgDraft}
+                        onChange={(e) =>
+                          setPkgDraftById((m) => ({
+                            ...m,
+                            [v.id]: e.target.value as PackageId,
+                          }))
+                        }
+                        className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-[#f2efe8] outline-none focus:border-brass/40"
+                      >
+                        {PACKAGES.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.label}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        disabled={pkgBusyId === v.id || pkgDraft === v.packageId}
+                        onClick={() => void activatePackage(v)}
+                        className="rounded-xl bg-brass px-4 py-2.5 text-sm font-bold text-[#0c100e] disabled:opacity-55"
+                      >
+                        {pkgBusyId === v.id ? "Saving…" : "Activate"}
+                      </button>
+                    </div>
+                    {pkgMsg ? (
+                      <p
+                        className={`mt-2 text-xs ${
+                          pkgMsg.startsWith("Activated")
+                            ? "text-brass"
+                            : "text-alert"
+                        }`}
+                      >
+                        {pkgMsg}
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className="mt-4 border-t border-white/8 pt-4">
