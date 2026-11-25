@@ -236,9 +236,9 @@ export function BrowseMenuClient({
         <div className="absolute inset-0 bg-gradient-to-b from-[#141c18] to-transparent" />
         <div className="absolute -end-16 -top-20 h-56 w-56 rounded-full bg-brass/10 blur-3xl" />
         <div className="relative animate-rise">
-          <div className="relative flex min-h-9 items-start justify-between">
-            <LanguageSwitcher className="z-10 shrink-0" />
-            <QikTikLogo className="z-10 !h-[1.875rem] !w-auto rounded-lg p-0.5" />
+          <div className="relative flex items-center justify-between gap-3">
+            <LanguageSwitcher className="z-10 shrink-0 [&_select]:h-8 [&_select]:py-0" />
+            <QikTikLogo className="z-10 !h-8 !w-auto !rounded-xl !p-0" />
           </div>
           <div className="mt-5 flex flex-col items-center text-center">
             <VenueLogo
