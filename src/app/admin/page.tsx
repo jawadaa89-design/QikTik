@@ -826,20 +826,19 @@ export default function AdminPage() {
             />
           </div>
           <div className="mt-10 space-y-2 border-t border-white/8 pt-4 text-xs text-ink-soft/40">
-            {alertsOn ? (
+            {pickupOn ? (
+              <a
+                href={venueStaffPath(venueSlug, "pickup")}
+                className="block hover:text-brass"
+              >
+                {t.linkAlertsPickup}
+              </a>
+            ) : alertsOn ? (
               <a
                 href={venueStaffPath(venueSlug, "alerts")}
                 className="block hover:text-brass"
               >
                 {t.linkAlerts}
-              </a>
-            ) : null}
-            {hasFeature("pickup") ? (
-              <a
-                href={venueStaffPath(venueSlug, "pickup")}
-                className="block hover:text-brass"
-              >
-                {t.linkPickup}
               </a>
             ) : null}
             {hasFeature("ordering") ? (
@@ -1010,12 +1009,14 @@ export default function AdminPage() {
                 </div>
               ) : null}
 
-              {alertsOn && dash.alertsBoardUrl ? (
+              {(alertsOn || pickupOn) && dash.alertsBoardUrl ? (
                 <div className="guest-panel mt-5 rounded-2xl p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft/50">
-                    {t.alertsBoardTitle}
+                    {pickupOn ? t.alertsPickupBoardTitle : t.alertsBoardTitle}
                   </p>
-                  <p className="mt-1 text-sm text-ink-soft/55">{t.alertsBoardHint}</p>
+                  <p className="mt-1 text-sm text-ink-soft/55">
+                    {pickupOn ? t.alertsPickupBoardHint : t.alertsBoardHint}
+                  </p>
                   <a
                     href={dash.alertsBoardUrl}
                     target="_blank"
@@ -1032,7 +1033,12 @@ export default function AdminPage() {
                     >
                       {copiedLink ? t.linkCopied : t.copyLink}
                     </button>
-                    <LinkQrActions href={dash.alertsBoardUrl} label={t.alertsBoardTitle} />
+                    <LinkQrActions
+                      href={dash.alertsBoardUrl}
+                      label={
+                        pickupOn ? t.alertsPickupBoardTitle : t.alertsBoardTitle
+                      }
+                    />
                   </div>
                 </div>
               ) : null}
@@ -1840,12 +1846,18 @@ export default function AdminPage() {
                       </div>
                     </div>
                   ) : null}
-                  {alertsOn && dash?.alertsBoardUrl ? (
+                  {(alertsOn || pickupOn) && dash?.alertsBoardUrl ? (
                     <div className="guest-panel mt-4 rounded-2xl p-4">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft/50">
-                        {t.alertsBoardTitle}
+                        {pickupOn
+                          ? t.alertsPickupBoardTitle
+                          : t.alertsBoardTitle}
                       </p>
-                      <p className="mt-1 text-sm text-ink-soft/55">{t.alertsBoardHint}</p>
+                      <p className="mt-1 text-sm text-ink-soft/55">
+                        {pickupOn
+                          ? t.alertsPickupBoardHint
+                          : t.alertsBoardHint}
+                      </p>
                       <a
                         href={dash.alertsBoardUrl}
                         target="_blank"
@@ -1862,7 +1874,14 @@ export default function AdminPage() {
                         >
                           {copiedLink ? t.linkCopied : t.copyLink}
                         </button>
-                        <LinkQrActions href={dash.alertsBoardUrl} label={t.alertsBoardTitle} />
+                        <LinkQrActions
+                          href={dash.alertsBoardUrl}
+                          label={
+                            pickupOn
+                              ? t.alertsPickupBoardTitle
+                              : t.alertsBoardTitle
+                          }
+                        />
                       </div>
                     </div>
                   ) : null}

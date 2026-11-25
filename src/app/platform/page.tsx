@@ -5,6 +5,7 @@ import { QikTikLogo } from "@/components/QikTikLogo";
 import { LinkQrActions } from "@/components/LinkQrActions";
 import type { PackageId } from "@/lib/features";
 import { DEFAULT_VENUE_BRAND } from "@/lib/venue-brand";
+import { venueLinkLabelsForPackage } from "@/lib/platform-auth";
 
 type VenueUrls = {
   menu: string;
@@ -42,16 +43,6 @@ const PACKAGES: { id: PackageId; label: string }[] = [
 const PACKAGE_LABEL: Record<PackageId, string> = Object.fromEntries(
   PACKAGES.map((p) => [p.id, p.label])
 ) as Record<PackageId, string>;
-
-/** Guest home is always the menu; pickup registers from that page when in package. */
-const LINK_LABELS: { key: keyof VenueUrls; label: string }[] = [
-  { key: "menu", label: "Guest home (main)" },
-  { key: "admin", label: "Admin" },
-  { key: "staffPickup", label: "Pickup board" },
-  { key: "alerts", label: "Alerts board" },
-  { key: "kitchen", label: "Kitchen" },
-  { key: "waiter", label: "Waiter" },
-];
 
 export default function PlatformPage() {
   const [password, setPassword] = useState("");
@@ -386,35 +377,37 @@ export default function PlatformPage() {
                   </div>
 
                   <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                    {LINK_LABELS.map(({ key, label }) => {
-                      const href = v.urls?.[key];
-                      if (!href) return null;
-                      return (
-                        <div
-                          key={key}
-                          className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-soft/45">
-                              {label}
-                            </span>
-                            <LinkQrActions
-                              href={href}
-                              label={`${v.name} · ${label}`}
-                              compact
-                            />
-                          </div>
-                          <a
-                            href={href}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="mt-1 block break-all text-xs text-brass hover:underline"
+                    {venueLinkLabelsForPackage(v.packageId).map(
+                      ({ key, label }) => {
+                        const href = v.urls?.[key];
+                        if (!href) return null;
+                        return (
+                          <div
+                            key={key}
+                            className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2"
                           >
-                            {href}
-                          </a>
-                        </div>
-                      );
-                    })}
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-soft/45">
+                                {label}
+                              </span>
+                              <LinkQrActions
+                                href={href}
+                                label={`${v.name} · ${label}`}
+                                compact
+                              />
+                            </div>
+                            <a
+                              href={href}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-1 block break-all text-xs text-brass hover:underline"
+                            >
+                              {href}
+                            </a>
+                          </div>
+                        );
+                      }
+                    )}
                   </div>
 
                   <div className="mt-4 border-t border-white/8 pt-4">
@@ -666,7 +659,7 @@ export default function PlatformPage() {
           {created ? (
             <div className="guest-panel mt-6 space-y-3 rounded-2xl p-5">
               <p className="font-semibold text-ink">Created {created.name}</p>
-              {LINK_LABELS.map(({ key, label }) => {
+              {venueLinkLabelsForPackage(packageId).map(({ key, label }) => {
                 const href = created.urls?.[key];
                 if (!href) return null;
                 return (

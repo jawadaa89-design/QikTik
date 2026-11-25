@@ -708,6 +708,7 @@ export type AdminMessages = {
   linkWaiter: string;
   linkPickup: string;
   linkAlerts: string;
+  linkAlertsPickup: string;
   venueFallback: string;
   revenueToday: string;
   ordersToday: string;
@@ -782,6 +783,8 @@ export type AdminMessages = {
   menuGuestHintOrdering: string;
   alertsBoardTitle: string;
   alertsBoardHint: string;
+  alertsPickupBoardTitle: string;
+  alertsPickupBoardHint: string;
   copyLink: string;
   linkCopied: string;
   colNumber: string;
@@ -853,6 +856,7 @@ const adminEn: AdminMessages = {
   linkWaiter: "Waiter",
   linkPickup: "Pickup queue",
   linkAlerts: "Alerts board",
+  linkAlertsPickup: "Alerts + pickup board",
   venueFallback: "Venue",
   revenueToday: "Revenue today",
   ordersToday: "Orders today",
@@ -936,8 +940,10 @@ const adminEn: AdminMessages = {
   menuGuestHintOrdering:
     "Main guest link — guests open home, enter their table number, register, and order (table QR still works).",
   alertsBoardTitle: "Alerts board",
-  alertsBoardHint:
-    "Staff screen for waiter calls — includes the pickup queue when that package is on.",
+  alertsBoardHint: "Staff screen for waiter call alerts.",
+  alertsPickupBoardTitle: "Alerts + pickup board",
+  alertsPickupBoardHint:
+    "One staff screen for waiter calls and the pickup queue.",
   copyLink: "Copy link",
   linkCopied: "Copied",
   colNumber: "#",
@@ -1021,6 +1027,7 @@ const adminAr: AdminMessages = {
   linkWaiter: "النادل",
   linkPickup: "طابور الاستلام",
   linkAlerts: "لوحة التنبيهات",
+  linkAlertsPickup: "لوحة التنبيهات والاستلام",
   venueFallback: "المطعم",
   revenueToday: "إيراد اليوم",
   ordersToday: "طلبات اليوم",
@@ -1105,8 +1112,9 @@ const adminAr: AdminMessages = {
   menuGuestHintOrdering:
     "الرابط الرئيسي — يفتح الضيوف الصفحة الرئيسية ويدخلون رقم الطاولة ويسجّلون ويطلبون (رمز الطاولة ما زال يعمل).",
   alertsBoardTitle: "لوحة التنبيهات",
-  alertsBoardHint:
-    "شاشة الموظفين لاستدعاءات النادل — تتضمن طابور الاستلام عند تفعيل تلك الباقة.",
+  alertsBoardHint: "شاشة الموظفين لتنبيهات استدعاء النادل.",
+  alertsPickupBoardTitle: "لوحة التنبيهات والاستلام",
+  alertsPickupBoardHint: "شاشة واحدة لاستدعاءات النادل وطابور الاستلام.",
   copyLink: "نسخ الرابط",
   linkCopied: "تم النسخ",
   colNumber: "#",
@@ -1190,6 +1198,7 @@ const adminHe: AdminMessages = {
   linkWaiter: "מלצר",
   linkPickup: "תור איסוף",
   linkAlerts: "לוח התראות",
+  linkAlertsPickup: "לוח התראות + איסוף",
   venueFallback: "מקום",
   revenueToday: "הכנסות היום",
   ordersToday: "הזמנות היום",
@@ -1274,8 +1283,9 @@ const adminHe: AdminMessages = {
   menuGuestHintOrdering:
     "קישור ראשי — אורחים פותחים את דף הבית, מזינים מספר שולחן, נרשמים ומזמינים (QR לשולחן עדיין עובד).",
   alertsBoardTitle: "לוח התראות",
-  alertsBoardHint:
-    "מסך צוות לקריאות מלצר — כולל תור איסוף כשהחבילה כוללת איסוף.",
+  alertsBoardHint: "מסך צוות להתראות קריאת מלצר.",
+  alertsPickupBoardTitle: "לוח התראות + איסוף",
+  alertsPickupBoardHint: "מסך אחד לקריאות מלצר ותור האיסוף.",
   copyLink: "העתקת קישור",
   linkCopied: "הועתק",
   colNumber: "#",
@@ -1359,6 +1369,7 @@ const adminRu: AdminMessages = {
   linkWaiter: "Официант",
   linkPickup: "Очередь самовывоза",
   linkAlerts: "Доска оповещений",
+  linkAlertsPickup: "Оповещения + самовывоз",
   venueFallback: "Заведение",
   revenueToday: "Выручка сегодня",
   ordersToday: "Заказы сегодня",
@@ -1443,8 +1454,10 @@ const adminRu: AdminMessages = {
   menuGuestHintOrdering:
     "Главная ссылка — гости открывают home, вводят номер стола, регистрируются и заказывают (QR стола по-прежнему работает).",
   alertsBoardTitle: "Доска оповещений",
-  alertsBoardHint:
-    "Экран персонала для вызова официанта — включает очередь самовывоза при соответствующем пакете.",
+  alertsBoardHint: "Экран персонала для вызова официанта.",
+  alertsPickupBoardTitle: "Оповещения + самовывоз",
+  alertsPickupBoardHint:
+    "Один экран для вызова официанта и очереди самовывоза.",
   copyLink: "Копировать",
   linkCopied: "Скопировано",
   colNumber: "#",

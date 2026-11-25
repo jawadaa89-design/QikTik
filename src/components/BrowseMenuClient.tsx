@@ -236,19 +236,19 @@ export function BrowseMenuClient({
         <div className="absolute inset-0 bg-gradient-to-b from-[#141c18] to-transparent" />
         <div className="absolute -end-16 -top-20 h-56 w-56 rounded-full bg-brass/10 blur-3xl" />
         <div className="relative animate-rise">
-          <div className="relative min-h-14">
-            <LanguageSwitcher className="absolute start-0 top-0 z-10 shrink-0" />
-            <QikTikLogo className="absolute end-0 top-0 z-10" />
+          <div className="relative flex min-h-9 items-start justify-between">
+            <LanguageSwitcher className="z-10 shrink-0" />
+            <QikTikLogo className="z-10 !h-[1.875rem] !w-auto rounded-lg p-0.5" />
           </div>
-          <div className="mt-2 flex flex-col items-center text-center">
+          <div className="mt-5 flex flex-col items-center text-center">
             <VenueLogo
               alt={venueName}
-              width={72}
-              height={72}
-              className="h-[4.5rem] w-[4.5rem] rounded-full object-cover ring-1 ring-brass/40"
+              width={144}
+              height={144}
+              className="h-32 w-32 rounded-full object-cover shadow-[0_10px_28px_rgba(0,0,0,0.35)] ring-2 ring-brass/55 ring-offset-2 ring-offset-[#0c110f] sm:h-36 sm:w-36"
               priority
             />
-            <h1 className="mt-3 font-display text-2xl font-semibold leading-tight text-ink">
+            <h1 className="mt-4 font-display text-2xl font-semibold leading-tight text-ink sm:text-3xl">
               {venueName}
             </h1>
             <VenueContactIcons />
