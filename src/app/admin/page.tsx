@@ -37,6 +37,7 @@ type Dashboard = {
     openTables: number;
     avgCheck: string;
     menuItems: number;
+    menuVisitorsToday: number;
     pickupWaiting: number;
     pickupReady: number;
   };
@@ -931,6 +932,11 @@ export default function AdminPage() {
                 {(
                   [
                     [t.menuItemsLive, String(dash.stats.menuItems ?? 0), true],
+                    [
+                      t.menuVisitorsToday,
+                      String(dash.stats.menuVisitorsToday ?? 0),
+                      true,
+                    ],
                     [
                       t.revenueToday,
                       formatPrice(dash.stats.revenueToday),

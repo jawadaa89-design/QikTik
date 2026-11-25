@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
@@ -15,6 +15,24 @@ import { useVenueSlug } from "@/components/VenueProvider";
 import { venuePickupPath } from "@/lib/venue-paths";
 import type { MenuCategory, MenuItem } from "@/lib/demo-data";
 import type { Locale } from "@/i18n/config";
+
+const VISITOR_KEY = "qiktik_visitor_id";
+
+function getOrCreateVisitorId(): string | null {
+  try {
+    let id = localStorage.getItem(VISITOR_KEY)?.trim() || "";
+    if (!id || id.length < 8) {
+      id =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `v_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+      localStorage.setItem(VISITOR_KEY, id);
+    }
+    return id;
+  } catch {
+    return null;
+  }
+}
 
 type Props = {
   venueName: string;
@@ -60,6 +78,20 @@ export function BrowseMenuClient({
   const [callError, setCallError] = useState<string | null>(null);
   /** Landing first — menu items only after guest taps the Menu box. */
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Count unique guest visits to the restaurant home / digital menu (once per browser per day).
+  useEffect(() => {
+    const visitorId = getOrCreateVisitorId();
+    if (!visitorId || !venueSlug) return;
+    void fetch("/api/v1/menu/access", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId, venueSlug }),
+      keepalive: true,
+    }).catch(() => {
+      /* ignore analytics failures */
+    });
+  }, [venueSlug]);
 
   const current = categories.find((c) => c.id === activeCategory) ?? categories[0];
   const children = current?.children ?? [];

@@ -715,6 +715,7 @@ export type AdminMessages = {
   openTables: string;
   avgCheck: string;
   menuItemsLive: string;
+  menuVisitorsToday: string;
   pickupWaiting: string;
   pickupReady: string;
   liveFeed: string;
@@ -863,6 +864,7 @@ const adminEn: AdminMessages = {
   openTables: "Open tables",
   avgCheck: "Avg check",
   menuItemsLive: "Menu items",
+  menuVisitorsToday: "Menu visitors today",
   pickupWaiting: "Pickup waiting",
   pickupReady: "Pickup ready",
   liveFeed: "Live feed",
@@ -1034,6 +1036,7 @@ const adminAr: AdminMessages = {
   openTables: "طاولات مفتوحة",
   avgCheck: "متوسط الفاتورة",
   menuItemsLive: "أصناف القائمة",
+  menuVisitorsToday: "زوار القائمة اليوم",
   pickupWaiting: "استلام بالانتظار",
   pickupReady: "استلام جاهز",
   liveFeed: "البث المباشر",
@@ -1205,6 +1208,7 @@ const adminHe: AdminMessages = {
   openTables: "שולחנות פתוחים",
   avgCheck: "ממוצע חשבון",
   menuItemsLive: "פריטי תפריט",
+  menuVisitorsToday: "מבקרים בתפריט היום",
   pickupWaiting: "איסוף ממתין",
   pickupReady: "איסוף מוכן",
   liveFeed: "פיד חי",
@@ -1376,6 +1380,7 @@ const adminRu: AdminMessages = {
   openTables: "Открытые столы",
   avgCheck: "Средний чек",
   menuItemsLive: "Позиции меню",
+  menuVisitorsToday: "Посетители меню сегодня",
   pickupWaiting: "Самовывоз ожидает",
   pickupReady: "Самовывоз готов",
   liveFeed: "Лента",

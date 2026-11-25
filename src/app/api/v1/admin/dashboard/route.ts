@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getPublicBaseUrl } from "@/lib/public-url";
 import { featuresFromFlags } from "@/lib/features";
 import { requireStaffVenue } from "@/lib/staff-auth";
+import { utcDay } from "@/lib/menu-access";
 import { venueMainPath, venueStaffPath } from "@/lib/venue-paths";
 
 export async function GET(req: NextRequest) {
@@ -21,6 +22,7 @@ export async function GET(req: NextRequest) {
 
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
+  const menuDay = utcDay();
 
   const [
     ordersToday,
@@ -28,6 +30,7 @@ export async function GET(req: NextRequest) {
     paymentsToday,
     recentOrders,
     menuItems,
+    menuVisitorsToday,
     pickupWaiting,
     pickupReady,
     recentPickup,
@@ -75,6 +78,9 @@ export async function GET(req: NextRequest) {
         category: { venueId: venue.id },
       },
     }),
+    prisma.menuAccessDay.count({
+      where: { venueId: venue.id, day: menuDay },
+    }),
     features.pickup
       ? prisma.pickupTicket.count({
           where: { venueId: venue.id, status: "WAITING" },
@@ -121,6 +127,7 @@ export async function GET(req: NextRequest) {
       openTables,
       avgCheck: avg.toFixed(2),
       menuItems,
+      menuVisitorsToday,
       pickupWaiting,
       pickupReady,
     },
