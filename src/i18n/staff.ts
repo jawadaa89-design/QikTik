@@ -788,6 +788,10 @@ export type AdminMessages = {
   alertsPickupBoardHint: string;
   copyLink: string;
   linkCopied: string;
+  exportSummary: string;
+  exportSummaryBusy: string;
+  exportSummaryError: string;
+  summaryLinkAdmin: string;
   colNumber: string;
   colSection: string;
   colStatus: string;
@@ -948,6 +952,10 @@ const adminEn: AdminMessages = {
     "One staff screen for waiter calls and the pickup queue.",
   copyLink: "Copy link",
   linkCopied: "Copied",
+  exportSummary: "Download venue summary image",
+  exportSummaryBusy: "Preparing image…",
+  exportSummaryError: "Could not create the summary image. Try again.",
+  summaryLinkAdmin: "Admin",
   colNumber: "#",
   colSection: "Section",
   colStatus: "Status",
@@ -1120,6 +1128,10 @@ const adminAr: AdminMessages = {
   alertsPickupBoardHint: "شاشة واحدة لاستدعاءات النادل وطابور الاستلام.",
   copyLink: "نسخ الرابط",
   linkCopied: "تم النسخ",
+  exportSummary: "تنزيل صورة ملخص المطعم",
+  exportSummaryBusy: "جارٍ تجهيز الصورة…",
+  exportSummaryError: "تعذر إنشاء صورة الملخص. حاول مرة أخرى.",
+  summaryLinkAdmin: "الإدارة",
   colNumber: "#",
   colSection: "القسم",
   colStatus: "الحالة",
@@ -1292,6 +1304,10 @@ const adminHe: AdminMessages = {
   alertsPickupBoardHint: "מסך אחד לקריאות מלצר ותור האיסוף.",
   copyLink: "העתקת קישור",
   linkCopied: "הועתק",
+  exportSummary: "הורדת תמונת סיכום למקום",
+  exportSummaryBusy: "מכין תמונה…",
+  exportSummaryError: "לא ניתן ליצור את תמונת הסיכום. נסו שוב.",
+  summaryLinkAdmin: "ניהול",
   colNumber: "#",
   colSection: "אזור",
   colStatus: "סטטוס",
@@ -1465,6 +1481,10 @@ const adminRu: AdminMessages = {
     "Один экран для вызова официанта и очереди самовывоза.",
   copyLink: "Копировать",
   linkCopied: "Скопировано",
+  exportSummary: "Скачать сводное изображение",
+  exportSummaryBusy: "Готовим изображение…",
+  exportSummaryError: "Не удалось создать сводное изображение. Попробуйте ещё раз.",
+  summaryLinkAdmin: "Админ",
   colNumber: "#",
   colSection: "Зона",
   colStatus: "Статус",

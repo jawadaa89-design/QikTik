@@ -9,6 +9,7 @@ import {
 } from "@/components/StaffLanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
 import { LinkQrActions } from "@/components/LinkQrActions";
+import { VenueSummaryExport } from "@/components/VenueSummaryExport";
 import { useFeatures } from "@/components/FeaturesProvider";
 import { useVenueName, useVenueSlug } from "@/components/VenueProvider";
 import { useVenueLogoSrc } from "@/components/VenueThemeProvider";
@@ -902,9 +903,31 @@ export default function AdminPage() {
 
           {tab === "dashboard" && dash && (
             <>
-              <h2 className="font-display text-3xl font-semibold text-ink">
-                {dash.venue?.name ?? t.venueFallback}
-              </h2>
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <h2 className="font-display text-3xl font-semibold text-ink">
+                  {dash.venue?.name ?? t.venueFallback}
+                </h2>
+                <VenueSummaryExport
+                  venueName={dash.venue?.name ?? venueName}
+                  slug={venueSlug}
+                  packageId={packageId}
+                  logoUrl={headerLogoSrc}
+                  packageLabelFor={packageLabel}
+                  labels={{
+                    exportSummary: t.exportSummary,
+                    exportSummaryBusy: t.exportSummaryBusy,
+                    exportSummaryError: t.exportSummaryError,
+                    linkLabels: {
+                      menu: t.menuGuestTitle,
+                      admin: t.summaryLinkAdmin,
+                      staffPickup: t.linkAlertsPickup,
+                      alerts: t.linkAlerts,
+                      kitchen: t.linkKitchen,
+                      waiter: t.linkWaiter,
+                    },
+                  }}
+                />
+              </div>
 
               {!orderingOn && !pickupOn && !alertsOn ? (
                 <div className="guest-panel mt-5 rounded-2xl p-4">
