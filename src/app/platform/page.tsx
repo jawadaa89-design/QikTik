@@ -37,7 +37,7 @@ const PACKAGES: { id: PackageId; label: string }[] = [
   { id: "menu_only", label: "Menu only" },
   { id: "menu_alerts", label: "Menu + alerts" },
   { id: "menu_alerts_pickup", label: "Menu + alerts + pickup" },
-  { id: "menu_ordering", label: "Menu + ordering" },
+  { id: "menu_ordering", label: "Full (menu + ordering + alerts + pickup)" },
 ];
 
 const PACKAGE_LABEL: Record<PackageId, string> = Object.fromEntries(

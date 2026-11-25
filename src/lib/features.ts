@@ -10,9 +10,9 @@ export type FeatureKey = "digitalMenu" | "alerts" | "ordering" | "pickup";
  * - Menu only → guest home = digital menu
  * - Menu + alerts → menu + call waiter on the menu
  * - Menu + alerts + pickup → menu + pickup register CTA on the menu + alerts
- * - Menu + ordering → menu + table number / table QR ordering
+ * - Menu + ordering (full) → table ordering + alerts + pickup (one staff board)
  *
- * Guest entry is always the menu URL. Pickup is not a separate guest link.
+ * Guest entry is always the /main home. Pickup is not a separate guest link.
  */
 export type PackageId =
   | "menu_only"
@@ -70,17 +70,17 @@ export const PACKAGE_PRESETS: Record<
       digitalMenu: true,
       alerts: true,
       ordering: true,
-      pickup: false,
+      pickup: true,
     },
   },
 };
 
-/** Default demo package: table ordering + alerts. */
+/** Default demo package: full ordering + alerts + pickup. */
 export const DEFAULT_FEATURES: FeatureFlags = {
   digitalMenu: true,
   alerts: true,
   ordering: true,
-  pickup: false,
+  pickup: true,
 };
 
 export function featuresFromFlags(

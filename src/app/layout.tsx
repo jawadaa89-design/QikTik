@@ -1,16 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
-const venueName = process.env.NEXT_PUBLIC_VENUE_NAME ?? "My Restaurant";
-
 export const metadata: Metadata = {
   title: "QikTik",
   description: "QR + NFC table ordering for restaurants and pubs",
-  applicationName: "QikTik Pickup",
-  manifest: "/manifest.webmanifest",
+  applicationName: "QikTik",
+  manifest: "/api/v1/manifest",
   appleWebApp: {
     capable: true,
-    title: "QikTik Pickup",
+    title: "QikTik",
     statusBarStyle: "black-translucent",
   },
   icons: {
@@ -23,7 +21,7 @@ export const metadata: Metadata = {
   other: {
     "mobile-web-app-capable": "yes",
     "apple-mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-title": venueName,
+    "apple-mobile-web-app-title": "QikTik",
   },
 };
 

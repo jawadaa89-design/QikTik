@@ -132,6 +132,12 @@ export function venueLogoSrc(brand: VenueBrand | null | undefined): string {
   return brand?.logoUrl?.trim() || "/logo.png";
 }
 
+/** Home-screen / PWA display name when saving the guest main link. */
+export function venueHomeScreenName(venueName: string | null | undefined): string {
+  const name = venueName?.trim() || "Restaurant";
+  return `${name} QikTik`;
+}
+
 /** Chrome tab / PWA icons for the active restaurant logo. */
 export function venueIconsMetadata(logoSrc: string): {
   icon: { url: string }[];

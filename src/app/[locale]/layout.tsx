@@ -11,6 +11,7 @@ import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
 import { resolveVenue } from "@/lib/venue";
 import {
   brandFromVenue,
+  venueHomeScreenName,
   venueIconsMetadata,
   venueLogoSrc,
 } from "@/lib/venue-brand";
@@ -26,16 +27,35 @@ type Props = {
 /** Venue data is per-request; avoid build-time DB prerender. */
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
   const headerSlug = (await headers()).get(VENUE_SLUG_HEADER)?.trim();
   const venueSlug =
     headerSlug || (await venueSlugFromCookies()) || DEFAULT_VENUE_SLUG;
   const venue = await resolveVenue({ slug: venueSlug });
   const brand = brandFromVenue(venue);
   const name = venue?.name?.trim() || "Restaurant";
+  const homeName = venueHomeScreenName(name);
+  const manifestHref = `/api/v1/manifest?venue=${encodeURIComponent(venueSlug)}&locale=${encodeURIComponent(locale || "ar")}`;
   return {
     title: name,
+    applicationName: homeName,
+    manifest: manifestHref,
+    appleWebApp: {
+      capable: true,
+      title: homeName,
+      statusBarStyle: "black-translucent",
+    },
     icons: venueIconsMetadata(venueLogoSrc(brand)),
+    other: {
+      "mobile-web-app-capable": "yes",
+      "apple-mobile-web-app-capable": "yes",
+      "apple-mobile-web-app-title": homeName,
+    },
   };
 }
 
@@ -52,15 +72,19 @@ export default async function LocaleLayout({ children, params }: Props) {
   const venue = await resolveVenue({ slug: venueSlug });
   const brand = brandFromVenue(venue);
   const iconHref = venueLogoSrc(brand);
+  const homeName = venueHomeScreenName(venue?.name);
+  const manifestHref = `/api/v1/manifest?venue=${encodeURIComponent(venueSlug)}&locale=${encodeURIComponent(locale)}`;
 
   return (
     <html lang={locale} dir={dir}>
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content={homeName} />
         <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="application-name" content={homeName} />
         <VenueFaviconLinks href={iconHref} />
-        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="manifest" href={manifestHref} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

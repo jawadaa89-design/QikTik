@@ -46,12 +46,13 @@ export function venueLinkLabelsForPackage(
     { key: "admin", label: "Admin" },
   ];
 
-  if (packageId === "menu_alerts_pickup") {
+  if (packageId === "menu_alerts_pickup" || packageId === "menu_ordering") {
     links.push({ key: "staffPickup", label: "Alerts + pickup board" });
   } else if (packageId === "menu_alerts") {
     links.push({ key: "alerts", label: "Alerts board" });
-  } else if (packageId === "menu_ordering") {
-    links.push({ key: "alerts", label: "Alerts board" });
+  }
+
+  if (packageId === "menu_ordering") {
     links.push({ key: "kitchen", label: "Kitchen" });
     links.push({ key: "waiter", label: "Waiter" });
   }
