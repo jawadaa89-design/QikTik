@@ -9,6 +9,7 @@ import {
   brandFromVenue,
   venueIconsMetadata,
   venueLogoSrc,
+  venueStaffHomeScreenName,
 } from "@/lib/venue-brand";
 import { VenueFaviconLinks } from "@/components/VenueFaviconLinks";
 import { PoweredByQikTik } from "@/components/PoweredByQikTik";
@@ -22,9 +23,23 @@ export async function generateMetadata(): Promise<Metadata> {
   const venue = await resolveVenue({ slug: venueSlug });
   const brand = brandFromVenue(venue);
   const name = venue?.name?.trim() || "Restaurant";
+  const homeName = venueStaffHomeScreenName(name, "admin");
+  const manifestHref = `/api/v1/manifest?venue=${encodeURIComponent(venueSlug)}&start=admin`;
   return {
     title: `${name} · Admin`,
+    applicationName: homeName,
+    manifest: manifestHref,
+    appleWebApp: {
+      capable: true,
+      title: homeName,
+      statusBarStyle: "black-translucent",
+    },
     icons: venueIconsMetadata(venueLogoSrc(brand)),
+    other: {
+      "mobile-web-app-capable": "yes",
+      "apple-mobile-web-app-capable": "yes",
+      "apple-mobile-web-app-title": homeName,
+    },
   };
 }
 
@@ -37,11 +52,19 @@ export default async function AdminLayout({
   const venue = await resolveVenue({ slug: venueSlug });
   const brand = brandFromVenue(venue);
   const logoHref = venueLogoSrc(brand);
+  const homeName = venueStaffHomeScreenName(venue?.name, "admin");
+  const manifestHref = `/api/v1/manifest?venue=${encodeURIComponent(venueSlug)}&start=admin`;
 
   return (
     <html lang="ar" suppressHydrationWarning>
       <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content={homeName} />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="application-name" content={homeName} />
         <VenueFaviconLinks href={logoHref} />
+        <link rel="manifest" href={manifestHref} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -55,13 +78,13 @@ export default async function AdminLayout({
           venueName={venue?.name ?? "Restaurant"}
         >
           <VenueThemeProvider brand={brand}>
-            <div className="flex min-h-dvh flex-col">
-              <div className="flex-1">
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="min-h-0 flex-1">
                 <FeaturesProvider fetchOnMount venueSlug={venueSlug}>
                   <StaffAuthGate>{children}</StaffAuthGate>
                 </FeaturesProvider>
               </div>
-              <PoweredByQikTik />
+              <PoweredByQikTik className="shrink-0 py-2" />
             </div>
           </VenueThemeProvider>
         </VenueProvider>

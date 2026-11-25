@@ -138,6 +138,25 @@ export function venueHomeScreenName(venueName: string | null | undefined): strin
   return `${name} QikTik`;
 }
 
+/** Home-screen name when saving a staff board (admin / kitchen / waiter / pickup). */
+export function venueStaffHomeScreenName(
+  venueName: string | null | undefined,
+  board: "admin" | "pickup" | "alerts" | "kitchen" | "waiter"
+): string {
+  const name = venueName?.trim() || "Restaurant";
+  const label =
+    board === "admin"
+      ? "Admin"
+      : board === "kitchen"
+        ? "Kitchen"
+        : board === "waiter"
+          ? "Waiter"
+          : board === "alerts"
+            ? "Alerts"
+            : "Pickup";
+  return `${name} ${label}`;
+}
+
 /** Chrome tab / PWA icons for the active restaurant logo. */
 export function venueIconsMetadata(logoSrc: string): {
   icon: { url: string }[];

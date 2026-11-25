@@ -8,10 +8,7 @@ export async function POST(
   _req: Request,
   { params }: { params: Promise<{ tableId: string }> }
 ) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
-
-  const { tableId } = await params;
+    const { tableId } = await params;
 
   const table = await prisma.table.findUnique({
     where: { id: tableId },
@@ -25,6 +22,8 @@ export async function POST(
   });
 
   if (!table) return apiError("TABLE_NOT_FOUND", "Table not found", 404);
+  const denied = await requireStaffSession(req, table.venueId);
+  if (denied) return denied;
   const session = table.sessions[0];
   if (!session) return apiError("NO_SESSION", "No open session", 400);
 

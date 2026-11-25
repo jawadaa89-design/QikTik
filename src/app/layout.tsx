@@ -5,7 +5,8 @@ export const metadata: Metadata = {
   title: "QikTik",
   description: "QR + NFC table ordering for restaurants and pubs",
   applicationName: "QikTik",
-  manifest: "/api/v1/manifest",
+  // Manifest is set per-route (guest main vs staff boards) so Add to Home Screen
+  // does not always open the guest /main link.
   appleWebApp: {
     capable: true,
     title: "QikTik",

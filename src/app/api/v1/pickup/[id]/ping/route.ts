@@ -18,15 +18,15 @@ const lastPingByTicket = new Map<string, number>();
  * Also sends Web Push when the guest subscribed (background / closed tab).
  */
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
-
   const { id } = await params;
   const ticket = await prisma.pickupTicket.findUnique({ where: { id } });
   if (!ticket) return apiError("NOT_FOUND", "Pickup ticket not found", 404);
+
+  const denied = await requireStaffSession(req, ticket.venueId);
+  if (denied) return denied;
 
   const blocked = await requireFeature("pickup", ticket.venueId);
   if (blocked) return blocked;

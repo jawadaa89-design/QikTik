@@ -1,9 +1,8 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireStaffSession } from "@/lib/staff-auth";
 import { apiError } from "@/lib/validation";
 import { requireFeature } from "@/lib/features";
-import { requireVenue } from "@/lib/venue";
+import { requireStaffVenue } from "@/lib/staff-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -33,12 +32,9 @@ function serializeAssistance(call: {
  * GET /api/v1/pickup/assistance?venue=&status=OPEN,ACKNOWLEDGED — staff waiter-call queue.
  */
 export async function GET(req: NextRequest) {
-  const denied = await requireStaffSession(req);
-  if (denied) return denied;
-
   const statusParam = req.nextUrl.searchParams.get("status");
 
-  const resolved = await requireVenue(req);
+  const resolved = await requireStaffVenue(req);
   if ("error" in resolved) return resolved.error;
   const { venue } = resolved;
 

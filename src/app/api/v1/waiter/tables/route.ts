@@ -1,21 +1,23 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import type { DiningSection } from "@prisma/client";
-import { requireStaffSession } from "@/lib/staff-auth";
 import {
   hasHigherPriorityFloorAlert,
   maybeRemindPartySizeAlert,
   missingPartySize,
 } from "@/lib/party-size";
+import { requireStaffVenue } from "@/lib/staff-auth";
 
 export async function GET(req: NextRequest) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
+  const resolved = await requireStaffVenue(req);
+  if ("error" in resolved) return resolved.error;
+  const { venue } = resolved;
 
   const section = req.nextUrl.searchParams.get("section") as DiningSection | "ALL" | null;
 
   const tables = await prisma.table.findMany({
     where: {
+      venueId: venue.id,
       status: { not: "DISABLED" },
       ...(section && section !== "ALL" ? { section } : {}),
     },

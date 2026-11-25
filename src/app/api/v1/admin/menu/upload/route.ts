@@ -12,9 +12,6 @@ export const dynamic = "force-dynamic";
 
 /** Upload a menu item image → Vercel Blob (prod) or public/uploads/menu/{venueId}/ (local). */
 export async function POST(req: NextRequest) {
-  const denied = await requireStaffSession(req);
-  if (denied) return denied;
-
   const form = await req.formData().catch(() => null);
   if (!form) return apiError("VALIDATION_ERROR", "Expected multipart form", 400);
 
@@ -31,6 +28,9 @@ export async function POST(req: NextRequest) {
 
   const venue = await resolveVenue({ req });
   if (!venue) return apiError("VENUE_NOT_FOUND", "Venue not found", 404);
+
+  const denied = await requireStaffSession(req, venue.id);
+  if (denied) return denied;
 
   const item = await prisma.menuItem.findUnique({
     where: { id: itemId },

@@ -98,13 +98,13 @@ export default async function LocaleLayout({ children, params }: Props) {
           venueName={venue?.name ?? "Restaurant"}
         >
           <VenueThemeProvider brand={brand}>
-            <div className="flex min-h-dvh flex-col">
-              <div className="flex-1">
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="min-h-0 flex-1">
                 <NextIntlClientProvider messages={messages}>
                   {children}
                 </NextIntlClientProvider>
               </div>
-              <PoweredByQikTik />
+              <PoweredByQikTik className="shrink-0 py-2" />
             </div>
           </VenueThemeProvider>
         </VenueProvider>

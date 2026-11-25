@@ -10,9 +10,6 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ tableId: string }> }
 ) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
-
   const { tableId } = await params;
   const body = await req.json();
   const parsed = waiterOrderSchema.safeParse(body);
@@ -24,6 +21,9 @@ export async function POST(
     where: { id: tableId },
   });
   if (!table) return apiError("TABLE_NOT_FOUND", "Table not found", 404);
+
+  const denied = await requireStaffSession(req, table.venueId);
+  if (denied) return denied;
 
   const blocked = await requireFeature("ordering", table.venueId);
   if (blocked) return blocked;

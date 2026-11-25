@@ -1,8 +1,11 @@
 import { createHmac, timingSafeEqual } from "crypto";
+import type { Venue } from "@prisma/client";
+import type { NextRequest } from "next/server";
 import { cookies, headers } from "next/headers";
 import { prisma } from "@/lib/db";
 import { apiError } from "@/lib/validation";
 import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
+import { requireVenue } from "@/lib/venue";
 
 export const STAFF_SESSION_COOKIE = "qiktik_staff";
 /** Client-set cookie + header fallback when Safari drops httpOnly cookies on http://LAN-IP. */
@@ -128,23 +131,40 @@ export async function setVenueStaffPassword(
   });
 }
 
-function signStaffSession(expiresAt: number): string {
-  const payload = String(expiresAt);
+export type StaffSessionPayload = {
+  expiresAt: number;
+  venueId: string;
+};
+
+/**
+ * Staff session token: `{expiresAt}.{venueId}.{hmac}`.
+ * Bound to one venue so unlocking Coffee Up cannot unlock My Restaurant.
+ */
+export function createStaffSessionValue(
+  venueId: string,
+  now = Date.now()
+): string {
+  const id = venueId.trim();
+  if (!id) throw new Error("venueId required for staff session");
+  const expiresAt = now + SESSION_TTL_MS;
+  const payload = `${expiresAt}.${id}`;
   const sig = createHmac("sha256", staffSessionSecret())
     .update(payload)
     .digest("hex");
   return `${payload}.${sig}`;
 }
 
-export function createStaffSessionValue(now = Date.now()): string {
-  return signStaffSession(now + SESSION_TTL_MS);
-}
+export function parseStaffSession(
+  value: string | undefined | null
+): StaffSessionPayload | null {
+  if (!value) return null;
+  const parts = value.split(".");
+  // New format only (legacy expiresAt.sig is rejected — forces re-login).
+  if (parts.length !== 3) return null;
+  const [expiresRaw, venueId, sig] = parts;
+  if (!expiresRaw || !venueId || !sig) return null;
 
-export function verifyStaffSessionValue(value: string | undefined | null): boolean {
-  if (!value) return false;
-  const [payload, sig] = value.split(".");
-  if (!payload || !sig) return false;
-
+  const payload = `${expiresRaw}.${venueId}`;
   const expected = createHmac("sha256", staffSessionSecret())
     .update(payload)
     .digest("hex");
@@ -152,14 +172,20 @@ export function verifyStaffSessionValue(value: string | undefined | null): boole
   try {
     const a = Buffer.from(sig, "hex");
     const b = Buffer.from(expected, "hex");
-    if (a.length !== b.length || !timingSafeEqual(a, b)) return false;
+    if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
   } catch {
-    return false;
+    return null;
   }
 
-  const expiresAt = Number(payload);
-  if (!Number.isFinite(expiresAt) || expiresAt < Date.now()) return false;
-  return true;
+  const expiresAt = Number(expiresRaw);
+  if (!Number.isFinite(expiresAt) || expiresAt < Date.now()) return null;
+  return { expiresAt, venueId };
+}
+
+export function verifyStaffSessionValue(
+  value: string | undefined | null
+): boolean {
+  return parseStaffSession(value) !== null;
 }
 
 export function staffSessionCookieOptions(maxAgeSec = Math.floor(SESSION_TTL_MS / 1000)) {
@@ -174,19 +200,27 @@ export function staffSessionCookieOptions(maxAgeSec = Math.floor(SESSION_TTL_MS 
   };
 }
 
-/** Read + verify staff session cookie, JS cookie, header, or access_token query. */
-export async function hasStaffSession(): Promise<boolean> {
-  const jar = await cookies();
-  if (verifyStaffSessionValue(jar.get(STAFF_SESSION_COOKIE)?.value)) return true;
-  if (verifyStaffSessionValue(jar.get(STAFF_TOKEN_COOKIE)?.value)) return true;
+function sessionFromCookieJar(
+  jar: Awaited<ReturnType<typeof cookies>>
+): StaffSessionPayload | null {
+  return (
+    parseStaffSession(jar.get(STAFF_SESSION_COOKIE)?.value) ||
+    parseStaffSession(jar.get(STAFF_TOKEN_COOKIE)?.value)
+  );
+}
 
+async function readStaffSessionFromHeaders(): Promise<StaffSessionPayload | null> {
   try {
     const h = await headers();
-    if (verifyStaffSessionValue(h.get(STAFF_SESSION_HEADER))) return true;
+    const fromHeader = parseStaffSession(h.get(STAFF_SESSION_HEADER));
+    if (fromHeader) return fromHeader;
+
     const auth = h.get("authorization");
     if (auth?.toLowerCase().startsWith("bearer ")) {
-      if (verifyStaffSessionValue(auth.slice(7).trim())) return true;
+      const fromBearer = parseStaffSession(auth.slice(7).trim());
+      if (fromBearer) return fromBearer;
     }
+
     const candidate =
       h.get("x-invoke-query") ||
       h.get("next-url") ||
@@ -199,7 +233,8 @@ export async function hasStaffSession(): Promise<boolean> {
           : new URLSearchParams(
               candidate.startsWith("?") ? candidate.slice(1) : candidate
             ).get("access_token");
-        if (verifyStaffSessionValue(q)) return true;
+        const fromQuery = parseStaffSession(q);
+        if (fromQuery) return fromQuery;
       } catch {
         /* ignore */
       }
@@ -207,30 +242,94 @@ export async function hasStaffSession(): Promise<boolean> {
   } catch {
     /* headers() unavailable in some contexts */
   }
+  return null;
+}
 
-  return false;
+/** Read + verify staff session; optionally require it to match a venue. */
+export async function getStaffSession(
+  expectedVenueId?: string | null
+): Promise<StaffSessionPayload | null> {
+  const jar = await cookies();
+  const fromCookie = sessionFromCookieJar(jar);
+  const session = fromCookie || (await readStaffSessionFromHeaders());
+  if (!session) return null;
+  if (expectedVenueId?.trim() && session.venueId !== expectedVenueId.trim()) {
+    return null;
+  }
+  return session;
+}
+
+export async function hasStaffSession(
+  expectedVenueId?: string | null
+): Promise<boolean> {
+  return (await getStaffSession(expectedVenueId)) !== null;
+}
+
+export async function getStaffSessionFromRequest(
+  req: Request,
+  expectedVenueId?: string | null
+): Promise<StaffSessionPayload | null> {
+  const fromAmbient = await getStaffSession(expectedVenueId);
+  if (fromAmbient) return fromAmbient;
+
+  try {
+    const url = new URL(req.url);
+    const fromQuery = parseStaffSession(url.searchParams.get("access_token"));
+    if (!fromQuery) return null;
+    if (expectedVenueId?.trim() && fromQuery.venueId !== expectedVenueId.trim()) {
+      return null;
+    }
+    return fromQuery;
+  } catch {
+    return null;
+  }
 }
 
 export async function hasStaffSessionFromRequest(
-  req: Request
+  req: Request,
+  expectedVenueId?: string | null
 ): Promise<boolean> {
-  if (await hasStaffSession()) return true;
-  try {
-    const url = new URL(req.url);
-    if (verifyStaffSessionValue(url.searchParams.get("access_token"))) return true;
-  } catch {
-    /* ignore */
-  }
-  return false;
+  return (await getStaffSessionFromRequest(req, expectedVenueId)) !== null;
 }
 
+/**
+ * Require a valid staff session.
+ * When `venueId` is set, the session must be for that venue (cross-venue unlock blocked).
+ */
 export async function requireStaffSession(
-  req?: Request
+  req?: Request,
+  venueId?: string | null
 ): Promise<Response | null> {
   if (req) {
-    if (await hasStaffSessionFromRequest(req)) return null;
-  } else if (await hasStaffSession()) {
+    if (await hasStaffSessionFromRequest(req, venueId)) return null;
+  } else if (await hasStaffSession(venueId)) {
     return null;
   }
   return apiError("STAFF_AUTH_REQUIRED", "Staff login required", 401);
+}
+
+/** 403 when a loaded resource belongs to a different venue than the staff session. */
+export async function requireStaffOwnsVenue(
+  req: Request | undefined,
+  resourceVenueId: string | null | undefined
+): Promise<Response | null> {
+  if (!resourceVenueId) {
+    return apiError("VENUE_NOT_FOUND", "Venue not found", 404);
+  }
+  return requireStaffSession(req, resourceVenueId);
+}
+
+/**
+ * Resolve the request venue and require a staff session bound to that venue.
+ * Blocks cross-venue unlock (Coffee Up session cannot access My Restaurant APIs).
+ */
+export async function requireStaffVenue(
+  req: NextRequest | Request,
+  overrides: { slug?: string | null; id?: string | null } = {}
+): Promise<{ venue: Venue } | { error: Response }> {
+  const resolved = await requireVenue(req, overrides);
+  if ("error" in resolved) return resolved;
+  const denied = await requireStaffSession(req, resolved.venue.id);
+  if (denied) return { error: denied };
+  return resolved;
 }

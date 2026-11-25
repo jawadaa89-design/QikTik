@@ -9,9 +9,6 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ orderId: string; itemId: string }> }
 ) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
-
   const { orderId, itemId } = await params;
   const body = await req.json();
   const parsed = updateItemStatusSchema.safeParse(body);
@@ -31,6 +28,9 @@ export async function PATCH(
   if (!item) {
     return apiError("ITEM_NOT_FOUND", "Order item not found", 404);
   }
+
+  const denied = await requireStaffSession(req, item.order.session.venueId);
+  if (denied) return denied;
 
   const updated = await prisma.orderItem.update({
     where: { id: itemId },

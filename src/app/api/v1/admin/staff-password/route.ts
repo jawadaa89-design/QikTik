@@ -12,9 +12,6 @@ const schema = z.object({
 
 /** PATCH /api/v1/admin/staff-password — set this venue’s staff unlock password. */
 export async function PATCH(req: NextRequest) {
-  const denied = await requireStaffSession(req);
-  if (denied) return denied;
-
   let body: unknown;
   try {
     body = await req.json();
@@ -33,6 +30,9 @@ export async function PATCH(req: NextRequest) {
 
   const venue = await resolveVenue({ req });
   if (!venue) return apiError("VENUE_NOT_FOUND", "Venue not found", 404);
+
+  const denied = await requireStaffSession(req, venue.id);
+  if (denied) return denied;
 
   try {
     await setVenueStaffPassword(venue.id, parsed.data.password);

@@ -11,7 +11,7 @@ export function PoweredByQikTik({ className }: Props) {
   return (
     <p
       className={cn(
-        "px-4 py-3 text-center text-[10px] leading-none tracking-wide",
+        "px-4 py-2 text-center text-[10px] leading-none tracking-wide",
         className
       )}
     >

@@ -90,14 +90,11 @@ function mapCategory(
 }
 
 export async function GET(req: NextRequest) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
-
-  const locale = req.nextUrl.searchParams.get("locale") ?? "ar";
-  const { requireVenue } = await import("@/lib/venue");
-  const resolved = await requireVenue(req);
-  if ("error" in resolved) return Response.json({ categories: [] });
+  const { requireStaffVenue } = await import("@/lib/staff-auth");
+  const resolved = await requireStaffVenue(req);
+  if ("error" in resolved) return resolved.error;
   const { venue } = resolved;
+  const locale = req.nextUrl.searchParams.get("locale") ?? "ar";
 
   const categories = await prisma.menuCategory.findMany({
     where: { venueId: venue.id },
@@ -174,9 +171,6 @@ const updateItemSchema = z
   );
 
 export async function POST(req: NextRequest) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
-
   const body = await req.json();
 
   if (body?.type === "category") {
@@ -185,11 +179,9 @@ export async function POST(req: NextRequest) {
       return apiError("VALIDATION_ERROR", parsed.error.message, 400);
     }
 
-    const { requireVenue } = await import("@/lib/venue");
-    const resolved = await requireVenue(req);
-    if ("error" in resolved) {
-      return apiError("NOT_FOUND", "Venue not found", 404);
-    }
+    const { requireStaffVenue } = await import("@/lib/staff-auth");
+    const resolved = await requireStaffVenue(req);
+    if ("error" in resolved) return resolved.error;
     const { venue } = resolved;
 
     const parentId = parsed.data.parentId ?? null;
@@ -261,6 +253,9 @@ export async function POST(req: NextRequest) {
     return apiError("NOT_FOUND", "Category not found", 404);
   }
 
+  const deniedItem = await requireStaffSession(req, category.venueId);
+  if (deniedItem) return deniedItem;
+
   const priceNum = Number(price);
   if (!Number.isFinite(priceNum) || priceNum < 0) {
     return apiError("VALIDATION_ERROR", "Invalid price", 400);
@@ -317,8 +312,10 @@ const updateCategorySchema = z.object({
 });
 
 export async function PATCH(req: NextRequest) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
+  const { requireStaffVenue } = await import("@/lib/staff-auth");
+  const resolved = await requireStaffVenue(req);
+  if ("error" in resolved) return resolved.error;
+  const { venue } = resolved;
 
   const body = await req.json();
 
@@ -333,7 +330,7 @@ export async function PATCH(req: NextRequest) {
       where: { id: categoryId },
       include: { translations: true },
     });
-    if (!category) {
+    if (!category || category.venueId !== venue.id) {
       return apiError("NOT_FOUND", "Category not found", 404);
     }
 
@@ -373,9 +370,14 @@ export async function PATCH(req: NextRequest) {
 
   // Bulk hide / show every item in a category (+ direct children)
   if (categoryId && hidden !== undefined && !itemId) {
+    const cat = await prisma.menuCategory.findFirst({
+      where: { id: categoryId, venueId: venue.id },
+      select: { id: true },
+    });
+    if (!cat) return apiError("NOT_FOUND", "Category not found", 404);
     const childIds = (
       await prisma.menuCategory.findMany({
-        where: { parentId: categoryId },
+        where: { parentId: categoryId, venueId: venue.id },
         select: { id: true },
       })
     ).map((c) => c.id);
@@ -458,8 +460,10 @@ const deleteSchema = z
   .refine((d) => Boolean(d.itemId) || Boolean(d.categoryId), "itemId or categoryId required");
 
 export async function DELETE(req: NextRequest) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
+  const { requireStaffVenue } = await import("@/lib/staff-auth");
+  const resolved = await requireStaffVenue(req);
+  if ("error" in resolved) return resolved.error;
+  const { venue } = resolved;
 
   const body = await req.json().catch(() => null);
   const fromBody = deleteSchema.safeParse(body);
@@ -473,8 +477,8 @@ export async function DELETE(req: NextRequest) {
       : req.nextUrl.searchParams.get("categoryId");
 
   if (categoryId) {
-    const category = await prisma.menuCategory.findUnique({
-      where: { id: categoryId },
+    const category = await prisma.menuCategory.findFirst({
+      where: { id: categoryId, venueId: venue.id },
       select: { id: true },
     });
     if (!category) {
@@ -513,11 +517,12 @@ export async function DELETE(req: NextRequest) {
     select: {
       id: true,
       imageUrl: true,
+      category: { select: { venueId: true } },
       _count: { select: { orderItems: true } },
     },
   });
 
-  if (!item) {
+  if (!item || item.category.venueId !== venue.id) {
     return apiError("NOT_FOUND", "Item not found", 404);
   }
 

@@ -57,11 +57,10 @@ const brandingSchema = z.object({
 
 /** GET /api/v1/admin/venue/branding — current venue branding. */
 export async function GET(req: NextRequest) {
-  const denied = await requireStaffSession(req);
-  if (denied) return denied;
-
-  const venue = await resolveVenue({ req });
-  if (!venue) return apiError("VENUE_NOT_FOUND", "Venue not found", 404);
+  const { requireStaffVenue } = await import("@/lib/staff-auth");
+  const resolved = await requireStaffVenue(req);
+  if ("error" in resolved) return resolved.error;
+  const venue = resolved.venue;
 
   const branding = brandFromVenue(venue);
   return Response.json({
@@ -77,9 +76,6 @@ export async function GET(req: NextRequest) {
 
 /** PATCH /api/v1/admin/venue/branding — update colors, contact links, logoUrl. */
 export async function PATCH(req: NextRequest) {
-  const denied = await requireStaffSession(req);
-  if (denied) return denied;
-
   let body: unknown;
   try {
     body = await req.json();
@@ -92,8 +88,10 @@ export async function PATCH(req: NextRequest) {
     return apiError("VALIDATION_ERROR", parsed.error.message, 400);
   }
 
-  const venue = await resolveVenue({ req });
-  if (!venue) return apiError("VENUE_NOT_FOUND", "Venue not found", 404);
+  const { requireStaffVenue } = await import("@/lib/staff-auth");
+  const resolved = await requireStaffVenue(req);
+  if ("error" in resolved) return resolved.error;
+  const venue = resolved.venue;
 
   const data: {
     accentColor?: string;

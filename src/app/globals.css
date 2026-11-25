@@ -101,7 +101,8 @@ body > * {
 }
 
 .guest-shell {
-  @apply mx-auto min-h-dvh max-w-md;
+  /* Fill the layout column above the Powered By footer — not a second 100dvh. */
+  @apply mx-auto w-full max-w-md;
 }
 
 /* Language / logo pinned to a page — keep below status bar when parent isn’t padded */

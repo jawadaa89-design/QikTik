@@ -1,13 +1,14 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import type { StationRoute } from "@prisma/client";
-import { requireStaffSession } from "@/lib/staff-auth";
+import { requireStaffVenue } from "@/lib/staff-auth";
 
 const ACTIVE_ITEM = ["RECEIVED", "PREPARING", "READY"] as const;
 
 export async function GET(req: NextRequest) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
+  const resolved = await requireStaffVenue(req);
+  if ("error" in resolved) return resolved.error;
+  const { venue } = resolved;
 
   const station = req.nextUrl.searchParams.get("station") as StationRoute | null;
   const locale = req.nextUrl.searchParams.get("locale") ?? "ar";
@@ -18,6 +19,7 @@ export async function GET(req: NextRequest) {
       ...(station ? { menuItem: { route: station } } : {}),
       order: {
         status: { in: ["SENT_TO_KITCHEN", "IN_PROGRESS"] },
+        session: { venueId: venue.id },
       },
     },
     include: {

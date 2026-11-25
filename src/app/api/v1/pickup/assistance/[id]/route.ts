@@ -36,9 +36,6 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
-
   const { id } = await params;
 
   let body: unknown;
@@ -55,6 +52,9 @@ export async function PATCH(
 
   const existing = await prisma.pickupAssistanceCall.findUnique({ where: { id } });
   if (!existing) return apiError("NOT_FOUND", "Assistance call not found", 404);
+
+  const denied = await requireStaffSession(req, existing.venueId);
+  if (denied) return denied;
 
   const blocked = await requireFeature("pickup", existing.venueId);
   if (blocked) return blocked;

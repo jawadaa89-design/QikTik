@@ -28,9 +28,6 @@ const deleteSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
-
   const parsed = createSchema.safeParse(await req.json());
   if (!parsed.success) {
     return apiError("VALIDATION_ERROR", parsed.error.message, 400);
@@ -42,8 +39,13 @@ export async function POST(req: NextRequest) {
     return apiError("VALIDATION_ERROR", "Invalid price", 400);
   }
 
-  const item = await prisma.menuItem.findUnique({ where: { id: itemId } });
+  const item = await prisma.menuItem.findUnique({
+    where: { id: itemId },
+    include: { category: { select: { venueId: true } } },
+  });
   if (!item) return apiError("NOT_FOUND", "Item not found", 404);
+  const denied = await requireStaffSession(req, item.category.venueId);
+  if (denied) return denied;
 
   const maxSort = await prisma.menuItemAdditional.aggregate({
     where: { itemId },
@@ -83,9 +85,6 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
-
   const parsed = updateSchema.safeParse(await req.json());
   if (!parsed.success) {
     return apiError("VALIDATION_ERROR", parsed.error.message, 400);
@@ -94,9 +93,14 @@ export async function PATCH(req: NextRequest) {
   const { id, price, active, translations } = parsed.data;
   const existing = await prisma.menuItemAdditional.findUnique({
     where: { id },
-    include: { translations: true },
+    include: {
+      translations: true,
+      item: { include: { category: { select: { venueId: true } } } },
+    },
   });
   if (!existing) return apiError("NOT_FOUND", "Additional not found", 404);
+  const denied = await requireStaffSession(req, existing.item.category.venueId);
+  if (denied) return denied;
 
   if (price !== undefined) {
     const priceNum = Number(price);
@@ -141,17 +145,19 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
-
   const body = await req.json().catch(() => null);
   const parsed = deleteSchema.safeParse(body);
   const id =
     parsed.success ? parsed.data.id : req.nextUrl.searchParams.get("id");
   if (!id) return apiError("VALIDATION_ERROR", "id is required", 400);
 
-  const existing = await prisma.menuItemAdditional.findUnique({ where: { id } });
+  const existing = await prisma.menuItemAdditional.findUnique({
+    where: { id },
+    include: { item: { include: { category: { select: { venueId: true } } } } },
+  });
   if (!existing) return apiError("NOT_FOUND", "Additional not found", 404);
+  const denied = await requireStaffSession(req, existing.item.category.venueId);
+  if (denied) return denied;
 
   await prisma.menuItemAdditional.delete({ where: { id } });
   return Response.json({ ok: true });

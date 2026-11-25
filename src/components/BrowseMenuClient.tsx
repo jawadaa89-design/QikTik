@@ -231,7 +231,7 @@ export function BrowseMenuClient({
   }
 
   return (
-    <div className="guest-shell pb-10">
+    <div className="guest-shell pb-4">
       <header className="relative overflow-hidden border-b border-white/5 px-5 pb-5 pt-6">
         <div className="absolute inset-0 bg-gradient-to-b from-[#141c18] to-transparent" />
         <div className="absolute -end-16 -top-20 h-56 w-56 rounded-full bg-brass/10 blur-3xl" />

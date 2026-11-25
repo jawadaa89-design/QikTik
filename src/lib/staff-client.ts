@@ -5,8 +5,8 @@ import { VENUE_SLUG_HEADER } from "@/lib/venue-paths";
 export const STAFF_TOKEN_STORAGE_KEY = "qiktik_staff_token";
 export const STAFF_TOKEN_HEADER = "x-qiktik-staff";
 
-/** In-memory fallback when storage is blocked. */
-let memoryToken: string | null = null;
+/** In-memory fallback when storage is blocked (keyed by venue slug). */
+const memoryTokens = new Map<string, string>();
 
 /**
  * Per-tab venue for API calls. Each Chrome tab has its own JS realm, so this
@@ -15,10 +15,28 @@ let memoryToken: string | null = null;
 let activeVenueSlug: string | null = null;
 let fetchPatchInstalled = false;
 
+function normalizeSlug(slug: string | null | undefined): string | null {
+  const next = slug?.trim().toLowerCase() || null;
+  return next;
+}
+
+function tokenStorageKey(slug?: string | null): string {
+  const s = normalizeSlug(slug ?? activeVenueSlug);
+  return s ? `${STAFF_TOKEN_STORAGE_KEY}:${s}` : STAFF_TOKEN_STORAGE_KEY;
+}
+
+function gateOkKey(slug?: string | null): string {
+  const s = normalizeSlug(slug ?? activeVenueSlug);
+  return s ? `qiktik_staff_gate_ok:${s}` : "qiktik_staff_gate_ok";
+}
+
 /** Tell staff API fetch which /r/{slug} tab this document belongs to. */
 export function setActiveVenueSlug(slug: string | null | undefined) {
-  const next = slug?.trim().toLowerCase() || null;
-  activeVenueSlug = next;
+  activeVenueSlug = normalizeSlug(slug);
+}
+
+export function getActiveVenueSlug(): string | null {
+  return activeVenueSlug;
 }
 
 function attachVenueToRequest(
@@ -92,48 +110,56 @@ function readCookie(name: string): string | null {
   return match ? decodeURIComponent(match[1]!) : null;
 }
 
-export function getStaffToken(): string | null {
-  if (memoryToken) return memoryToken;
+export function getStaffToken(slug?: string | null): string | null {
+  const key = tokenStorageKey(slug);
+  const memKey = normalizeSlug(slug ?? activeVenueSlug) || "_";
+  const fromMem = memoryTokens.get(memKey);
+  if (fromMem) return fromMem;
+
   try {
-    const fromLocal = localStorage.getItem(STAFF_TOKEN_STORAGE_KEY);
+    const fromLocal = localStorage.getItem(key);
     if (fromLocal) {
-      memoryToken = fromLocal;
+      memoryTokens.set(memKey, fromLocal);
       return fromLocal;
     }
   } catch {
     /* ignore */
   }
   try {
-    const fromSession = sessionStorage.getItem(STAFF_TOKEN_STORAGE_KEY);
+    const fromSession = sessionStorage.getItem(key);
     if (fromSession) {
-      memoryToken = fromSession;
+      memoryTokens.set(memKey, fromSession);
       return fromSession;
     }
   } catch {
     /* ignore */
   }
+
+  // Shared cookie may belong to another venue — only use if no venue-scoped token.
   const fromCookie = readCookie(STAFF_TOKEN_STORAGE_KEY);
-  if (fromCookie) {
-    memoryToken = fromCookie;
+  if (fromCookie && !normalizeSlug(slug ?? activeVenueSlug)) {
+    memoryTokens.set(memKey, fromCookie);
     return fromCookie;
   }
   return null;
 }
 
-export function setStaffToken(token: string) {
-  memoryToken = token;
+export function setStaffToken(token: string, slug?: string | null) {
+  const key = tokenStorageKey(slug);
+  const memKey = normalizeSlug(slug ?? activeVenueSlug) || "_";
+  memoryTokens.set(memKey, token);
   try {
-    localStorage.setItem(STAFF_TOKEN_STORAGE_KEY, token);
+    localStorage.setItem(key, token);
   } catch {
     /* private mode / quota */
   }
   try {
-    sessionStorage.setItem(STAFF_TOKEN_STORAGE_KEY, token);
+    sessionStorage.setItem(key, token);
   } catch {
     /* ignore */
   }
   // Non-httpOnly cookie so EventSource (SSE) + credentialed fetch work on iPad LAN.
-  // Server also accepts this cookie name as a staff session.
+  // Server also accepts this cookie name as a staff session (venue-bound token).
   try {
     const maxAge = 12 * 60 * 60;
     document.cookie = `${STAFF_TOKEN_STORAGE_KEY}=${encodeURIComponent(token)}; path=/; max-age=${maxAge}; SameSite=Lax`;
@@ -142,15 +168,17 @@ export function setStaffToken(token: string) {
   }
 }
 
-export function clearStaffToken() {
-  memoryToken = null;
+export function clearStaffToken(slug?: string | null) {
+  const key = tokenStorageKey(slug);
+  const memKey = normalizeSlug(slug ?? activeVenueSlug) || "_";
+  memoryTokens.delete(memKey);
   try {
-    localStorage.removeItem(STAFF_TOKEN_STORAGE_KEY);
+    localStorage.removeItem(key);
   } catch {
     /* ignore */
   }
   try {
-    sessionStorage.removeItem(STAFF_TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(key);
   } catch {
     /* ignore */
   }
@@ -161,16 +189,36 @@ export function clearStaffToken() {
   }
 }
 
+export function getStaffGateOk(slug?: string | null): boolean {
+  try {
+    return sessionStorage.getItem(gateOkKey(slug)) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function setStaffGateOk(slug?: string | null) {
+  try {
+    sessionStorage.setItem(gateOkKey(slug), "1");
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearStaffGateOk(slug?: string | null) {
+  try {
+    sessionStorage.removeItem(gateOkKey(slug));
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Fired when an API returns STAFF_AUTH_REQUIRED — StaffAuthGate shows login. */
 export const STAFF_AUTH_REQUIRED_EVENT = "qiktik:staff-auth-required";
 
 export function notifyStaffAuthRequired() {
   clearStaffToken();
-  try {
-    sessionStorage.removeItem("qiktik_staff_gate_ok");
-  } catch {
-    /* ignore */
-  }
+  clearStaffGateOk();
   try {
     document.cookie = "qiktik_staff=; path=/; max-age=0; SameSite=Lax";
     document.cookie = "qiktik_staff_token=; path=/; max-age=0; SameSite=Lax";

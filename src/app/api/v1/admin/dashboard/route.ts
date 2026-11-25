@@ -1,45 +1,17 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireStaffSession } from "@/lib/staff-auth";
 import { getPublicBaseUrl } from "@/lib/public-url";
 import { featuresFromFlags } from "@/lib/features";
-import { resolveVenueFromRequest } from "@/lib/venue";
+import { requireStaffVenue } from "@/lib/staff-auth";
 import { venueMainPath, venueStaffPath } from "@/lib/venue-paths";
-import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
 
 export async function GET(req: NextRequest) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
-
-  const venue = await resolveVenueFromRequest(req);
+  const resolved = await requireStaffVenue(req);
+  if ("error" in resolved) return resolved.error;
+  const venue = resolved.venue;
 
   const locale = process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "ar";
   const base = getPublicBaseUrl(req);
-
-  if (!venue) {
-    return Response.json({
-      venue: null,
-      features: {
-        digitalMenu: true,
-        alerts: true,
-        ordering: true,
-        pickup: false,
-      },
-      stats: {
-        revenueToday: "0.00",
-        ordersToday: 0,
-        openTables: 0,
-        avgCheck: "0.00",
-        menuItems: 0,
-        pickupWaiting: 0,
-        pickupReady: 0,
-      },
-      recent: [],
-      recentPickup: [],
-      menuGuestUrl: `${base}${venueMainPath(DEFAULT_VENUE_SLUG, locale)}`,
-      alertsBoardUrl: `${base}${venueStaffPath(DEFAULT_VENUE_SLUG, "alerts")}`,
-    });
-  }
 
   const features = featuresFromFlags(
     venue.alertsEnabled,
@@ -62,23 +34,35 @@ export async function GET(req: NextRequest) {
   ] = await Promise.all([
     features.ordering
       ? prisma.order.findMany({
-          where: { createdAt: { gte: startOfDay }, status: { not: "CANCELLED" } },
+          where: {
+            createdAt: { gte: startOfDay },
+            status: { not: "CANCELLED" },
+            session: { venueId: venue.id },
+          },
         })
       : Promise.resolve([]),
     features.ordering
       ? prisma.table.count({
-          where: { status: { in: ["ACTIVE", "BILL_REQUESTED"] } },
+          where: {
+            venueId: venue.id,
+            status: { in: ["ACTIVE", "BILL_REQUESTED"] },
+          },
         })
       : Promise.resolve(0),
     features.ordering
       ? prisma.payment.findMany({
-          where: { status: "COMPLETED", paidAt: { gte: startOfDay } },
+          where: {
+            status: "COMPLETED",
+            paidAt: { gte: startOfDay },
+            session: { venueId: venue.id },
+          },
         })
       : Promise.resolve([]),
     features.ordering
       ? prisma.order.findMany({
           take: 10,
           orderBy: { createdAt: "desc" },
+          where: { session: { venueId: venue.id } },
           include: {
             session: { include: { table: true } },
           },

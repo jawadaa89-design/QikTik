@@ -54,7 +54,7 @@ export function VenueThemeProvider({
 
   return (
     <VenueThemeContext.Provider value={value}>
-      <div className="venue-theme min-h-dvh" style={style}>
+      <div className="venue-theme flex min-h-dvh flex-col" style={style}>
         {children}
       </div>
     </VenueThemeContext.Provider>

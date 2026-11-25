@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import {
   createStaffSessionValue,
+  parseStaffSession,
   staffSessionCookieOptions,
   verifyStaffPassword,
-  verifyStaffSessionValue,
 } from "@/lib/staff-auth";
 import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
 import { VENUE_SLUG_COOKIE, VENUE_SLUG_HEADER } from "@/lib/venue-paths";
@@ -159,13 +159,22 @@ function ageLabel(d: Date) {
  * Board session from URL/form token, or an existing staff cookie (e.g. already
  * unlocked on /admin — no second password).
  */
-function tokenFromQueryOrForm(req: NextRequest, formToken?: string): string | null {
-  const q = formToken || req.nextUrl.searchParams.get("access_token");
-  if (q && verifyStaffSessionValue(q)) return q;
-  const fromCookie =
-    req.cookies.get("qiktik_staff")?.value ||
-    req.cookies.get("qiktik_staff_token")?.value;
-  if (fromCookie && verifyStaffSessionValue(fromCookie)) return fromCookie;
+function tokenFromQueryOrForm(
+  req: NextRequest,
+  formToken: string | undefined,
+  venueId: string | undefined
+): string | null {
+  if (!venueId) return null;
+  const candidates = [
+    formToken,
+    req.nextUrl.searchParams.get("access_token"),
+    req.cookies.get("qiktik_staff")?.value,
+    req.cookies.get("qiktik_staff_token")?.value,
+  ];
+  for (const raw of candidates) {
+    const session = parseStaffSession(raw);
+    if (session && session.venueId === venueId) return raw!;
+  }
   return null;
 }
 
@@ -620,8 +629,8 @@ function renderBoard(
 (function () {
   var REFRESH_URL = ${JSON.stringify(refreshUrl)};
   var OPEN_CALLS = ${openCallsJson};
-  var SEEN_KEY = "qiktik_assist_seen";
-  var SOUND_KEY = "qiktik_sound_on";
+  var SEEN_KEY = "qiktik_assist_seen:${esc(venueSlug)}";
+  var SOUND_KEY = "qiktik_sound_on:${esc(venueSlug)}";
   var audioCtx = null;
   var soundReady = false;
   var alertEl = document.getElementById("call-alert");
@@ -904,11 +913,13 @@ function renderBoard(
 
 export async function GET(req: NextRequest) {
   const wantLock = req.nextUrl.searchParams.get("lock") === "1";
-  const token = wantLock ? null : tokenFromQueryOrForm(req);
   const slug = venueSlugFromReq(req);
   const venue =
     (await prisma.venue.findUnique({ where: { slug } })) ||
     (await prisma.venue.findFirst({ orderBy: { createdAt: "asc" } }));
+  const token = wantLock
+    ? null
+    : tokenFromQueryOrForm(req, undefined, venue?.id);
   const logoSrc = venueLogoSrc(brandFromVenue(venue));
   const venueName = venue?.name || "Staff";
 
@@ -982,7 +993,7 @@ export async function POST(req: NextRequest) {
       );
       return clearStaffCookies(res);
     }
-    const token = createStaffSessionValue();
+    const token = createStaffSessionValue(venue.id);
     const host =
       req.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
       req.headers.get("host") ||
@@ -1008,7 +1019,7 @@ export async function POST(req: NextRequest) {
     return res;
   }
 
-  const token = tokenFromQueryOrForm(req, accessToken);
+  const token = tokenFromQueryOrForm(req, accessToken, venue?.id);
   if (!token) {
     const res = new NextResponse(
       renderLogin(slug, "Session expired", logoSrc, venueName),

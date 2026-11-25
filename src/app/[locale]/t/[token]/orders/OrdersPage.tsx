@@ -381,7 +381,7 @@ export default function OrdersPage({ locale, token }: Props) {
 
   if (paidThanks || leftThanks) {
     return (
-      <div className="guest-shell relative flex min-h-dvh flex-col items-center justify-center px-6 pb-24">
+      <div className="guest-shell relative flex min-h-full flex-col items-center justify-center px-6 pb-24">
         <QikTikLogo className="absolute top-3 end-5 z-10" />
         <div className="guest-panel w-full max-w-md rounded-3xl p-6 text-center animate-rise">
           <p className="font-display text-3xl font-semibold text-ink">

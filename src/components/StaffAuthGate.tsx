@@ -6,19 +6,19 @@ import { primeStaffAlertAudio } from "@/components/PickupCallWaiterAlert";
 import { useStaffLocale } from "@/components/StaffLanguageSwitcher";
 import { staffGateMessages } from "@/i18n/staff";
 import {
+  clearStaffGateOk,
   clearStaffToken,
   ensureStaffApiFetchPatch,
+  getStaffGateOk,
   getStaffToken,
+  setStaffGateOk,
   setStaffToken,
   STAFF_AUTH_REQUIRED_EVENT,
 } from "@/lib/staff-client";
 import { useVenueSlug } from "@/components/VenueProvider";
 import { venueMainPath, venueStaffPath } from "@/lib/venue-paths";
 
-/** Marks a successful unlock in this browser tab (survives URL token strip + Strict Mode). */
-const STAFF_GATE_OK_KEY = "qiktik_staff_gate_ok";
-
-/** Client-side expiry check for staff session tokens (`expiresAt.hmac`). */
+/** Client-side expiry check for staff session tokens (`expiresAt.venueId.hmac`). */
 function staffTokenStillValid(token: string | null | undefined): boolean {
   if (!token) return false;
   const payload = token.split(".")[0];
@@ -45,12 +45,8 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
 
   useLayoutEffect(() => {
     if (unlockToken) {
-      setStaffToken(unlockToken);
-      try {
-        sessionStorage.setItem(STAFF_GATE_OK_KEY, "1");
-      } catch {
-        /* ignore */
-      }
+      setStaffToken(unlockToken, venueSlug);
+      setStaffGateOk(venueSlug);
       setUnlocked(true);
       setReady(true);
       // Strip token from the address bar — must NOT treat that as a logout.
@@ -64,49 +60,31 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
     }
 
     // Same tab after unlock (replaceState cleared the query, or React remounted).
-    try {
-      if (
-        sessionStorage.getItem(STAFF_GATE_OK_KEY) === "1" &&
-        staffTokenStillValid(getStaffToken())
-      ) {
-        setUnlocked(true);
-        setReady(true);
-        return;
-      }
-    } catch {
-      /* ignore */
-    }
-
-    // Session from admin (or another staff page) in this browser — no second password.
-    const existing = getStaffToken();
-    if (staffTokenStillValid(existing)) {
-      setStaffToken(existing!);
-      try {
-        sessionStorage.setItem(STAFF_GATE_OK_KEY, "1");
-      } catch {
-        /* ignore */
-      }
+    if (
+      getStaffGateOk(venueSlug) &&
+      staffTokenStillValid(getStaffToken(venueSlug))
+    ) {
       setUnlocked(true);
       setReady(true);
       return;
     }
 
-    // No valid session — require password.
-    clearStaffToken();
-    try {
-      sessionStorage.removeItem(STAFF_GATE_OK_KEY);
-    } catch {
-      /* ignore */
+    // Session from another staff page for THIS venue — no second password.
+    const existing = getStaffToken(venueSlug);
+    if (staffTokenStillValid(existing)) {
+      setStaffToken(existing!, venueSlug);
+      setStaffGateOk(venueSlug);
+      setUnlocked(true);
+      setReady(true);
+      return;
     }
+
+    // No valid session for this venue — require password (do not clear other venues).
+    clearStaffToken(venueSlug);
+    clearStaffGateOk(venueSlug);
     setUnlocked(false);
     setReady(true);
-    try {
-      document.cookie = "qiktik_staff=; path=/; max-age=0; SameSite=Lax";
-      document.cookie = "qiktik_staff_token=; path=/; max-age=0; SameSite=Lax";
-    } catch {
-      /* ignore */
-    }
-  }, [unlockToken]);
+  }, [unlockToken, venueSlug]);
 
   const showGuestPickupEscape =
     pathname === "/pickup" || (pathname?.startsWith("/pickup/") ?? false);
@@ -154,12 +132,8 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     ensureStaffApiFetchPatch();
     const showLogin = () => {
-      clearStaffToken();
-      try {
-        sessionStorage.removeItem(STAFF_GATE_OK_KEY);
-      } catch {
-        /* ignore */
-      }
+      clearStaffToken(venueSlug);
+      clearStaffGateOk(venueSlug);
       setUnlocked(false);
       setReady(true);
     };
@@ -168,7 +142,7 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
     return () => {
       window.removeEventListener(STAFF_AUTH_REQUIRED_EVENT, showLogin);
     };
-  }, []);
+  }, [venueSlug]);
 
   if (!ready) {
     return (

@@ -10,34 +10,55 @@ import {
   brandFromVenue,
   venueHomeScreenName,
   venueLogoSrc,
+  venueStaffHomeScreenName,
 } from "@/lib/venue-brand";
-import { venueMainPath } from "@/lib/venue-paths";
+import { venueMainPath, venueStaffPath } from "@/lib/venue-paths";
 
 export const dynamic = "force-dynamic";
 
+const STAFF_BOARDS = ["admin", "pickup", "alerts", "kitchen", "waiter"] as const;
+type StaffBoard = (typeof STAFF_BOARDS)[number];
+
+function isStaffBoard(value: string | null | undefined): value is StaffBoard {
+  return Boolean(value && (STAFF_BOARDS as readonly string[]).includes(value));
+}
+
 /**
- * Per-venue Web App Manifest for “Add to Home Screen” on the guest main link.
- * name / short_name → "{Venue} QikTik"
+ * Per-venue Web App Manifest for “Add to Home Screen”.
+ * Guest: ?start=main (default) → "{Venue} QikTik" → /r/{slug}/{locale}/main
+ * Staff: ?start=admin|kitchen|waiter|pickup|alerts → "{Venue} Admin" etc.
  */
 export async function GET(req: NextRequest) {
   const venue = await resolveVenueFromRequest(req);
   const brand = brandFromVenue(venue);
   const slug = venue?.slug || "myrestaurant";
-  const displayName = venueHomeScreenName(venue?.name);
   const logo = venueLogoSrc(brand);
   const localeParam = req.nextUrl.searchParams.get("locale")?.trim();
   const lang: Locale = locales.includes(localeParam as Locale)
     ? (localeParam as Locale)
     : defaultLocale;
-  const startUrl = venueMainPath(slug, lang);
+  const startParam =
+    req.nextUrl.searchParams.get("start")?.trim().toLowerCase() || "main";
+
+  const staffBoard = isStaffBoard(startParam) ? startParam : null;
+  const displayName = staffBoard
+    ? venueStaffHomeScreenName(venue?.name, staffBoard)
+    : venueHomeScreenName(venue?.name);
+  const startUrl = staffBoard
+    ? venueStaffPath(slug, staffBoard)
+    : venueMainPath(slug, lang);
+  const scope = `/r/${slug}/`;
+  const description = staffBoard
+    ? `${displayName} — staff board`
+    : `${displayName} — guest menu and ordering`;
 
   const body = {
-    id: `/r/${slug}/`,
+    id: staffBoard ? `${scope}${staffBoard}` : scope,
     name: displayName,
     short_name: displayName,
-    description: `${displayName} — guest menu and ordering`,
+    description,
     start_url: startUrl,
-    scope: `/r/${slug}/`,
+    scope,
     display: "standalone",
     display_override: ["standalone", "minimal-ui"],
     background_color: brand.backgroundColor,

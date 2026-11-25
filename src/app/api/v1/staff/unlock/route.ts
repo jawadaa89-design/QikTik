@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     return apiError("INVALID_PASSWORD", "Wrong staff password", 401);
   }
 
-  const token = createStaffSessionValue();
+  const token = createStaffSessionValue(venue.id);
   const res = NextResponse.json({ ok: true, token, venueSlug: venue.slug });
   const cookieOpts = staffSessionCookieOptions();
   res.cookies.set(STAFF_SESSION_COOKIE, token, cookieOpts);

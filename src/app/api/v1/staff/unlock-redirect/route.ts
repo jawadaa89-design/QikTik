@@ -84,7 +84,11 @@ async function unlockAndRedirect(
     return res;
   }
 
-  const token = createStaffSessionValue();
+  if (!venue?.id) {
+    dest.searchParams.set("staff_error", "1");
+    return NextResponse.redirect(dest, 303);
+  }
+  const token = createStaffSessionValue(venue.id);
   dest.searchParams.delete("staff_error");
   dest.searchParams.set("access_token", token);
   dest.searchParams.set("staff_token", token);

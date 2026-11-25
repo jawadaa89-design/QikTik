@@ -4,15 +4,11 @@ import { generateTableToken } from "@/lib/utils";
 import { getPublicBaseUrl } from "@/lib/public-url";
 import { z } from "zod";
 import { apiError } from "@/lib/validation";
-import { requireStaffSession } from "@/lib/staff-auth";
-import { requireVenue } from "@/lib/venue";
+import { requireStaffVenue } from "@/lib/staff-auth";
 import { venueTablePath } from "@/lib/venue-paths";
 
 export async function GET(req: NextRequest) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
-
-  const resolved = await requireVenue(req);
+  const resolved = await requireStaffVenue(req);
   if ("error" in resolved) return resolved.error;
   const { venue } = resolved;
 
@@ -51,16 +47,13 @@ const createTableSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
-
   const body = await req.json();
   const parsed = createTableSchema.safeParse(body);
   if (!parsed.success) {
     return apiError("VALIDATION_ERROR", parsed.error.message, 400);
   }
 
-  const resolved = await requireVenue(req);
+  const resolved = await requireStaffVenue(req);
   if ("error" in resolved) return resolved.error;
   const { venue } = resolved;
 

@@ -662,7 +662,7 @@ export default function PickupWaitingPage() {
 
   return (
     <main
-      className="guest-shell relative flex min-h-dvh flex-col px-5 pb-10 pt-8"
+      className="guest-shell relative flex min-h-full flex-col px-5 pb-10 pt-8"
       onPointerDown={primeGuestPickupAudio}
     >
       <div className="relative mb-2 min-h-10">

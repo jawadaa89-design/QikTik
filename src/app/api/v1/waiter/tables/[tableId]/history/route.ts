@@ -8,10 +8,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ tableId: string }> }
 ) {
-  const denied = await requireStaffSession();
-  if (denied) return denied;
-
-  const { tableId } = await params;
+    const { tableId } = await params;
   const locale = req.nextUrl.searchParams.get("locale") ?? "ar";
   const limit = Math.min(
     50,
@@ -20,6 +17,8 @@ export async function GET(
 
   const table = await prisma.table.findUnique({ where: { id: tableId } });
   if (!table) return apiError("TABLE_NOT_FOUND", "Table not found", 404);
+  const denied = await requireStaffSession(req, table.venueId);
+  if (denied) return denied;
 
   const sessions = await prisma.session.findMany({
     where: { tableId, status: "CLOSED" },

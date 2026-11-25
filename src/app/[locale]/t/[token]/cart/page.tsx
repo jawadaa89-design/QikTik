@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { hasFeature } from "@/lib/features";
+import { getTableByToken } from "@/lib/menu-service";
 import CartPage from "./CartPage";
 
 type Props = {
@@ -8,7 +9,8 @@ type Props = {
 
 export default async function CartRoute({ params }: Props) {
   const { locale, token } = await params;
-  if (!(await hasFeature("ordering"))) {
+  const table = await getTableByToken(token);
+  if (!(await hasFeature("ordering", table?.venueId))) {
     redirect(`/${locale}/t/${token}`);
   }
   return <CartPage locale={locale} token={token} />;

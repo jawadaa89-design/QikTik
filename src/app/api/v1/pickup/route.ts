@@ -2,9 +2,9 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { allocatePickupTicketRef } from "@/lib/pickup-refs";
 import { publish, RealtimeEvents } from "@/lib/realtime";
-import { requireStaffSession } from "@/lib/staff-auth";
 import { apiError, pickupRegisterSchema } from "@/lib/validation";
 import { requireFeature } from "@/lib/features";
+import { requireStaffVenue } from "@/lib/staff-auth";
 import { requireVenue } from "@/lib/venue";
 import { expireStaleReadyPickupTickets } from "@/lib/pickup-expire";
 
@@ -117,12 +117,9 @@ export async function POST(req: NextRequest) {
  * GET /api/v1/pickup?venue=&status=WAITING,READY — staff pickup queue.
  */
 export async function GET(req: NextRequest) {
-  const denied = await requireStaffSession(req);
-  if (denied) return denied;
-
   const statusParam = req.nextUrl.searchParams.get("status");
 
-  const resolved = await requireVenue(req);
+  const resolved = await requireStaffVenue(req);
   if ("error" in resolved) return resolved.error;
   const { venue } = resolved;
 

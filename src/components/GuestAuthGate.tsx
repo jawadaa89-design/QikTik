@@ -146,7 +146,7 @@ export function GuestAuthGate({ children }: { children: React.ReactNode }) {
 
   if (!featuresReady || !langReady || (ordering && !auth.ready)) {
     return (
-      <div className="guest-shell flex min-h-dvh items-center justify-center px-6">
+      <div className="guest-shell flex min-h-full items-center justify-center px-6">
         <p className="text-ink-soft/50">{t("loading")}</p>
       </div>
     );
@@ -221,7 +221,7 @@ export function GuestAuthGate({ children }: { children: React.ReactNode }) {
 
   if (!langPicked) {
     return (
-      <div className="guest-shell flex min-h-dvh flex-col px-5 pb-10 pt-8">
+      <div className="guest-shell flex min-h-full flex-col px-5 pb-10 pt-8">
         <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col">
           <div className="absolute -end-10 -top-8 h-40 w-40 rounded-full bg-brass/10 blur-3xl" />
           <div className="absolute -start-12 top-32 h-36 w-36 rounded-full bg-[#1a2a24] blur-3xl" />
@@ -275,7 +275,7 @@ export function GuestAuthGate({ children }: { children: React.ReactNode }) {
   if (auth.needsRegistration) {
     const afterReset = Boolean(auth.guestName);
     return (
-      <div className="guest-shell relative flex min-h-dvh flex-col justify-center px-5 py-10">
+      <div className="guest-shell relative flex min-h-full flex-col justify-center px-5 py-10">
         <label className="absolute start-5 top-3 z-10 inline-flex shrink-0">
           <span className="sr-only">{tLang("select")}</span>
           <select
@@ -409,7 +409,7 @@ export function GuestAuthGate({ children }: { children: React.ReactNode }) {
   // Full-page unlock (not a bottom overlay) — phones stay at top of viewport
   if (auth.showUnlockPrompt) {
     return (
-      <div className="guest-shell relative flex min-h-dvh flex-col px-5 pb-10 pt-8">
+      <div className="guest-shell relative flex min-h-full flex-col px-5 pb-10 pt-8">
         <QikTikLogo className="absolute top-3 end-5 z-10" />
         <div className="mx-auto mb-6 flex w-full max-w-md justify-center">
           <VenueLogo
