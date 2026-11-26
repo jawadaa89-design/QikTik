@@ -8,21 +8,7 @@ import {
 } from "@/lib/staff-auth";
 import { DEFAULT_VENUE_SLUG } from "@/lib/venue-config";
 import { VENUE_SLUG_COOKIE, VENUE_SLUG_HEADER } from "@/lib/venue-paths";
-
-function venueSlugFromReq(
-  req: NextRequest,
-  formVenue?: string | null
-): string {
-  const fromForm = formVenue?.trim();
-  if (fromForm) return fromForm.toLowerCase();
-  const fromHeader = req.headers.get(VENUE_SLUG_HEADER)?.trim();
-  if (fromHeader) return fromHeader.toLowerCase();
-  const fromQuery = req.nextUrl.searchParams.get("venue")?.trim();
-  if (fromQuery) return fromQuery.toLowerCase();
-  const fromCookie = req.cookies.get(VENUE_SLUG_COOKIE)?.value?.trim();
-  if (fromCookie) return fromCookie.toLowerCase();
-  return DEFAULT_VENUE_SLUG;
-}
+import { MOBILE_PULL_REFRESH_SCRIPT } from "@/lib/mobile-pull-refresh-script";
 import {
   STAFF_LOCALE_KEY,
   isRtl,
@@ -38,6 +24,21 @@ import {
   venueFaviconLinkTags,
   venueLogoSrc,
 } from "@/lib/venue-brand";
+
+function venueSlugFromReq(
+  req: NextRequest,
+  formVenue?: string | null
+): string {
+  const fromForm = formVenue?.trim();
+  if (fromForm) return fromForm.toLowerCase();
+  const fromHeader = req.headers.get(VENUE_SLUG_HEADER)?.trim();
+  if (fromHeader) return fromHeader.toLowerCase();
+  const fromQuery = req.nextUrl.searchParams.get("venue")?.trim();
+  if (fromQuery) return fromQuery.toLowerCase();
+  const fromCookie = req.cookies.get(VENUE_SLUG_COOKIE)?.value?.trim();
+  if (fromCookie) return fromCookie.toLowerCase();
+  return DEFAULT_VENUE_SLUG;
+}
 
 const LOCALE_JSON = JSON.stringify({
   key: STAFF_LOCALE_KEY,
@@ -277,6 +278,7 @@ function renderLogin(
     <input id="password" name="password" type="password" required autocomplete="off" />
     <button type="submit" data-i18n="unlock">Unlock</button>
   </form>
+  ${MOBILE_PULL_REFRESH_SCRIPT}
   ${poweredByQikTikHtml()}
 </body>
 </html>`;
@@ -906,6 +908,7 @@ function renderBoard(
   setInterval(softRefresh, 2000);
 })();
   </script>
+  ${MOBILE_PULL_REFRESH_SCRIPT}
   ${poweredByQikTikHtml()}
 </body>
 </html>`;

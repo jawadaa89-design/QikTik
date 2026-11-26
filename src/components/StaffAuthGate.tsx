@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useLayoutEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { MobilePullToRefresh } from "@/components/MobilePullToRefresh";
 import { primeStaffAlertAudio } from "@/components/PickupCallWaiterAlert";
 import { useStaffLocale } from "@/components/StaffLanguageSwitcher";
 import { staffGateMessages } from "@/i18n/staff";
@@ -43,6 +44,15 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
   const [unlocked, setUnlocked] = useState(() => Boolean(unlockToken));
   const [ready, setReady] = useState(() => Boolean(unlockToken));
 
+  function boardFromPath(path: string | null): "admin" | "pickup" | "alerts" | "kitchen" | "waiter" {
+    if (!path) return "admin";
+    if (path.includes("/kitchen")) return "kitchen";
+    if (path.includes("/waiter")) return "waiter";
+    if (path.includes("/alerts")) return "alerts";
+    if (path.includes("/pickup")) return "pickup";
+    return "admin";
+  }
+
   useLayoutEffect(() => {
     if (unlockToken) {
       setStaffToken(unlockToken, venueSlug);
@@ -59,19 +69,33 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Same tab after unlock (replaceState cleared the query, or React remounted).
-    if (
-      getStaffGateOk(venueSlug) &&
-      staffTokenStillValid(getStaffToken(venueSlug))
-    ) {
+    const board = boardFromPath(
+      (() => {
+        try {
+          return window.location.pathname;
+        } catch {
+          return pathname;
+        }
+      })()
+    );
+    const existing = getStaffToken(venueSlug);
+    const tokenOk = staffTokenStillValid(existing);
+    const gateOk = getStaffGateOk(venueSlug);
+
+    // Same browser tab after unlock (or React remount) — keep session.
+    if (gateOk && tokenOk) {
       setUnlocked(true);
       setReady(true);
       return;
     }
 
-    // Session from another staff page for THIS venue — no second password.
-    const existing = getStaffToken(venueSlug);
-    if (staffTokenStillValid(existing)) {
+    /**
+     * Admin is sensitive: do NOT unlock from a leftover localStorage token alone.
+     * Phones / Add-to-Home-Screen keep localStorage across launches, which previously
+     * skipped the password. Admin requires a fresh unlock this tab (gateOk).
+     * Kitchen / waiter / pickup may reuse a valid venue token for the shift.
+     */
+    if (board !== "admin" && tokenOk) {
       setStaffToken(existing!, venueSlug);
       setStaffGateOk(venueSlug);
       setUnlocked(true);
@@ -80,23 +104,16 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
     }
 
     // No valid session for this venue — require password (do not clear other venues).
-    clearStaffToken(venueSlug);
+    if (!tokenOk) {
+      clearStaffToken(venueSlug);
+    }
     clearStaffGateOk(venueSlug);
     setUnlocked(false);
     setReady(true);
-  }, [unlockToken, venueSlug]);
+  }, [unlockToken, venueSlug, pathname]);
 
   const showGuestPickupEscape =
     pathname === "/pickup" || (pathname?.startsWith("/pickup/") ?? false);
-
-  function boardFromPath(path: string | null): "admin" | "pickup" | "alerts" | "kitchen" | "waiter" {
-    if (!path) return "admin";
-    if (path.includes("/kitchen")) return "kitchen";
-    if (path.includes("/waiter")) return "waiter";
-    if (path.includes("/alerts")) return "alerts";
-    if (path.includes("/pickup")) return "pickup";
-    return "admin";
-  }
 
   // Prefer browser URL (/r/{slug}/…) — usePathname is the rewritten internal path.
   const [browserPath, setBrowserPath] = useState<string | null>(null);
@@ -163,6 +180,7 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
           touchAction: "manipulation",
         }}
       >
+        <MobilePullToRefresh />
         <section
           style={{
             margin: "0 auto",
@@ -315,7 +333,12 @@ function StaffAuthGateInner({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <MobilePullToRefresh />
+      {children}
+    </>
+  );
 }
 
 export function StaffAuthGate({ children }: { children: React.ReactNode }) {

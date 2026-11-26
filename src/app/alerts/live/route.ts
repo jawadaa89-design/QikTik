@@ -14,6 +14,16 @@ import {
   venueFaviconLinkTags,
   venueLogoSrc,
 } from "@/lib/venue-brand";
+import { MOBILE_PULL_REFRESH_SCRIPT } from "@/lib/mobile-pull-refresh-script";
+import {
+  STAFF_LOCALE_KEY,
+  isRtl,
+  localeNames,
+  locales,
+  pickupMessages,
+  staffGateMessages,
+} from "@/i18n/staff";
+import { poweredByQikTikHtml } from "@/components/PoweredByQikTik";
 
 function venueSlugFromReq(
   req: NextRequest,
@@ -29,15 +39,6 @@ function venueSlugFromReq(
   if (fromCookie) return fromCookie.toLowerCase();
   return DEFAULT_VENUE_SLUG;
 }
-import {
-  STAFF_LOCALE_KEY,
-  isRtl,
-  localeNames,
-  locales,
-  pickupMessages,
-  staffGateMessages,
-} from "@/i18n/staff";
-import { poweredByQikTikHtml } from "@/components/PoweredByQikTik";
 
 /** Menu+alerts+pickup → combined board (waiter calls + pickup queues). */
 async function combinedBoardPath(venueId: string | undefined): Promise<string> {
@@ -262,6 +263,7 @@ function renderLogin(
     <input id="password" name="password" type="password" required autocomplete="off" />
     <button type="submit" data-i18n="unlock">Unlock</button>
   </form>
+  ${MOBILE_PULL_REFRESH_SCRIPT}
   ${poweredByQikTikHtml()}
 </body>
 </html>`;
@@ -617,6 +619,7 @@ function renderBoard(
   setInterval(softRefresh, 2000);
 })();
   </script>
+  ${MOBILE_PULL_REFRESH_SCRIPT}
   ${poweredByQikTikHtml()}
 </body>
 </html>`;

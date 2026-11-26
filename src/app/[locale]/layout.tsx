@@ -16,6 +16,7 @@ import {
   venueLogoSrc,
 } from "@/lib/venue-brand";
 import { VenueFaviconLinks } from "@/components/VenueFaviconLinks";
+import { MobilePullToRefresh } from "@/components/MobilePullToRefresh";
 import { PoweredByQikTik } from "@/components/PoweredByQikTik";
 import { VENUE_SLUG_HEADER } from "@/lib/venue-paths";
 
@@ -98,6 +99,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           venueName={venue?.name ?? "Restaurant"}
         >
           <VenueThemeProvider brand={brand}>
+            <MobilePullToRefresh />
             <div className="flex min-h-0 flex-1 flex-col">
               <div className="min-h-0 flex-1">
                 <NextIntlClientProvider messages={messages}>
