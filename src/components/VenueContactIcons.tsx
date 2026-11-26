@@ -65,19 +65,6 @@ export function VenueContactIcons({ brand: brandProp, className = "" }: Props) {
     });
   }
 
-  const facebook = socialProfileHref(
-    brand.facebookUrl,
-    "https://www.facebook.com"
-  );
-  if (facebook) {
-    links.push({
-      key: "facebook",
-      href: facebook,
-      label: "Facebook",
-      icon: <FacebookIcon />,
-    });
-  }
-
   const tiktok = socialProfileHref(
     brand.tiktokUrl,
     "https://www.tiktok.com",
@@ -89,6 +76,19 @@ export function VenueContactIcons({ brand: brandProp, className = "" }: Props) {
       href: tiktok,
       label: "TikTok",
       icon: <TikTokIcon />,
+    });
+  }
+
+  const facebook = socialProfileHref(
+    brand.facebookUrl,
+    "https://www.facebook.com"
+  );
+  if (facebook) {
+    links.push({
+      key: "facebook",
+      href: facebook,
+      label: "Facebook",
+      icon: <FacebookIcon />,
     });
   }
 

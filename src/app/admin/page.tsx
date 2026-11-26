@@ -2170,14 +2170,14 @@ export default function AdminPage() {
                         t.brandingInstagramPlaceholder,
                       ],
                       [
-                        "facebookUrl",
-                        t.brandingFacebook,
-                        t.brandingFacebookPlaceholder,
-                      ],
-                      [
                         "tiktokUrl",
                         t.brandingTiktok,
                         t.brandingTiktokPlaceholder,
+                      ],
+                      [
+                        "facebookUrl",
+                        t.brandingFacebook,
+                        t.brandingFacebookPlaceholder,
                       ],
                       [
                         "googleUrl",
