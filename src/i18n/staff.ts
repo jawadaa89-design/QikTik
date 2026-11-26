@@ -996,13 +996,13 @@ const adminEn: AdminMessages = {
   packageMenuOnly: "Menu only",
   packageMenuAlerts: "Menu + alerts system",
   packageMenuAlertsPickup: "Menu + alerts + pickup",
-  packageMenuOrdering: "Full (ordering + alerts + pickup)",
+  packageMenuOrdering: "Menu + ordering + alerts + pickup",
   packageMenuOnlyDesc: "Public menu link for guests",
   packageMenuAlertsDesc: "Public menu link + waiter call alerts (no table QR)",
   packageMenuAlertsPickupDesc:
     "Guest menu home with pickup registration + waiter alerts",
   packageMenuOrderingDesc:
-    "Full package: table ordering, one alerts + pickup board, kitchen and waiter",
+    "Table ordering, pickup, one alerts + pickup board, kitchen and waiter",
   featureDigitalMenu: "Digital Menu",
   featureAlerts: "Waiter alerts / call waiter",
   featureOrdering: "Table ordering",
@@ -1179,13 +1179,13 @@ const adminAr: AdminMessages = {
   packageMenuOnly: "القائمة فقط",
   packageMenuAlerts: "القائمة + نظام التنبيهات",
   packageMenuAlertsPickup: "القائمة + التنبيهات + الاستلام",
-  packageMenuOrdering: "الكاملة (طلب + تنبيهات + استلام)",
+  packageMenuOrdering: "القائمة + الطلب + التنبيهات + الاستلام",
   packageMenuOnlyDesc: "رابط القائمة العامة للضيوف",
   packageMenuAlertsDesc: "رابط القائمة العامة + تنبيهات استدعاء النادل (بدون QR للطاولة)",
   packageMenuAlertsPickupDesc:
     "الصفحة الرئيسية للقائمة مع تسجيل الاستلام + تنبيهات النادل",
   packageMenuOrderingDesc:
-    "الباقة الكاملة: طلب الطاولات، لوحة تنبيهات واستلام واحدة، مطبخ ونادل",
+    "طلب الطاولات، الاستلام، لوحة تنبيهات واستلام واحدة، مطبخ ونادل",
   featureDigitalMenu: "القائمة الرقمية",
   featureAlerts: "تنبيهات النادل / استدعاء النادل",
   featureOrdering: "طلب الطاولات",
@@ -1362,13 +1362,13 @@ const adminHe: AdminMessages = {
   packageMenuOnly: "תפריט בלבד",
   packageMenuAlerts: "תפריט + מערכת התראות",
   packageMenuAlertsPickup: "תפריט + התראות + איסוף",
-  packageMenuOrdering: "מלא (הזמנות + התראות + איסוף)",
+  packageMenuOrdering: "תפריט + הזמנות + התראות + איסוף",
   packageMenuOnlyDesc: "קישור תפריט ציבורי לאורחים",
   packageMenuAlertsDesc: "קישור תפריט ציבורי + התראות קריאת מלצר (בלי QR לשולחן)",
   packageMenuAlertsPickupDesc:
     "דף בית התפריט עם הרשמה לאיסוף + התראות מלצר",
   packageMenuOrderingDesc:
-    "חבילה מלאה: הזמנות שולחן, לוח התראות+איסוף אחד, מטבח ומלצר",
+    "הזמנות שולחן, איסוף, לוח התראות+איסוף אחד, מטבח ומלצר",
   featureDigitalMenu: "תפריט דיגיטלי",
   featureAlerts: "התראות מלצר / קריאה למלצר",
   featureOrdering: "הזמנות משולחן",
@@ -1546,13 +1546,13 @@ const adminRu: AdminMessages = {
   packageMenuOnly: "Только меню",
   packageMenuAlerts: "Меню + система оповещений",
   packageMenuAlertsPickup: "Меню + оповещения + самовывоз",
-  packageMenuOrdering: "Полный (заказы + оповещения + самовывоз)",
+  packageMenuOrdering: "Меню + заказы + оповещения + самовывоз",
   packageMenuOnlyDesc: "Публичная ссылка на меню для гостей",
   packageMenuAlertsDesc: "Публичное меню + вызов официанта (без QR стола)",
   packageMenuAlertsPickupDesc:
     "Главная страница меню с регистрацией на самовывоз + оповещения",
   packageMenuOrderingDesc:
-    "Полный пакет: заказы со стола, одна доска оповещений+самовывоза, кухня и официант",
+    "Заказы со стола, самовывоз, одна доска оповещений+самовывоза, кухня и официант",
   featureDigitalMenu: "Цифровое меню",
   featureAlerts: "Оповещения / вызов официанта",
   featureOrdering: "Заказ со стола",

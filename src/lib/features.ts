@@ -10,7 +10,7 @@ export type FeatureKey = "digitalMenu" | "alerts" | "ordering" | "pickup";
  * - Menu only → guest home = digital menu
  * - Menu + alerts → menu + call waiter on the menu
  * - Menu + alerts + pickup → menu + pickup register CTA on the menu + alerts
- * - Menu + ordering (full) → table ordering + alerts + pickup (one staff board)
+ * - Menu + ordering + alerts + pickup → table ordering + alerts + pickup (one staff board)
  *
  * Guest entry is always the /main home. Pickup is not a separate guest link.
  */
@@ -93,7 +93,8 @@ export function featuresFromFlags(
     // Ordering / pickup always imply waiter alerts.
     alerts: alertsEnabled || orderingEnabled || pickupEnabled,
     ordering: orderingEnabled,
-    pickup: pickupEnabled,
+    // Full package (ordering) always includes pickup.
+    pickup: pickupEnabled || orderingEnabled,
   };
 }
 
