@@ -212,26 +212,17 @@ export function BrowseMenuClient({
     }
   }
 
-  /** Landing: tall buttons fill the sheet. Menu open: compact fixed size like before. */
-  const stageFill =
+  const stageBtn =
     "inline-flex w-full min-h-0 flex-1 items-center justify-center gap-2.5 rounded-2xl px-4 text-base font-semibold transition disabled:opacity-55";
-  const stageCompact =
-    "inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition disabled:opacity-55";
-  const stageOutlineFill = `${stageFill} border border-white/20 bg-transparent text-ink hover:bg-white/[0.04]`;
-  const stageOutlineCompact = `${stageCompact} border border-white/20 bg-transparent text-ink hover:bg-white/[0.04]`;
+  const stageOutlineBtn = `${stageBtn} border border-white/20 bg-transparent text-ink hover:bg-white/[0.04]`;
 
   function guestActions(variant: "stage" | "compact") {
     const stage = variant === "stage";
-    const fill = stage && !menuOpen;
-    const outlineClass = fill ? stageOutlineFill : stage ? stageOutlineCompact : null;
-    const iconSize = fill ? 22 : 18;
     return (
       <div
         className={
           stage
-            ? fill
-              ? "flex h-full min-h-0 w-full flex-1 flex-col gap-2.5"
-              : "flex w-full flex-col gap-2.5"
+            ? "flex h-full min-h-0 w-full flex-1 flex-col gap-2.5"
             : "space-y-2.5"
         }
       >
@@ -241,14 +232,14 @@ export function BrowseMenuClient({
           aria-expanded={menuOpen}
           className={
             stage
-              ? `${fill ? stageFill : stageCompact} bg-brass font-bold text-[#0c100e] shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:brightness-105`
+              ? `${stageBtn} bg-brass font-bold text-[#0c100e] shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:brightness-105`
               : `guest-panel inline-flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-center transition ${
                   menuOpen ? "border-brass/45 bg-brass/15" : "hover:border-brass/35"
                 }`
           }
         >
-          {stage && !menuOpen ? (
-            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" aria-hidden>
+          {stage ? (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path
                 d="M6 4.5h9.5a2 2 0 0 1 2 2V20l-4.25-2.2L9 20V6.5a2 2 0 0 1 2-2"
                 stroke="currentColor"
@@ -272,12 +263,13 @@ export function BrowseMenuClient({
           <Link
             href={`${venuePickupPath(venueSlug, locale)}/register`}
             className={
-              outlineClass ??
-              "btn-primary inline-flex w-full flex-col items-center justify-center gap-0.5 px-4 py-3.5 text-center"
+              stage
+                ? stageOutlineBtn
+                : "btn-primary inline-flex w-full flex-col items-center justify-center gap-0.5 px-4 py-3.5 text-center"
             }
           >
             {stage ? (
-              <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" aria-hidden className="text-brass">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden className="text-brass">
                 <path
                   d="M7.5 9V7.2A4.5 4.5 0 0 1 12 2.7 4.5 4.5 0 0 1 16.5 7.2V9"
                   stroke="currentColor"
@@ -309,8 +301,9 @@ export function BrowseMenuClient({
               type="button"
               onClick={openOrderForm}
               className={
-                outlineClass ??
-                "btn-primary inline-flex w-full items-center justify-center px-4 py-3 text-sm font-bold"
+                stage
+                  ? stageOutlineBtn
+                  : "btn-primary inline-flex w-full items-center justify-center px-4 py-3 text-sm font-bold"
               }
             >
               {tMenu("orderAtTable")}
@@ -318,9 +311,7 @@ export function BrowseMenuClient({
           ) : (
             <form
               onSubmit={onOrderAtTable}
-              className={`guest-panel w-full space-y-3 rounded-2xl border border-brass/25 p-4 ${
-                fill ? "flex min-h-0 flex-1 flex-col justify-center" : ""
-              }`}
+              className="guest-panel flex min-h-0 w-full flex-1 flex-col justify-center space-y-3 rounded-2xl border border-brass/25 p-4"
             >
               <p className="text-sm text-ink-soft/75">{tMenu("orderAtTableHint")}</p>
               <label className="block">
@@ -371,12 +362,13 @@ export function BrowseMenuClient({
           <Link
             href={venueCallWaiterPath(venueSlug, locale)}
             className={
-              outlineClass ??
-              "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-alert/40 bg-alert/15 px-4 py-3 text-sm font-bold text-alert transition hover:bg-alert/25"
+              stage
+                ? stageOutlineBtn
+                : "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-alert/40 bg-alert/15 px-4 py-3 text-sm font-bold text-alert transition hover:bg-alert/25"
             }
           >
             <CallWaiterBellIcon
-              size={iconSize}
+              size={22}
               className={stage ? "text-brass" : undefined}
             />
             {tPickup("callWaiter")}
@@ -448,14 +440,8 @@ export function BrowseMenuClient({
 
               <div className="mx-auto mb-2 mt-2 h-px w-full max-w-[11rem] shrink-0 bg-white/12" />
 
-              {/* Landing: CTAs fill sheet. Menu open: compact fixed height under the line. */}
-              <div
-                className={
-                  menuOpen
-                    ? "w-full shrink-0 pb-1"
-                    : "flex min-h-0 w-full flex-1 flex-col pb-1"
-                }
-              >
+              {/* Same CTA size whether menu is open or closed; menu scrolls in below */}
+              <div className="flex min-h-0 w-full flex-1 flex-col pb-1">
                 {guestActions("stage")}
               </div>
             </div>
