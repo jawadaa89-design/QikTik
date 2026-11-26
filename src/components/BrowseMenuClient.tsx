@@ -265,19 +265,19 @@ export function BrowseMenuClient({
   }
 
   const outlineBtn =
-    "inline-flex w-full items-center justify-center gap-2.5 rounded-2xl border border-white/20 bg-transparent px-4 py-3 text-sm font-semibold text-ink transition hover:bg-white/[0.04] disabled:opacity-55";
+    "inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/20 bg-transparent px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-white/[0.04] disabled:opacity-55";
 
   function guestActions(variant: "stage" | "compact") {
     const stage = variant === "stage";
     return (
-      <div className={stage ? "space-y-2.5" : "space-y-2.5"}>
+      <div className={stage ? "space-y-2" : "space-y-2.5"}>
         <button
           type="button"
           onClick={() => setMenuOpen((open) => !open)}
           aria-expanded={menuOpen}
           className={
             stage
-              ? "inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-brass px-4 py-3 text-sm font-bold text-[#0c100e] shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:brightness-105"
+              ? "inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brass px-4 py-2.5 text-sm font-bold text-[#0c100e] shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:brightness-105"
               : `guest-panel inline-flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-center transition ${
                   menuOpen ? "border-brass/45 bg-brass/15" : "hover:border-brass/35"
                 }`
@@ -495,9 +495,13 @@ export function BrowseMenuClient({
   }
 
   return (
-    <div className={`guest-shell ${menuOpen ? "pb-4" : "pb-0"}`}>
+    <div
+      className={`guest-shell ${
+        menuOpen ? "pb-4" : "flex min-h-0 flex-1 flex-col pb-0"
+      }`}
+    >
       {!menuOpen ? (
-        <header className="relative isolate min-h-[calc(100dvh-2.75rem)] animate-rise overflow-hidden">
+        <header className="relative isolate flex min-h-0 flex-1 animate-rise flex-col overflow-hidden">
           <div className="absolute inset-0">
             <Image
               src={heroSrc}
@@ -509,37 +513,38 @@ export function BrowseMenuClient({
             />
             <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
             {/* Soft fade: photo stays under branding, goes black around the menu button */}
-            <div className="absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-b from-transparent via-black/45 to-black/90" />
-            <div className="absolute inset-x-0 bottom-0 h-[22%] bg-gradient-to-t from-[#0c110f] via-[#0c110f]/85 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-b from-transparent via-black/40 to-black/92" />
+            <div className="absolute inset-x-0 bottom-0 h-[24%] bg-gradient-to-t from-[#0c110f] via-[#0c110f]/80 to-transparent" />
           </div>
 
-          <div className="relative z-10 flex min-h-[calc(100dvh-2.75rem)] flex-col">
-            <div className="flex items-center justify-between gap-3 px-5 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
+          <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+            {/* venue-theme already applies safe-area — keep this light */}
+            <div className="flex shrink-0 items-center justify-between gap-3 px-4 pb-1.5 pt-2">
               <LanguageSwitcher className="shrink-0 [&_select]:h-8 [&_select]:border-white/20 [&_select]:bg-black/40 [&_select]:py-0 [&_select]:backdrop-blur-sm" />
-              <QikTikLogo className="!h-7 !w-auto !rounded-md !bg-black/30 !p-1 !backdrop-blur-sm" />
+              <QikTikLogo className="!h-6 !w-auto !rounded-md !bg-black/30 !p-1 !backdrop-blur-sm" />
             </div>
 
-            <div className="min-h-[4rem] flex-1" aria-hidden />
+            <div className="min-h-[2.5rem] flex-1" aria-hidden />
 
             {/* Logo + title + contacts sit on the fading photo */}
-            <div className="relative z-10 flex flex-col items-center px-5 pb-4 text-center">
+            <div className="relative z-10 flex shrink-0 flex-col items-center px-4 pb-2.5 text-center">
               <VenueLogo
                 alt={venueName}
-                width={128}
-                height={128}
-                className="h-[6.5rem] w-[6.5rem] rounded-full object-cover shadow-[0_14px_36px_rgba(0,0,0,0.5)] ring-[3px] ring-brass/85"
+                width={112}
+                height={112}
+                className="h-[5.5rem] w-[5.5rem] rounded-full object-cover shadow-[0_14px_36px_rgba(0,0,0,0.5)] ring-[3px] ring-brass/85 sm:h-[6.25rem] sm:w-[6.25rem]"
                 priority
               />
-              <h1 className="mt-2.5 font-display text-[1.65rem] font-semibold leading-tight tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.8)]">
+              <h1 className="mt-2 font-display text-[1.45rem] font-semibold leading-tight tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.8)] sm:text-[1.65rem]">
                 {venueName}
               </h1>
-              <p className="mt-0.5 text-[0.8125rem] font-medium text-white/85 drop-shadow-[0_1px_10px_rgba(0,0,0,0.7)]">
+              <p className="mt-0.5 text-xs font-medium text-white/85 drop-shadow-[0_1px_10px_rgba(0,0,0,0.7)] sm:text-[0.8125rem]">
                 {t("homeTagline")}
               </p>
-              <VenueContactIcons className="mt-3.5" />
+              <VenueContactIcons className="mt-2.5" />
             </div>
 
-            <div className="relative z-10 shrink-0 px-5 pb-[max(0.85rem,env(safe-area-inset-bottom))] pt-0.5">
+            <div className="relative z-10 shrink-0 px-4 pb-2 pt-0.5">
               {guestActions("stage")}
             </div>
           </div>

@@ -96,14 +96,14 @@ export function VenueContactIcons({ brand: brandProp, className = "" }: Props) {
 
   return (
     <div
-      className={`inline-flex items-center justify-center rounded-full border border-white/20 bg-black/35 px-1.5 py-1 backdrop-blur-sm ${className}`}
+      className={`inline-flex items-center justify-center rounded-full border border-white/20 bg-black/35 px-1 py-0.5 backdrop-blur-sm ${className}`}
     >
       {links.map((link, i) => (
         <div key={link.key} className="flex items-center">
           {i > 0 ? (
             <span
               aria-hidden
-              className="mx-0.5 h-4 w-px shrink-0 bg-white/30"
+              className="mx-0.5 h-3.5 w-px shrink-0 bg-white/30"
             />
           ) : null}
           <a
@@ -112,7 +112,7 @@ export function VenueContactIcons({ brand: brandProp, className = "" }: Props) {
             rel={link.key === "phone" ? undefined : "noopener noreferrer"}
             aria-label={link.label}
             title={link.label}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-white/10"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/10"
           >
             {link.icon}
             <span className="sr-only">{link.label}</span>

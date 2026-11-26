@@ -101,7 +101,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           <VenueThemeProvider brand={brand}>
             <MobilePullToRefresh />
             <div className="flex min-h-0 flex-1 flex-col">
-              <div className="min-h-0 flex-1">
+              <div className="flex min-h-0 flex-1 flex-col">
                 <NextIntlClientProvider messages={messages}>
                   {children}
                 </NextIntlClientProvider>
