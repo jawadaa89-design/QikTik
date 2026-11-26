@@ -1,12 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { CallWaiterBellIcon } from "@/components/CallWaiterBellIcon";
-import { DigitalMenuLink } from "@/components/DigitalMenuLink";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
 import { VenueLogo } from "@/components/VenueLogo";
@@ -26,7 +24,7 @@ import {
   type GuestPushBlocker,
 } from "@/lib/guest-push";
 import { useVenueName, useVenueSlug } from "@/components/VenueProvider";
-import { venuePickupPath } from "@/lib/venue-paths";
+import { venueMainPath } from "@/lib/venue-paths";
 
 /** Soft first-visit prompt: dismissed or subscribed for this ticket. */
 const PUSH_PROMPT_LS_PREFIX = "qiktik-push-prompt:";
@@ -680,13 +678,6 @@ export default function PickupWaitingPage() {
         <h1 className="mt-3 text-center font-display text-2xl font-semibold text-ink">
           {venueName}
         </h1>
-        <div className="mt-4 flex w-full max-w-md justify-center">
-          <DigitalMenuLink
-            locale={locale}
-            venueSlug={venueSlug}
-            label={t("digitalMenu")}
-          />
-        </div>
       </div>
 
       {guestAlert && ticket && (
@@ -1037,12 +1028,12 @@ export default function PickupWaitingPage() {
         ) : null}
       </div>
 
-      <p className="mt-6 text-center text-sm">
+      <p className="mt-8 mb-2 text-center text-sm">
         <Link
-          href={`${venuePickupPath(venueSlug, locale)}/register`}
+          href={venueMainPath(venueSlug, locale)}
           className="text-ink-soft/50 hover:text-brass"
         >
-          {t("registerAnother")}
+          {t("backHome")}
         </Link>
       </p>
     </main>

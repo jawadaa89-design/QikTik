@@ -57,32 +57,83 @@ export function VenueThemeProvider({
     };
   }, [brand]);
 
-  // Lock to the *visible* phone viewport so the guest home fits before any tap
+  // Lock to the visible phone viewport so guest home fits before any tap
   // (iOS/Android chrome can leave 100dvh wrong until interaction).
+  // Do NOT shrink while a text field is focused — the keyboard collapses
+  // visualViewport and was crushing register / form pages mid-typing.
   useEffect(() => {
     const root = document.documentElement;
-    const sync = () => {
+    let blurTimer = 0;
+
+    const isEditingText = () => {
+      const el = document.activeElement;
+      if (!el || !(el instanceof HTMLElement)) return false;
+      if (el.isContentEditable) return true;
+      const tag = el.tagName;
+      if (tag === "TEXTAREA") return true;
+      if (tag === "INPUT") {
+        const type = (el as HTMLInputElement).type;
+        return (
+          type === "" ||
+          type === "text" ||
+          type === "search" ||
+          type === "email" ||
+          type === "tel" ||
+          type === "url" ||
+          type === "password" ||
+          type === "number"
+        );
+      }
+      return false;
+    };
+
+    const sync = (opts?: { force?: boolean }) => {
       const h =
         window.visualViewport?.height ??
         window.innerHeight ??
         root.clientHeight;
-      if (h > 0) root.style.setProperty("--app-height", `${Math.round(h)}px`);
+      if (!(h > 0)) return;
+
+      if (!opts?.force) {
+        if (isEditingText()) return;
+        // Keyboard sometimes resizes before focus settles — ignore big shrinks
+        const prev =
+          parseFloat(root.style.getPropertyValue("--app-height")) || 0;
+        if (prev > 0 && prev - h > 120) return;
+      }
+
+      root.style.setProperty("--app-height", `${Math.round(h)}px`);
     };
+
+    const onFocusIn = () => {
+      window.clearTimeout(blurTimer);
+    };
+    const onFocusOut = () => {
+      window.clearTimeout(blurTimer);
+      // After keyboard dismisses, remeasure once the viewport settles
+      blurTimer = window.setTimeout(() => sync({ force: true }), 280);
+    };
+
+    const onOrientation = () => sync({ force: true });
+    const onViewportResize = () => sync();
+
     sync();
-    window.addEventListener("resize", sync);
-    window.visualViewport?.addEventListener("resize", sync);
-    window.visualViewport?.addEventListener("scroll", sync);
-    window.addEventListener("orientationchange", sync);
-    // One more pass after paint / browser UI settle
-    const t1 = window.setTimeout(sync, 50);
-    const t2 = window.setTimeout(sync, 300);
+    window.addEventListener("resize", onViewportResize);
+    window.visualViewport?.addEventListener("resize", onViewportResize);
+    window.addEventListener("orientationchange", onOrientation);
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("focusout", onFocusOut);
+    const t1 = window.setTimeout(() => sync(), 50);
+    const t2 = window.setTimeout(() => sync(), 300);
     return () => {
-      window.removeEventListener("resize", sync);
-      window.visualViewport?.removeEventListener("resize", sync);
-      window.visualViewport?.removeEventListener("scroll", sync);
-      window.removeEventListener("orientationchange", sync);
+      window.removeEventListener("resize", onViewportResize);
+      window.visualViewport?.removeEventListener("resize", onViewportResize);
+      window.removeEventListener("orientationchange", onOrientation);
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("focusout", onFocusOut);
       window.clearTimeout(t1);
       window.clearTimeout(t2);
+      window.clearTimeout(blurTimer);
       root.style.removeProperty("--app-height");
     };
   }, []);

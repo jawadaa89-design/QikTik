@@ -255,7 +255,7 @@ export function BrowseMenuClient({
             </svg>
           ) : null}
           <span className="leading-tight">
-            {menuOpen ? t("menu") : t("viewMenu")}
+            {menuOpen ? t("closeMenu") : t("viewMenu")}
           </span>
         </button>
 
