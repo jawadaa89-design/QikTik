@@ -29,6 +29,11 @@ export function venuePickupPath(venueSlug: string, locale: string): string {
   return `${venueGuestBase(venueSlug, locale)}/pickup`;
 }
 
+/** Guest call-waiter form (separate page, same pattern as pickup register). */
+export function venueCallWaiterPath(venueSlug: string, locale: string): string {
+  return `${venueGuestBase(venueSlug, locale)}/call-waiter`;
+}
+
 export function venueTablePath(
   venueSlug: string,
   locale: string,

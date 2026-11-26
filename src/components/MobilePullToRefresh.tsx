@@ -5,13 +5,40 @@ import { useEffect, useRef, useState } from "react";
 const PULL_THRESHOLD_PX = 72;
 const MAX_PULL_PX = 120;
 
+/** True scroll position for guest pages and the window. */
 function pageScrollTop(): number {
-  return (
+  const theme = document.querySelector(".venue-theme") as HTMLElement | null;
+  const mainCol = document.querySelector(
+    "[data-qiktik-scroll]"
+  ) as HTMLElement | null;
+  const themeTop = theme?.scrollTop ?? 0;
+  const colTop = mainCol?.scrollTop ?? 0;
+  const winTop =
     window.scrollY ||
     document.documentElement.scrollTop ||
     document.body.scrollTop ||
-    0
-  );
+    0;
+  return Math.max(themeTop, colTop, winTop);
+}
+
+/** Any scrollable ancestor of the touch target that still has room above. */
+function scrollParentNotAtTop(target: EventTarget | null): boolean {
+  let el =
+    target instanceof Element
+      ? target
+      : target instanceof Node
+        ? target.parentElement
+        : null;
+  while (el && el !== document.documentElement) {
+    const style = window.getComputedStyle(el);
+    const oy = style.overflowY;
+    const canScroll =
+      (oy === "auto" || oy === "scroll" || oy === "overlay") &&
+      el.scrollHeight > el.clientHeight + 1;
+    if (canScroll && el.scrollTop > 1) return true;
+    el = el.parentElement;
+  }
+  return false;
 }
 
 /**
@@ -31,9 +58,13 @@ export function MobilePullToRefresh() {
       window.matchMedia("(pointer: coarse)").matches;
     if (!coarse) return;
 
+    const atPageTop = (target: EventTarget | null) =>
+      pageScrollTop() <= 1 && !scrollParentNotAtTop(target);
+
     const onStart = (e: TouchEvent) => {
       if (refreshing) return;
-      if (pageScrollTop() > 1) {
+      // Only arm PTR when every scroll container is already at the top
+      if (!atPageTop(e.target)) {
         pulling.current = false;
         return;
       }
@@ -43,7 +74,7 @@ export function MobilePullToRefresh() {
 
     const onMove = (e: TouchEvent) => {
       if (!pulling.current || refreshing) return;
-      if (pageScrollTop() > 1) {
+      if (!atPageTop(e.target)) {
         pulling.current = false;
         setPull(0);
         return;

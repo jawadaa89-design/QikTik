@@ -13,7 +13,7 @@ import { VenueContactIcons } from "@/components/VenueContactIcons";
 import { formatPrice } from "@/lib/utils";
 import { useVenueSlug } from "@/components/VenueProvider";
 import { useVenueHeroSrc } from "@/components/VenueThemeProvider";
-import { venuePickupPath } from "@/lib/venue-paths";
+import { venueCallWaiterPath, venuePickupPath } from "@/lib/venue-paths";
 import type { MenuCategory, MenuItem } from "@/lib/demo-data";
 import type { Locale } from "@/i18n/config";
 
@@ -71,13 +71,6 @@ export function BrowseMenuClient({
   const [tableNumber, setTableNumber] = useState("");
   const [orderBusy, setOrderBusy] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
-  const [callFormOpen, setCallFormOpen] = useState(false);
-  const [callName, setCallName] = useState("");
-  const [callComment, setCallComment] = useState("");
-  const [callState, setCallState] = useState<"idle" | "sending" | "sent" | "cooldown">(
-    "idle"
-  );
-  const [callError, setCallError] = useState<string | null>(null);
   /** Landing first — menu items expand below Call waiter after guest taps Menu. */
   const [menuOpen, setMenuOpen] = useState(false);
   const menuSectionRef = useRef<HTMLDivElement | null>(null);
@@ -97,6 +90,9 @@ export function BrowseMenuClient({
         window.scrollTo({ top: 0, behavior: "smooth" });
         document
           .querySelector(".venue-theme")
+          ?.scrollTo({ top: 0, behavior: "smooth" });
+        document
+          .querySelector("[data-qiktik-scroll]")
           ?.scrollTo({ top: 0, behavior: "smooth" });
       }
       return next;
@@ -162,7 +158,6 @@ export function BrowseMenuClient({
   function openOrderForm() {
     setOrderError(null);
     setOrderFormOpen(true);
-    setCallFormOpen(false);
   }
 
   function closeOrderForm() {
@@ -217,96 +212,21 @@ export function BrowseMenuClient({
     }
   }
 
-  function openCallForm() {
-    setCallError(null);
-    setCallFormOpen(true);
-    setOrderFormOpen(false);
-  }
-
-  function closeCallForm() {
-    setCallFormOpen(false);
-    setCallError(null);
-  }
-
-  async function onCallWaiter(e: FormEvent) {
-    e.preventDefault();
-    if (callState !== "idle") return;
-
-    const trimmedName = callName.trim();
-    if (!trimmedName) {
-      setCallError(tPickup("callWaiterNameRequired"));
-      return;
-    }
-
-    setCallError(null);
-    setCallState("sending");
-    try {
-      const res = await fetch("/api/v1/pickup/call-waiter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerName: trimmedName,
-          comment: callComment.trim() || undefined,
-          venueSlug,
-        }),
-      });
-      const data = await res.json().catch(() => null);
-      if (res.status === 429) {
-        setCallState("cooldown");
-        setCallError(tPickup("callWaiterCooldown"));
-        window.setTimeout(() => {
-          setCallState("idle");
-          setCallError(null);
-        }, 15_000);
-        return;
-      }
-      if (!res.ok) {
-        const code = data?.error?.code;
-        if (code === "NAME_REQUIRED") {
-          setCallError(tPickup("callWaiterNameRequired"));
-        } else {
-          setCallError(data?.error?.message ?? tPickup("callWaiterError"));
-        }
-        setCallState("idle");
-        return;
-      }
-      setCallFormOpen(false);
-      setCallComment("");
-      setCallState("sent");
-      window.setTimeout(() => {
-        setCallState("cooldown");
-        window.setTimeout(() => {
-          setCallState("idle");
-          setCallError(null);
-        }, 15_000);
-      }, 1500);
-    } catch {
-      setCallState("idle");
-      setCallError(tPickup("callWaiterError"));
-    }
-  }
-
   const outlineBtn =
-    "inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/20 bg-transparent px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-white/[0.04] disabled:opacity-55";
-  const stageOutlineBtn = `${outlineBtn} flex-1`;
+    "inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/20 bg-transparent px-4 py-3 text-sm font-semibold text-ink transition hover:bg-white/[0.04] disabled:opacity-55";
+  const stageOutlineBtn = `${outlineBtn} shrink-0`;
 
   function guestActions(variant: "stage" | "compact") {
     const stage = variant === "stage";
     return (
-      <div
-        className={
-          stage
-            ? "flex h-full min-h-0 flex-1 flex-col gap-2.5"
-            : "space-y-2.5"
-        }
-      >
+      <div className={stage ? "flex w-full flex-col gap-2.5" : "space-y-2.5"}>
         <button
           type="button"
           onClick={toggleMenu}
           aria-expanded={menuOpen}
           className={
             stage
-              ? "inline-flex w-full flex-1 items-center justify-center gap-2 rounded-2xl bg-brass px-4 py-2.5 text-sm font-bold text-[#0c100e] shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:brightness-105"
+              ? "inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-brass px-4 py-3 text-sm font-bold text-[#0c100e] shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:brightness-105"
               : `guest-panel inline-flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-center transition ${
                   menuOpen ? "border-brass/45 bg-brass/15" : "hover:border-brass/35"
                 }`
@@ -433,91 +353,17 @@ export function BrowseMenuClient({
         ) : null}
 
         {enableCallWaiter ? (
-          !callFormOpen ? (
-            <button
-              type="button"
-              disabled={callState !== "idle"}
-              onClick={openCallForm}
-              className={
-                stage
-                  ? stageOutlineBtn
-                  : "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-alert/40 bg-alert/15 px-4 py-3 text-sm font-bold text-alert transition hover:bg-alert/25 disabled:opacity-55"
-              }
-            >
-              <CallWaiterBellIcon className={stage ? "text-brass" : undefined} />
-              {callState === "sent"
-                ? tPickup("callWaiterSent")
-                : callState === "cooldown"
-                  ? tPickup("callWaiterCooldown")
-                  : tPickup("callWaiter")}
-            </button>
-          ) : (
-            <form
-              onSubmit={onCallWaiter}
-              className="guest-panel w-full space-y-3 rounded-2xl border border-alert/25 p-4"
-            >
-              <p className="text-sm text-ink-soft/75">{tPickup("callWaiterFormHint")}</p>
-              <label className="block">
-                <span className="text-xs font-semibold text-ink-soft">
-                  {tPickup("name")} <span className="text-alert">*</span>
-                </span>
-                <input
-                  required
-                  value={callName}
-                  onChange={(e) => {
-                    setCallName(e.target.value);
-                    if (callError) setCallError(null);
-                  }}
-                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-ink outline-none focus:border-brass/40"
-                  autoComplete="name"
-                  autoFocus
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs font-semibold text-ink-soft">
-                  {tPickup("callWaiterComment")}{" "}
-                  <span className="font-normal text-ink-soft/50">
-                    {tPickup("callWaiterCommentOptional")}
-                  </span>
-                </span>
-                <textarea
-                  value={callComment}
-                  onChange={(e) => setCallComment(e.target.value)}
-                  rows={2}
-                  maxLength={280}
-                  className="mt-1.5 w-full resize-y rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-ink outline-none focus:border-brass/40"
-                  placeholder={tPickup("callWaiterCommentHint")}
-                />
-              </label>
-              {callError && (
-                <p className="rounded-xl border border-alert/30 bg-alert/10 px-3 py-2 text-sm text-alert">
-                  {callError}
-                </p>
-              )}
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <button
-                  type="submit"
-                  disabled={callState !== "idle"}
-                  className="w-full rounded-xl border border-alert/40 bg-alert/15 px-4 py-3 text-sm font-bold text-alert disabled:opacity-55 sm:flex-1"
-                >
-                  {callState === "sending"
-                    ? tPickup("loading")
-                    : callState === "sent"
-                      ? tPickup("callWaiterSent")
-                      : callState === "cooldown"
-                        ? tPickup("callWaiterCooldown")
-                        : tPickup("callWaiterSubmit")}
-                </button>
-                <button
-                  type="button"
-                  onClick={closeCallForm}
-                  className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-ink-soft sm:flex-1"
-                >
-                  {tPickup("callWaiterCancel")}
-                </button>
-              </div>
-            </form>
-          )
+          <Link
+            href={venueCallWaiterPath(venueSlug, locale)}
+            className={
+              stage
+                ? stageOutlineBtn
+                : "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-alert/40 bg-alert/15 px-4 py-3 text-sm font-bold text-alert transition hover:bg-alert/25"
+            }
+          >
+            <CallWaiterBellIcon className={stage ? "text-brass" : undefined} />
+            {tPickup("callWaiter")}
+          </Link>
         ) : null}
       </div>
     );
@@ -585,7 +431,8 @@ export function BrowseMenuClient({
 
               <div className="mx-auto my-3 h-px w-full max-w-[11rem] shrink-0 bg-white/12" />
 
-              <div className="flex min-h-0 w-full flex-1 flex-col pb-1">
+              {/* Fixed-size CTAs — sit at bottom of sheet, don’t grow when menu opens */}
+              <div className="mt-auto w-full shrink-0 pb-1">
                 {guestActions("stage")}
               </div>
             </div>

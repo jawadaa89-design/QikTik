@@ -101,7 +101,11 @@ export default async function LocaleLayout({ children, params }: Props) {
           <VenueThemeProvider brand={brand}>
             <MobilePullToRefresh />
             <div className="flex min-h-0 flex-1 flex-col">
-              <div className="flex min-h-0 flex-1 flex-col">
+              {/* Scroll the page body above the footer so links never sit under Powered By */}
+              <div
+                data-qiktik-scroll
+                className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto"
+              >
                 <NextIntlClientProvider messages={messages}>
                   {children}
                 </NextIntlClientProvider>

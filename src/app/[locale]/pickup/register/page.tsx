@@ -136,7 +136,7 @@ export default function PickupRegisterPage() {
   }
 
   return (
-    <main className="guest-shell relative flex min-h-full flex-col px-5 pb-10 pt-8">
+    <main className="guest-shell relative flex min-h-full flex-col px-5 pb-8 pt-8">
       <div className="relative mb-2 min-h-10">
         <LanguageSwitcher className="absolute start-0 top-0 z-10 shrink-0" />
         <QikTikLogo className="absolute end-0 top-0 z-10" />
@@ -287,7 +287,7 @@ export default function PickupRegisterPage() {
         )}
       </div>
 
-      <p className="mt-6 text-center text-sm">
+      <p className="mt-8 mb-2 text-center text-sm">
         <Link href={venueMainPath(venueSlug, locale)} className="text-ink-soft/50 hover:text-brass">
           {t("backHome")}
         </Link>
