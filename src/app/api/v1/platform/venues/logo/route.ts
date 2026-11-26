@@ -5,7 +5,7 @@ import {
   assertLogoFile,
   storeVenueLogo,
 } from "@/lib/venue-logo-storage";
-import { platformPasswordOk } from "@/lib/platform-auth";
+import { verifyPlatformPassword } from "@/lib/platform-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   if (!form) return apiError("VALIDATION_ERROR", "Expected multipart form", 400);
 
   const password = String(form.get("password") ?? "");
-  if (!platformPasswordOk(password)) {
+  if (!(await verifyPlatformPassword(password))) {
     return apiError("UNAUTHORIZED", "Wrong platform password", 401);
   }
 

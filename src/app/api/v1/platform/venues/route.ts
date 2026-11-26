@@ -16,8 +16,8 @@ import {
 } from "@/lib/venue-brand";
 import { hashStaffPassword } from "@/lib/staff-auth";
 import {
-  platformPasswordOk,
   venuePublicUrls,
+  verifyPlatformPassword,
 } from "@/lib/platform-auth";
 
 export const dynamic = "force-dynamic";
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     return apiError("VALIDATION_ERROR", parsed.error.message, 400);
   }
 
-  if (!platformPasswordOk(parsed.data.password)) {
+  if (!(await verifyPlatformPassword(parsed.data.password))) {
     return apiError("UNAUTHORIZED", "Wrong platform password", 401);
   }
 
@@ -150,7 +150,7 @@ export async function GET(req: NextRequest) {
     req.nextUrl.searchParams.get("password") ||
     req.headers.get("x-platform-password") ||
     "";
-  if (!platformPasswordOk(password)) {
+  if (!(await verifyPlatformPassword(password))) {
     return apiError("UNAUTHORIZED", "Wrong platform password", 401);
   }
 

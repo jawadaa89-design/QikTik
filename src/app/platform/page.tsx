@@ -228,6 +228,14 @@ export default function PlatformPage() {
           >
             {listBusy ? "Loading…" : "Unlock platform"}
           </button>
+          <p className="text-center text-sm">
+            <Link
+              href="/platform/password"
+              className="text-ink-soft/50 hover:text-brass"
+            >
+              Change or reset password
+            </Link>
+          </p>
         </form>
       ) : (
         <>
@@ -240,6 +248,12 @@ export default function PlatformPage() {
               className="rounded-xl bg-brass px-3 py-1.5 text-xs font-bold text-[#0c100e] hover:brightness-105"
             >
               Create restaurant
+            </Link>
+            <Link
+              href="/platform/password"
+              className="rounded-xl border border-white/12 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-[#f2efe8] hover:border-brass/40"
+            >
+              Password
             </Link>
             <button
               type="button"

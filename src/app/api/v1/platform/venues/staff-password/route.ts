@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { setVenueStaffPassword } from "@/lib/staff-auth";
-import { platformPasswordOk } from "@/lib/platform-auth";
+import { verifyPlatformPassword } from "@/lib/platform-auth";
 import { apiError } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest) {
     return apiError("VALIDATION_ERROR", parsed.error.message, 400);
   }
 
-  if (!platformPasswordOk(parsed.data.password)) {
+  if (!(await verifyPlatformPassword(parsed.data.password))) {
     return apiError("UNAUTHORIZED", "Wrong platform password", 401);
   }
 

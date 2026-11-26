@@ -6,7 +6,7 @@ import {
   type PackageId,
 } from "@/lib/features";
 import { apiError } from "@/lib/validation";
-import { platformPasswordOk } from "@/lib/platform-auth";
+import { verifyPlatformPassword } from "@/lib/platform-auth";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +33,7 @@ export async function PATCH(req: NextRequest) {
     return apiError("VALIDATION_ERROR", parsed.error.message, 400);
   }
 
-  if (!platformPasswordOk(parsed.data.password)) {
+  if (!(await verifyPlatformPassword(parsed.data.password))) {
     return apiError("UNAUTHORIZED", "Wrong platform password", 401);
   }
 
