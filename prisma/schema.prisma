@@ -131,6 +131,8 @@ model Venue {
   pickupEnabled     Boolean  @default(true) @map("pickup_enabled")
   /** Restaurant logo — Blob URL or /uploads/venues/… path */
   logoUrl           String?  @map("logo_url")
+  /** Guest home hero / atmosphere photo — Blob URL or /uploads path */
+  heroImageUrl      String?  @map("hero_image_url")
   /** Brand accent (buttons, highlights) */
   accentColor       String   @default("#c4a35a") @map("accent_color")
   /** Page / shell background */

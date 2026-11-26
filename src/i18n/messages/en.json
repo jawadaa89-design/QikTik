@@ -12,7 +12,8 @@
     "total": "Total",
     "subtotal": "Subtotal",
     "offlineBanner": "Card payments unavailable. You can still order — pay cash to your waiter.",
-    "viewMenu": "View Menu",
+    "viewMenu": "View menu",
+    "homeTagline": "Cafe & Coffee House",
     "tapOrScan": "Tap NFC or scan QR on the stand"
   },
   "language": {
@@ -154,6 +155,7 @@
   "pickup": {
     "title": "Register for pickup",
     "registerCta": "Register for pickup",
+    "pickupShort": "Pickup",
     "subtitle": "We’ll notify you when your order is ready",
     "hint": "Enter your name after placing your order at the counter. Keep this page open — you’ll get a ticket number to reconnect if needed.",
     "name": "Your name",
@@ -219,7 +221,7 @@
     "pingAlertBody": "{name}, please come to the counter now.",
     "pingNotifTitle": "Pickup reminder",
     "pingNotifBody": "{name}, come pick up your order!",
-    "callWaiter": "Call a waiter",
+    "callWaiter": "Call waiter",
     "callWaiterSent": "Waiter called",
     "callWaiterSeen": "Staff saw your call — help is on the way",
     "callWaiterCooldown": "Wait a moment before calling again",

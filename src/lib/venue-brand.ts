@@ -2,6 +2,8 @@ import type { Venue } from "@prisma/client";
 
 export type VenueBrand = {
   logoUrl: string | null;
+  /** Full-bleed guest home atmosphere photo */
+  heroImageUrl: string | null;
   accentColor: string;
   backgroundColor: string;
   surfaceColor: string;
@@ -16,6 +18,7 @@ export type VenueBrand = {
 
 export const DEFAULT_VENUE_BRAND: VenueBrand = {
   logoUrl: null,
+  heroImageUrl: null,
   accentColor: "#c4a35a",
   backgroundColor: "#0c110f",
   surfaceColor: "#141a17",
@@ -92,6 +95,7 @@ export function brandFromVenue(
   venue: Pick<
     Venue,
     | "logoUrl"
+    | "heroImageUrl"
     | "accentColor"
     | "backgroundColor"
     | "surfaceColor"
@@ -107,6 +111,7 @@ export function brandFromVenue(
   if (!venue) return { ...DEFAULT_VENUE_BRAND };
   return {
     logoUrl: venue.logoUrl?.trim() || null,
+    heroImageUrl: venue.heroImageUrl?.trim() || null,
     accentColor: normalizeHexColor(
       venue.accentColor,
       DEFAULT_VENUE_BRAND.accentColor
@@ -130,6 +135,14 @@ export function brandFromVenue(
 
 export function venueLogoSrc(brand: VenueBrand | null | undefined): string {
   return brand?.logoUrl?.trim() || "/logo.png";
+}
+
+/** Default Photo Stage atmosphere when a venue has not uploaded its own cafe photo. */
+export const DEFAULT_VENUE_HERO = "/venue-hero-default.jpg?v=c3";
+
+/** Guest home hero photo — venue upload, else shared Photo Stage default. */
+export function venueHeroSrc(brand: VenueBrand | null | undefined): string {
+  return brand?.heroImageUrl?.trim() || DEFAULT_VENUE_HERO;
 }
 
 /** Home-screen / PWA display name when saving the guest main link. */

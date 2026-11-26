@@ -71,6 +71,23 @@ export async function storeVenueLogo(
 }
 
 /**
+ * Store guest-home atmosphere / cafe photo for the Photo Stage landing.
+ */
+export async function storeVenueHeroImage(
+  venueId: string,
+  file: File
+): Promise<string> {
+  const ext = extForType(file.type);
+  const filename = `hero-${Date.now()}.${ext}`;
+  return storePublicImage(
+    `venues/${venueId}/${filename}`,
+    path.join("uploads", "venues", venueId),
+    filename,
+    file
+  );
+}
+
+/**
  * Store menu item photo per venue (survives redeploy when Blob token is set).
  */
 export async function storeMenuItemImage(

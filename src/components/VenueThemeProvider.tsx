@@ -12,6 +12,7 @@ import {
   brandCssVars,
   brandFromVenue,
   DEFAULT_VENUE_BRAND,
+  venueHeroSrc,
   venueLogoSrc,
   type VenueBrand,
 } from "@/lib/venue-brand";
@@ -19,11 +20,13 @@ import {
 type VenueThemeContextValue = {
   brand: VenueBrand;
   logoSrc: string;
+  heroSrc: string;
 };
 
 const VenueThemeContext = createContext<VenueThemeContextValue>({
   brand: DEFAULT_VENUE_BRAND,
   logoSrc: "/logo.png",
+  heroSrc: "/venue-hero-default.jpg?v=c3",
 });
 
 export function VenueThemeProvider({
@@ -35,7 +38,11 @@ export function VenueThemeProvider({
 }) {
   const brand = brandProp ?? DEFAULT_VENUE_BRAND;
   const logoSrc = venueLogoSrc(brand);
-  const value = useMemo(() => ({ brand, logoSrc }), [brand, logoSrc]);
+  const heroSrc = venueHeroSrc(brand);
+  const value = useMemo(
+    () => ({ brand, logoSrc, heroSrc }),
+    [brand, logoSrc, heroSrc]
+  );
 
   useEffect(() => {
     const root = document.documentElement;
@@ -67,6 +74,11 @@ export function useVenueBrand(): VenueBrand {
 
 export function useVenueLogoSrc(): string {
   return useContext(VenueThemeContext).logoSrc;
+}
+
+/** Guest home atmosphere photo (venue upload or shared default). */
+export function useVenueHeroSrc(): string {
+  return useContext(VenueThemeContext).heroSrc;
 }
 
 /** Server-safe serialize for passing brand into client provider. */

@@ -12,6 +12,7 @@ import { VenueLogo } from "@/components/VenueLogo";
 import { VenueContactIcons } from "@/components/VenueContactIcons";
 import { formatPrice } from "@/lib/utils";
 import { useVenueSlug } from "@/components/VenueProvider";
+import { useVenueHeroSrc } from "@/components/VenueThemeProvider";
 import { venuePickupPath } from "@/lib/venue-paths";
 import type { MenuCategory, MenuItem } from "@/lib/demo-data";
 import type { Locale } from "@/i18n/config";
@@ -62,6 +63,7 @@ export function BrowseMenuClient({
   const locale = useLocale() as Locale;
   const router = useRouter();
   const venueSlug = useVenueSlug();
+  const heroSrc = useVenueHeroSrc();
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id ?? "");
   const [activeSubId, setActiveSubId] = useState<string | "all">("all");
   const [search, setSearch] = useState("");
@@ -262,215 +264,322 @@ export function BrowseMenuClient({
     }
   }
 
-  return (
-    <div className="guest-shell pb-4">
-      <header className="relative overflow-hidden border-b border-white/5 px-5 pb-5 pt-6">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#141c18] to-transparent" />
-        <div className="absolute -end-16 -top-20 h-56 w-56 rounded-full bg-brass/10 blur-3xl" />
-        <div className="relative animate-rise">
-          <div className="relative flex items-center justify-between gap-3">
-            <LanguageSwitcher className="z-10 shrink-0 [&_select]:h-8 [&_select]:py-0" />
-            <QikTikLogo className="z-10 !h-7 !w-auto !rounded-md !p-0" />
-          </div>
-          <div className="mt-5 flex flex-col items-center text-center">
-            <VenueLogo
-              alt={venueName}
-              width={144}
-              height={144}
-              className="h-32 w-32 rounded-full object-cover shadow-[0_10px_28px_rgba(0,0,0,0.35)] ring-2 ring-brass/55 ring-offset-2 ring-offset-[#0c110f] sm:h-36 sm:w-36"
-              priority
-            />
-            <h1 className="mt-4 font-display text-2xl font-semibold leading-tight text-ink sm:text-3xl">
-              {venueName}
-            </h1>
-            <VenueContactIcons />
-          </div>
+  const outlineBtn =
+    "inline-flex w-full items-center justify-center gap-2.5 rounded-2xl border border-white/20 bg-transparent px-4 py-3 text-sm font-semibold text-ink transition hover:bg-white/[0.04] disabled:opacity-55";
 
-          <div className="mt-6 space-y-2.5">
-              <button
-                type="button"
-                onClick={() => setMenuOpen((open) => !open)}
-                aria-expanded={menuOpen}
-                className={`guest-panel inline-flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-center transition ${
-                  menuOpen
-                    ? "border-brass/45 bg-brass/15"
-                    : "hover:border-brass/35"
-                }`}
-              >
-                <span className="text-sm font-bold leading-tight text-ink">
-                  {menuOpen ? t("menu") : t("viewMenu")}
+  function guestActions(variant: "stage" | "compact") {
+    const stage = variant === "stage";
+    return (
+      <div className={stage ? "space-y-2.5" : "space-y-2.5"}>
+        <button
+          type="button"
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-expanded={menuOpen}
+          className={
+            stage
+              ? "inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-brass px-4 py-3 text-sm font-bold text-[#0c100e] shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:brightness-105"
+              : `guest-panel inline-flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-center transition ${
+                  menuOpen ? "border-brass/45 bg-brass/15" : "hover:border-brass/35"
+                }`
+          }
+        >
+          {stage && !menuOpen ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M6 4.5h9.5a2 2 0 0 1 2 2V20l-4.25-2.2L9 20V6.5a2 2 0 0 1 2-2"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M9 4.5h-3A1.5 1.5 0 0 0 4.5 6v14"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
+          ) : null}
+          <span className="leading-tight">
+            {menuOpen ? t("menu") : t("viewMenu")}
+          </span>
+        </button>
+
+        {enablePickup ? (
+          <Link
+            href={`${venuePickupPath(venueSlug, locale)}/register`}
+            className={
+              stage
+                ? outlineBtn
+                : "btn-primary inline-flex w-full flex-col items-center justify-center gap-0.5 px-4 py-3.5 text-center"
+            }
+          >
+            {stage ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden className="text-brass">
+                <path
+                  d="M7.5 9V7.2A4.5 4.5 0 0 1 12 2.7 4.5 4.5 0 0 1 16.5 7.2V9"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M5.5 9h13l-.7 10.2a2 2 0 0 1-2 1.9H8.2a2 2 0 0 1-2-1.9L5.5 9Z"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            ) : null}
+            <span className="leading-tight">
+              {stage ? tPickup("pickupShort") : tPickup("registerCta")}
+            </span>
+            {!stage ? (
+              <span className="text-xs font-medium leading-snug text-[#0c100e]/75">
+                {tPickup("subtitle")}
+              </span>
+            ) : null}
+          </Link>
+        ) : null}
+
+        {enableOrderAtTable ? (
+          !orderFormOpen ? (
+            <button
+              type="button"
+              onClick={openOrderForm}
+              className={
+                stage
+                  ? outlineBtn
+                  : "btn-primary inline-flex w-full items-center justify-center px-4 py-3 text-sm font-bold"
+              }
+            >
+              {tMenu("orderAtTable")}
+            </button>
+          ) : (
+            <form
+              onSubmit={onOrderAtTable}
+              className="guest-panel w-full space-y-3 rounded-2xl border border-brass/25 p-4"
+            >
+              <p className="text-sm text-ink-soft/75">{tMenu("orderAtTableHint")}</p>
+              <label className="block">
+                <span className="text-xs font-semibold text-ink-soft">
+                  {tMenu("tableNumberLabel")} <span className="text-alert">*</span>
                 </span>
-              </button>
-
-              {enablePickup ? (
-                <Link
-                  href={`${venuePickupPath(venueSlug, locale)}/register`}
-                  className="btn-primary inline-flex w-full flex-col items-center justify-center gap-0.5 px-4 py-3.5 text-center"
+                <input
+                  required
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={tableNumber}
+                  onChange={(e) => {
+                    setTableNumber(e.target.value.replace(/[^\d]/g, "").slice(0, 4));
+                    if (orderError) setOrderError(null);
+                  }}
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-ink outline-none focus:border-brass/40"
+                  autoComplete="off"
+                  autoFocus
+                  placeholder="7"
+                />
+              </label>
+              {orderError && (
+                <p className="rounded-xl border border-alert/30 bg-alert/10 px-3 py-2 text-sm text-alert">
+                  {orderError}
+                </p>
+              )}
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="submit"
+                  disabled={orderBusy}
+                  className="btn-primary w-full px-4 py-3 text-sm font-bold disabled:opacity-55 sm:flex-1"
                 >
-                  <span className="text-sm font-bold leading-tight">
-                    {tPickup("registerCta")}
-                  </span>
-                  <span className="text-xs font-medium leading-snug text-[#0c100e]/75">
-                    {tPickup("subtitle")}
-                  </span>
-                </Link>
-              ) : null}
+                  {orderBusy ? tPickup("loading") : tMenu("continueToOrder")}
+                </button>
+                <button
+                  type="button"
+                  onClick={closeOrderForm}
+                  className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-ink-soft sm:flex-1"
+                >
+                  {t("close")}
+                </button>
+              </div>
+            </form>
+          )
+        ) : null}
 
-              {enableOrderAtTable ? (
-                !orderFormOpen ? (
-                  <button
-                    type="button"
-                    onClick={openOrderForm}
-                    className="btn-primary inline-flex w-full items-center justify-center px-4 py-3 text-sm font-bold"
-                  >
-                    {tMenu("orderAtTable")}
-                  </button>
-                ) : (
-                  <form
-                    onSubmit={onOrderAtTable}
-                    className="guest-panel w-full space-y-3 rounded-2xl border border-brass/25 p-4"
-                  >
-                    <p className="text-sm text-ink-soft/75">{tMenu("orderAtTableHint")}</p>
-                    <label className="block">
-                      <span className="text-xs font-semibold text-ink-soft">
-                        {tMenu("tableNumberLabel")} <span className="text-alert">*</span>
-                      </span>
-                      <input
-                        required
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        value={tableNumber}
-                        onChange={(e) => {
-                          setTableNumber(e.target.value.replace(/[^\d]/g, "").slice(0, 4));
-                          if (orderError) setOrderError(null);
-                        }}
-                        className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-ink outline-none focus:border-brass/40"
-                        autoComplete="off"
-                        autoFocus
-                        placeholder="7"
-                      />
-                    </label>
-                    {orderError && (
-                      <p className="rounded-xl border border-alert/30 bg-alert/10 px-3 py-2 text-sm text-alert">
-                        {orderError}
-                      </p>
-                    )}
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                      <button
-                        type="submit"
-                        disabled={orderBusy}
-                        className="btn-primary w-full px-4 py-3 text-sm font-bold disabled:opacity-55 sm:flex-1"
-                      >
-                        {orderBusy ? tPickup("loading") : tMenu("continueToOrder")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={closeOrderForm}
-                        className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-ink-soft sm:flex-1"
-                      >
-                        {t("close")}
-                      </button>
-                    </div>
-                  </form>
-                )
-              ) : null}
-
-              {enableCallWaiter ? (
-                !callFormOpen ? (
-                  <button
-                    type="button"
-                    disabled={callState !== "idle"}
-                    onClick={openCallForm}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-alert/40 bg-alert/15 px-4 py-3 text-sm font-bold text-alert transition hover:bg-alert/25 disabled:opacity-55"
-                  >
-                    <CallWaiterBellIcon />
-                    {callState === "sent"
+        {enableCallWaiter ? (
+          !callFormOpen ? (
+            <button
+              type="button"
+              disabled={callState !== "idle"}
+              onClick={openCallForm}
+              className={
+                stage
+                  ? outlineBtn
+                  : "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-alert/40 bg-alert/15 px-4 py-3 text-sm font-bold text-alert transition hover:bg-alert/25 disabled:opacity-55"
+              }
+            >
+              <CallWaiterBellIcon className={stage ? "text-brass" : undefined} />
+              {callState === "sent"
+                ? tPickup("callWaiterSent")
+                : callState === "cooldown"
+                  ? tPickup("callWaiterCooldown")
+                  : tPickup("callWaiter")}
+            </button>
+          ) : (
+            <form
+              onSubmit={onCallWaiter}
+              className="guest-panel w-full space-y-3 rounded-2xl border border-alert/25 p-4"
+            >
+              <p className="text-sm text-ink-soft/75">{tPickup("callWaiterFormHint")}</p>
+              <label className="block">
+                <span className="text-xs font-semibold text-ink-soft">
+                  {tPickup("name")} <span className="text-alert">*</span>
+                </span>
+                <input
+                  required
+                  value={callName}
+                  onChange={(e) => {
+                    setCallName(e.target.value);
+                    if (callError) setCallError(null);
+                  }}
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-ink outline-none focus:border-brass/40"
+                  autoComplete="name"
+                  autoFocus
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold text-ink-soft">
+                  {tPickup("callWaiterComment")}{" "}
+                  <span className="font-normal text-ink-soft/50">
+                    {tPickup("callWaiterCommentOptional")}
+                  </span>
+                </span>
+                <textarea
+                  value={callComment}
+                  onChange={(e) => setCallComment(e.target.value)}
+                  rows={2}
+                  maxLength={280}
+                  className="mt-1.5 w-full resize-y rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-ink outline-none focus:border-brass/40"
+                  placeholder={tPickup("callWaiterCommentHint")}
+                />
+              </label>
+              {callError && (
+                <p className="rounded-xl border border-alert/30 bg-alert/10 px-3 py-2 text-sm text-alert">
+                  {callError}
+                </p>
+              )}
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="submit"
+                  disabled={callState !== "idle"}
+                  className="w-full rounded-xl border border-alert/40 bg-alert/15 px-4 py-3 text-sm font-bold text-alert disabled:opacity-55 sm:flex-1"
+                >
+                  {callState === "sending"
+                    ? tPickup("loading")
+                    : callState === "sent"
                       ? tPickup("callWaiterSent")
                       : callState === "cooldown"
                         ? tPickup("callWaiterCooldown")
-                        : tPickup("callWaiter")}
-                  </button>
-                ) : (
-                  <form
-                    onSubmit={onCallWaiter}
-                    className="guest-panel w-full space-y-3 rounded-2xl border border-alert/25 p-4"
-                  >
-                    <p className="text-sm text-ink-soft/75">{tPickup("callWaiterFormHint")}</p>
-                    <label className="block">
-                      <span className="text-xs font-semibold text-ink-soft">
-                        {tPickup("name")} <span className="text-alert">*</span>
-                      </span>
-                      <input
-                        required
-                        value={callName}
-                        onChange={(e) => {
-                          setCallName(e.target.value);
-                          if (callError) setCallError(null);
-                        }}
-                        className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-ink outline-none focus:border-brass/40"
-                        autoComplete="name"
-                        autoFocus
-                      />
-                    </label>
-                    <label className="block">
-                      <span className="text-xs font-semibold text-ink-soft">
-                        {tPickup("callWaiterComment")}{" "}
-                        <span className="font-normal text-ink-soft/50">
-                          {tPickup("callWaiterCommentOptional")}
-                        </span>
-                      </span>
-                      <textarea
-                        value={callComment}
-                        onChange={(e) => setCallComment(e.target.value)}
-                        rows={2}
-                        maxLength={280}
-                        className="mt-1.5 w-full resize-y rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-ink outline-none focus:border-brass/40"
-                        placeholder={tPickup("callWaiterCommentHint")}
-                      />
-                    </label>
-                    {callError && (
-                      <p className="rounded-xl border border-alert/30 bg-alert/10 px-3 py-2 text-sm text-alert">
-                        {callError}
-                      </p>
-                    )}
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                      <button
-                        type="submit"
-                        disabled={callState !== "idle"}
-                        className="w-full rounded-xl border border-alert/40 bg-alert/15 px-4 py-3 text-sm font-bold text-alert disabled:opacity-55 sm:flex-1"
-                      >
-                        {callState === "sending"
-                          ? tPickup("loading")
-                          : callState === "sent"
-                            ? tPickup("callWaiterSent")
-                            : callState === "cooldown"
-                              ? tPickup("callWaiterCooldown")
-                              : tPickup("callWaiterSubmit")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={closeCallForm}
-                        className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-ink-soft sm:flex-1"
-                      >
-                        {tPickup("callWaiterCancel")}
-                      </button>
-                    </div>
-                  </form>
-                )
-              ) : null}
+                        : tPickup("callWaiterSubmit")}
+                </button>
+                <button
+                  type="button"
+                  onClick={closeCallForm}
+                  className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-ink-soft sm:flex-1"
+                >
+                  {tPickup("callWaiterCancel")}
+                </button>
+              </div>
+            </form>
+          )
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className={`guest-shell ${menuOpen ? "pb-4" : "pb-0"}`}>
+      {!menuOpen ? (
+        <header className="relative isolate min-h-[calc(100dvh-2.75rem)] animate-rise overflow-hidden">
+          <div className="absolute inset-0">
+            <Image
+              src={heroSrc}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-[center_40%]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
+            {/* Soft fade: photo stays under branding, goes black around the menu button */}
+            <div className="absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-b from-transparent via-black/45 to-black/90" />
+            <div className="absolute inset-x-0 bottom-0 h-[22%] bg-gradient-to-t from-[#0c110f] via-[#0c110f]/85 to-transparent" />
           </div>
 
-          {menuOpen && !comingSoon ? (
-            <input
-              type="search"
-              placeholder={t("search")}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="mt-5 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-ink placeholder:text-ink-soft/50 outline-none focus:border-brass/40"
-            />
-          ) : null}
-        </div>
-      </header>
+          <div className="relative z-10 flex min-h-[calc(100dvh-2.75rem)] flex-col">
+            <div className="flex items-center justify-between gap-3 px-5 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
+              <LanguageSwitcher className="shrink-0 [&_select]:h-8 [&_select]:border-white/20 [&_select]:bg-black/40 [&_select]:py-0 [&_select]:backdrop-blur-sm" />
+              <QikTikLogo className="!h-7 !w-auto !rounded-md !bg-black/30 !p-1 !backdrop-blur-sm" />
+            </div>
+
+            <div className="min-h-[4rem] flex-1" aria-hidden />
+
+            {/* Logo + title + contacts sit on the fading photo */}
+            <div className="relative z-10 flex flex-col items-center px-5 pb-4 text-center">
+              <VenueLogo
+                alt={venueName}
+                width={128}
+                height={128}
+                className="h-[6.5rem] w-[6.5rem] rounded-full object-cover shadow-[0_14px_36px_rgba(0,0,0,0.5)] ring-[3px] ring-brass/85"
+                priority
+              />
+              <h1 className="mt-2.5 font-display text-[1.65rem] font-semibold leading-tight tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.8)]">
+                {venueName}
+              </h1>
+              <p className="mt-0.5 text-[0.8125rem] font-medium text-white/85 drop-shadow-[0_1px_10px_rgba(0,0,0,0.7)]">
+                {t("homeTagline")}
+              </p>
+              <VenueContactIcons className="mt-3.5" />
+            </div>
+
+            <div className="relative z-10 shrink-0 px-5 pb-[max(0.85rem,env(safe-area-inset-bottom))] pt-0.5">
+              {guestActions("stage")}
+            </div>
+          </div>
+        </header>
+      ) : (
+        <header className="relative overflow-hidden border-b border-white/5 px-5 pb-5 pt-6">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#141c18] to-transparent" />
+          <div className="relative animate-rise">
+            <div className="relative flex items-center justify-between gap-3">
+              <LanguageSwitcher className="z-10 shrink-0 [&_select]:h-8 [&_select]:py-0" />
+              <QikTikLogo className="z-10 !h-7 !w-auto !rounded-md !p-0" />
+            </div>
+            <div className="mt-4 flex items-center gap-3">
+              <VenueLogo
+                alt={venueName}
+                width={56}
+                height={56}
+                className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-brass/45"
+                priority
+              />
+              <div className="min-w-0">
+                <h1 className="truncate font-display text-xl font-semibold text-ink">
+                  {venueName}
+                </h1>
+                <VenueContactIcons className="mt-2" />
+              </div>
+            </div>
+            <div className="mt-5">{guestActions("compact")}</div>
+            {!comingSoon ? (
+              <input
+                type="search"
+                placeholder={t("search")}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="mt-5 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-ink placeholder:text-ink-soft/50 outline-none focus:border-brass/40"
+              />
+            ) : null}
+          </div>
+        </header>
+      )}
 
       {!menuOpen ? null : comingSoon ? (
         <section className="flex flex-col items-center px-5 py-16 text-center">

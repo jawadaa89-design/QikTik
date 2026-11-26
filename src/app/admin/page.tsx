@@ -18,6 +18,7 @@ import type { PackageId } from "@/lib/features";
 import { venueStaffPath } from "@/lib/venue-paths";
 import {
   DEFAULT_VENUE_BRAND,
+  DEFAULT_VENUE_HERO,
   type VenueBrand,
 } from "@/lib/venue-brand";
 
@@ -113,6 +114,8 @@ export default function AdminPage() {
   const [brand, setBrand] = useState<VenueBrand>({ ...DEFAULT_VENUE_BRAND });
   const [brandLogoFile, setBrandLogoFile] = useState<File | null>(null);
   const [brandLogoPreview, setBrandLogoPreview] = useState<string | null>(null);
+  const [brandHeroFile, setBrandHeroFile] = useState<File | null>(null);
+  const [brandHeroPreview, setBrandHeroPreview] = useState<string | null>(null);
   const [brandBusy, setBrandBusy] = useState(false);
   const [brandMsg, setBrandMsg] = useState<string | null>(null);
   const [staffPw, setStaffPw] = useState("");
@@ -217,6 +220,8 @@ export default function AdminPage() {
         setBrand(next);
         setBrandLogoPreview(next.logoUrl || null);
         setBrandLogoFile(null);
+        setBrandHeroPreview(next.heroImageUrl || null);
+        setBrandHeroFile(null);
       }
     } catch {
       /* transient */
@@ -243,6 +248,28 @@ export default function AdminPage() {
           setBrand((prev) => ({ ...prev, logoUrl: logoData.logoUrl }));
           setBrandLogoPreview(logoData.logoUrl);
           setBrandLogoFile(null);
+        }
+      }
+
+      if (brandHeroFile) {
+        const form = new FormData();
+        form.set("file", brandHeroFile);
+        const heroRes = await fetch("/api/v1/admin/venue/hero", {
+          method: "POST",
+          body: form,
+        });
+        if (!heroRes.ok) {
+          setBrandMsg(t.brandingHeroUploadError);
+          return;
+        }
+        const heroData = await heroRes.json();
+        if (heroData.heroImageUrl) {
+          setBrand((prev) => ({
+            ...prev,
+            heroImageUrl: heroData.heroImageUrl,
+          }));
+          setBrandHeroPreview(heroData.heroImageUrl);
+          setBrandHeroFile(null);
         }
       }
 
@@ -1980,6 +2007,81 @@ export default function AdminPage() {
                         setBrandLogoFile(file);
                       }}
                     />
+                  </div>
+                </label>
+
+                <label className="block">
+                  <span className="text-xs font-semibold text-ink-soft">
+                    {t.brandingHero}
+                  </span>
+                  <p className="mt-0.5 text-xs text-ink-soft/50">
+                    {t.brandingHeroHint}
+                  </p>
+                  <div className="mt-2 overflow-hidden rounded-xl border border-white/10 bg-black/20">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={
+                        brandHeroFile
+                          ? URL.createObjectURL(brandHeroFile)
+                          : brandHeroPreview ||
+                            brand.heroImageUrl ||
+                            DEFAULT_VENUE_HERO
+                      }
+                      alt=""
+                      className="aspect-[16/9] w-full object-cover"
+                    />
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="text-sm text-ink-soft file:me-3 file:rounded-lg file:border-0 file:bg-brass/20 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brass"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] ?? null;
+                        setBrandHeroFile(file);
+                      }}
+                    />
+                    {(brandHeroPreview ||
+                      brand.heroImageUrl ||
+                      brandHeroFile) && (
+                      <button
+                        type="button"
+                        disabled={brandBusy}
+                        onClick={() => {
+                          void (async () => {
+                            setBrandBusy(true);
+                            setBrandMsg(null);
+                            try {
+                              if (brandHeroFile) {
+                                setBrandHeroFile(null);
+                                setBrandBusy(false);
+                                return;
+                              }
+                              const res = await fetch(
+                                "/api/v1/admin/venue/hero",
+                                { method: "DELETE" }
+                              );
+                              if (!res.ok) {
+                                setBrandMsg(t.brandingHeroUploadError);
+                                return;
+                              }
+                              setBrand((prev) => ({
+                                ...prev,
+                                heroImageUrl: null,
+                              }));
+                              setBrandHeroPreview(null);
+                            } catch {
+                              setBrandMsg(t.brandingHeroUploadError);
+                            } finally {
+                              setBrandBusy(false);
+                            }
+                          })();
+                        }}
+                        className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-ink-soft"
+                      >
+                        {t.brandingHeroClear}
+                      </button>
+                    )}
                   </div>
                 </label>
 

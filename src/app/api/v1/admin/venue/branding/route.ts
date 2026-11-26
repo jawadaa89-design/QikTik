@@ -53,6 +53,18 @@ const brandingSchema = z.object({
     )
     .nullable()
     .optional(),
+  heroImageUrl: z
+    .string()
+    .trim()
+    .refine(
+      (v) =>
+        v.startsWith("/") ||
+        v.startsWith("http://") ||
+        v.startsWith("https://"),
+      "Expected absolute URL or /path"
+    )
+    .nullable()
+    .optional(),
 });
 
 /** GET /api/v1/admin/venue/branding — current venue branding. */
@@ -104,6 +116,7 @@ export async function PATCH(req: NextRequest) {
     facebookUrl?: string | null;
     tiktokUrl?: string | null;
     logoUrl?: string | null;
+    heroImageUrl?: string | null;
   } = {};
 
   if (parsed.data.accentColor != null) {
@@ -140,6 +153,9 @@ export async function PATCH(req: NextRequest) {
   }
   if (parsed.data.logoUrl !== undefined) {
     data.logoUrl = parsed.data.logoUrl;
+  }
+  if (parsed.data.heroImageUrl !== undefined) {
+    data.heroImageUrl = parsed.data.heroImageUrl;
   }
   if (parsed.data.phone !== undefined) {
     data.phone = parsed.data.phone;

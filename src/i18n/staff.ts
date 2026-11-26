@@ -683,6 +683,10 @@ export type AdminMessages = {
   brandingTitle: string;
   brandingHint: string;
   brandingLogo: string;
+  brandingHero: string;
+  brandingHeroHint: string;
+  brandingHeroClear: string;
+  brandingHeroUploadError: string;
   brandingAccent: string;
   brandingBackground: string;
   brandingSurface: string;
@@ -835,6 +839,11 @@ const adminEn: AdminMessages = {
   brandingTitle: "Branding",
   brandingHint: "Logo and colors for the guest and staff experience.",
   brandingLogo: "Logo",
+  brandingHero: "Guest home photo",
+  brandingHeroHint:
+    "Full-bleed cafe / venue photo on the guest main page. Wide landscape works best.",
+  brandingHeroClear: "Remove photo",
+  brandingHeroUploadError: "Could not upload the guest home photo.",
   brandingAccent: "Accent",
   brandingBackground: "Background",
   brandingSurface: "Surface",
@@ -1011,6 +1020,11 @@ const adminAr: AdminMessages = {
   brandingTitle: "الهوية البصرية",
   brandingHint: "الشعار والألوان لواجهة الضيوف والطاقم.",
   brandingLogo: "الشعار",
+  brandingHero: "صورة الصفحة الرئيسية للضيوف",
+  brandingHeroHint:
+    "صورة واسعة للمطعم تظهر أعلى الصفحة الرئيسية للضيوف. يُفضّل منظر أفقي.",
+  brandingHeroClear: "إزالة الصورة",
+  brandingHeroUploadError: "تعذر رفع صورة الصفحة الرئيسية.",
   brandingAccent: "لون التمييز",
   brandingBackground: "الخلفية",
   brandingSurface: "السطح",
@@ -1187,6 +1201,11 @@ const adminHe: AdminMessages = {
   brandingTitle: "מיתוג",
   brandingHint: "לוגו וצבעים לחוויית האורחים והצוות.",
   brandingLogo: "לוגו",
+  brandingHero: "תמונת דף הבית לאורחים",
+  brandingHeroHint:
+    "תמונת אווירה רחבה של המקום בראש דף הבית לאורחים. לרוחב עובד הכי טוב.",
+  brandingHeroClear: "הסרת תמונה",
+  brandingHeroUploadError: "לא ניתן להעלות את תמונת דף הבית.",
   brandingAccent: "הדגשה",
   brandingBackground: "רקע",
   brandingSurface: "משטח",
@@ -1363,6 +1382,11 @@ const adminRu: AdminMessages = {
   brandingTitle: "Брендинг",
   brandingHint: "Логотип и цвета для гостевого и staff-интерфейса.",
   brandingLogo: "Логотип",
+  brandingHero: "Фото главной для гостей",
+  brandingHeroHint:
+    "Широкое атмосферное фото заведения на главной странице гостей. Лучше горизонтальный кадр.",
+  brandingHeroClear: "Удалить фото",
+  brandingHeroUploadError: "Не удалось загрузить фото главной.",
   brandingAccent: "Акцент",
   brandingBackground: "Фон",
   brandingSurface: "Поверхность",

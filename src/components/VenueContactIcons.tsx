@@ -96,109 +96,107 @@ export function VenueContactIcons({ brand: brandProp, className = "" }: Props) {
 
   return (
     <div
-      className={`mt-3 flex flex-wrap items-center justify-center gap-2 ${className}`}
+      className={`inline-flex items-center justify-center rounded-full border border-white/20 bg-black/35 px-1.5 py-1 backdrop-blur-sm ${className}`}
     >
-      {links.map((link) => (
-        <a
-          key={link.key}
-          href={link.href}
-          target={link.key === "phone" ? undefined : "_blank"}
-          rel={link.key === "phone" ? undefined : "noopener noreferrer"}
-          aria-label={link.label}
-          title={link.label}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-brass/35 bg-brass/10 text-brass transition hover:border-brass/60 hover:bg-brass/20"
-        >
-          {link.icon}
-          <span className="sr-only">{link.label}</span>
-        </a>
+      {links.map((link, i) => (
+        <div key={link.key} className="flex items-center">
+          {i > 0 ? (
+            <span
+              aria-hidden
+              className="mx-0.5 h-4 w-px shrink-0 bg-white/30"
+            />
+          ) : null}
+          <a
+            href={link.href}
+            target={link.key === "phone" ? undefined : "_blank"}
+            rel={link.key === "phone" ? undefined : "noopener noreferrer"}
+            aria-label={link.label}
+            title={link.label}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-white/10"
+          >
+            {link.icon}
+            <span className="sr-only">{link.label}</span>
+          </a>
+        </div>
       ))}
     </div>
   );
 }
 
-const iconProps = {
-  width: 20,
-  height: 20,
-  viewBox: "0 0 24 24",
-  fill: "none" as const,
-  "aria-hidden": true as const,
-};
-
 function PhoneIcon() {
   return (
-    <svg {...iconProps}>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M6.6 3.7c.4-.4 1-.5 1.5-.3l2.2 1c.5.2.8.7.8 1.2v2.2c0 .4-.2.8-.6 1-.7.5-1 1.3-.8 2.1.5 2 2.1 3.6 4.1 4.1.8.2 1.6-.1 2.1-.8.2-.4.6-.6 1-.6h2.2c.5 0 1 .3 1.2.8l1 2.2c.2.5.1 1.1-.3 1.5-1.3 1.3-3.2 1.9-5.1 1.5C9.4 18.6 5.4 14.6 4.2 9.3c-.4-1.9.2-3.8 1.5-5.1Z"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinejoin="round"
+        d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.4 21 3 13.6 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.58a1 1 0 0 1-.25 1.02l-2.2 2.19Z"
+        fill="#E4C57A"
       />
     </svg>
   );
 }
 
+/** Official Waze outline mark (Simple Icons) */
 function WazeIcon() {
   return (
-    <svg {...iconProps}>
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
       <path
-        d="M12 3.5c-4.4 0-8 3.1-8 7.2 0 2.6 1.4 4.9 3.6 6.3v2.1c0 .5.5.8 1 .6l2.3-1.1c.4.1.7.1 1.1.1 4.4 0 8-3.1 8-7.2S16.4 3.5 12 3.5Z"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinejoin="round"
-      />
-      <circle cx="9.2" cy="10.2" r="1.1" fill="currentColor" />
-      <circle cx="14.8" cy="10.2" r="1.1" fill="currentColor" />
-      <path
-        d="M9 13.2c.7.7 1.7 1.1 3 1.1s2.3-.4 3-1.1"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
+        fill="#33CCFF"
+        fillRule="evenodd"
+        d="M13.218 0C9.915 0 6.835 1.49 4.723 4.148c-1.515 1.913-2.31 4.272-2.31 6.706v1.739c0 .894-.62 1.738-1.862 1.813-.298.025-.547.224-.547.522-.05.82.82 2.31 2.012 3.502.82.844 1.788 1.515 2.832 2.036a3 3 0 0 0 2.955 3.528 2.966 2.966 0 0 0 2.931-2.385h2.509c.323 1.689 2.086 2.856 3.974 2.21 1.64-.546 2.36-2.409 1.763-3.924a12.84 12.84 0 0 0 1.838-1.465 10.73 10.73 0 0 0 3.18-7.65c0-2.882-1.118-5.589-3.155-7.625A10.899 10.899 0 0 0 13.218 0zm0 1.217c2.558 0 4.967.994 6.78 2.807a9.525 9.525 0 0 1 2.807 6.78A9.526 9.526 0 0 1 20 17.585a9.647 9.647 0 0 1-6.78 2.807h-2.46a3.008 3.008 0 0 0-2.93-2.41 3.03 3.03 0 0 0-2.534 1.367v.024a8.945 8.945 0 0 1-2.41-1.788c-.844-.844-1.316-1.614-1.515-2.11a2.858 2.858 0 0 0 1.441-.846 2.959 2.959 0 0 0 .795-2.036v-1.789c0-2.11.696-4.197 2.012-5.861 1.863-2.385 4.62-3.726 7.6-3.726zm-2.41 5.986a1.192 1.192 0 0 0-1.191 1.192 1.192 1.192 0 0 0 1.192 1.193A1.192 1.192 0 0 0 12 8.395a1.192 1.192 0 0 0-1.192-1.192zm7.204 0a1.192 1.192 0 0 0-1.192 1.192 1.192 1.192 0 0 0 1.192 1.193 1.192 1.192 0 0 0 1.192-1.193 1.192 1.192 0 0 0-1.192-1.192zm-7.377 4.769a.596.596 0 0 0-.546.845 4.813 4.813 0 0 0 4.346 2.757 4.77 4.77 0 0 0 4.347-2.757.596.596 0 0 0-.547-.845h-.025a.561.561 0 0 0-.521.348 3.59 3.59 0 0 1-3.254 2.061 3.591 3.591 0 0 1-3.254-2.061.64.64 0 0 0-.546-.348z"
       />
     </svg>
   );
 }
 
+/** Instagram glyph with brand gradient */
 function InstagramIcon() {
   return (
-    <svg {...iconProps}>
-      <rect
-        x="3.5"
-        y="3.5"
-        width="17"
-        height="17"
-        rx="4.5"
-        stroke="currentColor"
-        strokeWidth="1.75"
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+      <defs>
+        <radialGradient id="qiktik-ig-grad" cx="30%" cy="107%" r="150%">
+          <stop offset="0%" stopColor="#fdf497" />
+          <stop offset="5%" stopColor="#fdf497" />
+          <stop offset="45%" stopColor="#fd5949" />
+          <stop offset="60%" stopColor="#d6249f" />
+          <stop offset="90%" stopColor="#285AEB" />
+        </radialGradient>
+      </defs>
+      <path
+        fill="url(#qiktik-ig-grad)"
+        d="M12 2.16c3.2 0 3.58.01 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-3.26-.15-4.77-1.7-4.92-4.92-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85C2.38 3.92 3.9 2.38 7.15 2.23 8.42 2.17 8.8 2.16 12 2.16Zm0 1.8c-3.15 0-3.52.01-4.76.07-2.25.1-3.4 1.24-3.5 3.5-.06 1.24-.07 1.61-.07 4.76s.01 3.52.07 4.76c.1 2.25 1.25 3.4 3.5 3.5 1.24.06 1.61.07 4.76.07s3.52-.01 4.76-.07c2.25-.1 3.4-1.26 3.5-3.5.06-1.24.07-1.61.07-4.76s-.01-3.52-.07-4.76c-.1-2.25-1.26-3.4-3.5-3.5-1.24-.06-1.61-.07-4.76-.07Zm0 3.06a5.18 5.18 0 1 1 0 10.36 5.18 5.18 0 0 1 0-10.36Zm0 8.55a3.37 3.37 0 1 0 0-6.74 3.37 3.37 0 0 0 0 6.74Zm5.34-9.8a1.21 1.21 0 1 1-2.42 0 1.21 1.21 0 0 1 2.42 0Z"
       />
-      <circle
-        cx="12"
-        cy="12"
-        r="4"
-        stroke="currentColor"
-        strokeWidth="1.75"
-      />
-      <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" />
     </svg>
   );
 }
 
+/** Facebook "f" mark */
 function FacebookIcon() {
   return (
-    <svg {...iconProps}>
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
       <path
-        d="M14.5 8.5H16V5.8c-.3 0-1.5-.2-2.8-.2-2.8 0-4.7 1.7-4.7 4.8V13H6v3h2.5v6.5h3.2V16H14l.5-3h-2.8V10.7c0-.9.2-2.2 2.3-2.2Z"
-        fill="currentColor"
+        fill="#1877F2"
+        d="M24 12.07C24 5.42 18.63 0 12 0S0 5.42 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.79-4.7 4.53-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.89v2.26h3.32l-.53 3.49h-2.79V24C19.62 23.1 24 18.1 24 12.07Z"
       />
     </svg>
   );
 }
 
+/** TikTok note mark */
 function TikTokIcon() {
   return (
-    <svg {...iconProps}>
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
       <path
-        d="M14.2 4v9.1c0 2.2-1.8 4-4 4s-4-1.8-4-4 1.8-4 4-4c.3 0 .6 0 .9.1v2.4a1.7 1.7 0 0 0-.9-.2 1.7 1.7 0 1 0 1.7 1.7V4h2.3Zm2.3 0c.6 1.8 2.1 3.2 4 3.7v2.5c-1.6-.1-3.1-.7-4.3-1.7v4.3c0 3.5-2.8 6.3-6.3 6.3S3.6 16.3 3.6 12.8 6.4 6.5 9.9 6.5c.5 0 1 .1 1.5.2V9c-.4-.2-.9-.3-1.4-.3-2.1 0-3.8 1.7-3.8 3.8s1.7 3.8 3.8 3.8 3.8-1.7 3.8-3.8V4h2.7Z"
-        fill="currentColor"
+        fill="#25F4EE"
+        d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.76 2.89 2.89 0 0 1-2.88-2.88 2.89 2.89 0 0 1 2.88-2.88c.28 0 .56.04.83.12v-3.5A6.32 6.32 0 0 0 9.15 9.2 6.34 6.34 0 0 0 2.8 15.54 6.34 6.34 0 0 0 9.15 21.9a6.34 6.34 0 0 0 6.34-6.36V8.7a8.18 8.18 0 0 0 4.76 1.52V6.8c-.34-.02-.68-.05-1-.11Z"
+        transform="translate(0.6 0.4)"
+      />
+      <path
+        fill="#FE2C55"
+        d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.76 2.89 2.89 0 0 1-2.88-2.88 2.89 2.89 0 0 1 2.88-2.88c.28 0 .56.04.83.12v-3.5A6.32 6.32 0 0 0 9.15 9.2 6.34 6.34 0 0 0 2.8 15.54 6.34 6.34 0 0 0 9.15 21.9a6.34 6.34 0 0 0 6.34-6.36V8.7a8.18 8.18 0 0 0 4.76 1.52V6.8c-.34-.02-.68-.05-1-.11Z"
+        transform="translate(-0.6 -0.4)"
+      />
+      <path
+        fill="#fff"
+        d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.76 2.89 2.89 0 0 1-2.88-2.88 2.89 2.89 0 0 1 2.88-2.88c.28 0 .56.04.83.12v-3.5A6.32 6.32 0 0 0 9.15 9.2 6.34 6.34 0 0 0 2.8 15.54 6.34 6.34 0 0 0 9.15 21.9a6.34 6.34 0 0 0 6.34-6.36V8.7a8.18 8.18 0 0 0 4.76 1.52V6.8c-.34-.02-.68-.05-1-.11Z"
       />
     </svg>
   );
