@@ -1,9 +1,15 @@
 /** Decorative ring/bell for guest “Call a waiter” controls. Hidden from AT — button text is the name. */
-export function CallWaiterBellIcon({ className }: { className?: string }) {
+export function CallWaiterBellIcon({
+  className,
+  size = 18,
+}: {
+  className?: string;
+  size?: number;
+}) {
   return (
     <svg
-      width="18"
-      height="18"
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden

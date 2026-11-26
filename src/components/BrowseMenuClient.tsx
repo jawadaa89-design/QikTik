@@ -212,28 +212,33 @@ export function BrowseMenuClient({
     }
   }
 
-  const outlineBtn =
-    "inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/20 bg-transparent px-4 py-3 text-sm font-semibold text-ink transition hover:bg-white/[0.04] disabled:opacity-55";
-  const stageOutlineBtn = `${outlineBtn} shrink-0`;
+  const stageOutlineBtn =
+    "inline-flex w-full min-h-0 flex-1 items-center justify-center gap-2.5 rounded-2xl border border-white/20 bg-transparent px-4 text-base font-semibold text-ink transition hover:bg-white/[0.04] disabled:opacity-55";
 
   function guestActions(variant: "stage" | "compact") {
     const stage = variant === "stage";
     return (
-      <div className={stage ? "flex w-full flex-col gap-2.5" : "space-y-2.5"}>
+      <div
+        className={
+          stage
+            ? "flex h-full min-h-0 w-full flex-1 flex-col gap-2.5"
+            : "space-y-2.5"
+        }
+      >
         <button
           type="button"
           onClick={toggleMenu}
           aria-expanded={menuOpen}
           className={
             stage
-              ? "inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-brass px-4 py-3 text-sm font-bold text-[#0c100e] shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:brightness-105"
+              ? "inline-flex w-full min-h-0 flex-1 items-center justify-center gap-2.5 rounded-2xl bg-brass px-4 text-base font-bold text-[#0c100e] shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:brightness-105"
               : `guest-panel inline-flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-center transition ${
                   menuOpen ? "border-brass/45 bg-brass/15" : "hover:border-brass/35"
                 }`
           }
         >
           {stage && !menuOpen ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path
                 d="M6 4.5h9.5a2 2 0 0 1 2 2V20l-4.25-2.2L9 20V6.5a2 2 0 0 1 2-2"
                 stroke="currentColor"
@@ -263,7 +268,7 @@ export function BrowseMenuClient({
             }
           >
             {stage ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden className="text-brass">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden className="text-brass">
                 <path
                   d="M7.5 9V7.2A4.5 4.5 0 0 1 12 2.7 4.5 4.5 0 0 1 16.5 7.2V9"
                   stroke="currentColor"
@@ -305,7 +310,7 @@ export function BrowseMenuClient({
           ) : (
             <form
               onSubmit={onOrderAtTable}
-              className="guest-panel w-full space-y-3 rounded-2xl border border-brass/25 p-4"
+              className="guest-panel flex min-h-0 w-full flex-1 flex-col justify-center space-y-3 rounded-2xl border border-brass/25 p-4"
             >
               <p className="text-sm text-ink-soft/75">{tMenu("orderAtTableHint")}</p>
               <label className="block">
@@ -361,7 +366,10 @@ export function BrowseMenuClient({
                 : "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-alert/40 bg-alert/15 px-4 py-3 text-sm font-bold text-alert transition hover:bg-alert/25"
             }
           >
-            <CallWaiterBellIcon className={stage ? "text-brass" : undefined} />
+            <CallWaiterBellIcon
+              size={stage ? 22 : 18}
+              className={stage ? "text-brass" : undefined}
+            />
             {tPickup("callWaiter")}
           </Link>
         ) : null}
@@ -429,10 +437,10 @@ export function BrowseMenuClient({
                 <VenueContactIcons className="mt-2" />
               </div>
 
-              <div className="mx-auto my-3 h-px w-full max-w-[11rem] shrink-0 bg-white/12" />
+              <div className="mx-auto mb-2 mt-2 h-px w-full max-w-[11rem] shrink-0 bg-white/12" />
 
-              {/* Fixed-size CTAs — sit at bottom of sheet, don’t grow when menu opens */}
-              <div className="mt-auto w-full shrink-0 pb-1">
+              {/* CTAs start right under the line and fill the rest of the sheet */}
+              <div className="flex min-h-0 w-full flex-1 flex-col pb-1">
                 {guestActions("stage")}
               </div>
             </div>
