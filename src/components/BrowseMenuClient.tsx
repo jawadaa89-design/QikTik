@@ -1,10 +1,9 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { CallWaiterBellIcon } from "@/components/CallWaiterBellIcon";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
@@ -13,7 +12,11 @@ import { VenueContactIcons } from "@/components/VenueContactIcons";
 import { formatPrice } from "@/lib/utils";
 import { useVenueSlug } from "@/components/VenueProvider";
 import { useVenueHeroSrc } from "@/components/VenueThemeProvider";
-import { venueCallWaiterPath, venuePickupPath } from "@/lib/venue-paths";
+import {
+  venueCallWaiterPath,
+  venueOrderTablePath,
+  venuePickupPath,
+} from "@/lib/venue-paths";
 import type { MenuCategory, MenuItem } from "@/lib/demo-data";
 import type { Locale } from "@/i18n/config";
 
@@ -61,16 +64,11 @@ export function BrowseMenuClient({
   const tMenu = useTranslations("menu");
   const tPickup = useTranslations("pickup");
   const locale = useLocale() as Locale;
-  const router = useRouter();
   const venueSlug = useVenueSlug();
   const heroSrc = useVenueHeroSrc();
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id ?? "");
   const [activeSubId, setActiveSubId] = useState<string | "all">("all");
   const [search, setSearch] = useState("");
-  const [orderFormOpen, setOrderFormOpen] = useState(false);
-  const [tableNumber, setTableNumber] = useState("");
-  const [orderBusy, setOrderBusy] = useState(false);
-  const [orderError, setOrderError] = useState<string | null>(null);
   /** Landing first — menu items expand below Call waiter after guest taps Menu. */
   const [menuOpen, setMenuOpen] = useState(false);
   const menuSectionRef = useRef<HTMLDivElement | null>(null);
@@ -153,63 +151,6 @@ export function BrowseMenuClient({
   function selectCategory(id: string) {
     setActiveCategory(id);
     setActiveSubId("all");
-  }
-
-  function openOrderForm() {
-    setOrderError(null);
-    setOrderFormOpen(true);
-  }
-
-  function closeOrderForm() {
-    setOrderFormOpen(false);
-    setOrderError(null);
-  }
-
-  async function onOrderAtTable(e: FormEvent) {
-    e.preventDefault();
-    if (orderBusy) return;
-
-    const num = Number.parseInt(tableNumber.trim(), 10);
-    if (!Number.isFinite(num) || num < 1) {
-      setOrderError(tMenu("tableNumberRequired"));
-      return;
-    }
-
-    setOrderError(null);
-    setOrderBusy(true);
-    try {
-      const res = await fetch("/api/v1/tables/resolve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tableNumber: num,
-          venueSlug,
-          locale,
-        }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        const code = data?.error?.code;
-        if (code === "TABLE_NOT_FOUND") {
-          setOrderError(tMenu("tableNotFound"));
-        } else if (code === "TABLE_DISABLED") {
-          setOrderError(tMenu("tableDisabled"));
-        } else {
-          setOrderError(data?.error?.message ?? tMenu("orderAtTableError"));
-        }
-        return;
-      }
-      const path = typeof data?.path === "string" ? data.path : null;
-      if (!path) {
-        setOrderError(tMenu("orderAtTableError"));
-        return;
-      }
-      router.push(path);
-    } catch {
-      setOrderError(tMenu("orderAtTableError"));
-    } finally {
-      setOrderBusy(false);
-    }
   }
 
   const stageBtn =
@@ -296,66 +237,16 @@ export function BrowseMenuClient({
         ) : null}
 
         {enableOrderAtTable ? (
-          !orderFormOpen ? (
-            <button
-              type="button"
-              onClick={openOrderForm}
-              className={
-                stage
-                  ? stageOutlineBtn
-                  : "btn-primary inline-flex w-full items-center justify-center px-4 py-3 text-sm font-bold"
-              }
-            >
-              {tMenu("orderAtTable")}
-            </button>
-          ) : (
-            <form
-              onSubmit={onOrderAtTable}
-              className="guest-panel flex min-h-0 w-full flex-1 flex-col justify-center space-y-3 rounded-2xl border border-brass/25 p-4"
-            >
-              <p className="text-sm text-ink-soft/75">{tMenu("orderAtTableHint")}</p>
-              <label className="block">
-                <span className="text-xs font-semibold text-ink-soft">
-                  {tMenu("tableNumberLabel")} <span className="text-alert">*</span>
-                </span>
-                <input
-                  required
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={tableNumber}
-                  onChange={(e) => {
-                    setTableNumber(e.target.value.replace(/[^\d]/g, "").slice(0, 4));
-                    if (orderError) setOrderError(null);
-                  }}
-                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-ink outline-none focus:border-brass/40"
-                  autoComplete="off"
-                  autoFocus
-                  placeholder="7"
-                />
-              </label>
-              {orderError && (
-                <p className="rounded-xl border border-alert/30 bg-alert/10 px-3 py-2 text-sm text-alert">
-                  {orderError}
-                </p>
-              )}
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <button
-                  type="submit"
-                  disabled={orderBusy}
-                  className="btn-primary w-full px-4 py-3 text-sm font-bold disabled:opacity-55 sm:flex-1"
-                >
-                  {orderBusy ? tPickup("loading") : tMenu("continueToOrder")}
-                </button>
-                <button
-                  type="button"
-                  onClick={closeOrderForm}
-                  className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-ink-soft sm:flex-1"
-                >
-                  {t("close")}
-                </button>
-              </div>
-            </form>
-          )
+          <Link
+            href={venueOrderTablePath(venueSlug, locale)}
+            className={
+              stage
+                ? stageOutlineBtn
+                : "btn-primary inline-flex w-full items-center justify-center px-4 py-3 text-sm font-bold"
+            }
+          >
+            {tMenu("orderAtTable")}
+          </Link>
         ) : null}
 
         {enableCallWaiter ? (

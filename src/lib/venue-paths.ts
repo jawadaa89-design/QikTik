@@ -34,6 +34,11 @@ export function venueCallWaiterPath(venueSlug: string, locale: string): string {
   return `${venueGuestBase(venueSlug, locale)}/call-waiter`;
 }
 
+/** Guest order-at-table: enter table number → register & order. */
+export function venueOrderTablePath(venueSlug: string, locale: string): string {
+  return `${venueGuestBase(venueSlug, locale)}/order-table`;
+}
+
 export function venueTablePath(
   venueSlug: string,
   locale: string,

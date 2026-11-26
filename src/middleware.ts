@@ -23,7 +23,6 @@ const STAFF_ROOTS = new Set([
   "alerts",
   "kitchen",
   "waiter",
-  "platform",
 ]);
 
 function isLocale(seg: string | undefined): boolean {
@@ -54,6 +53,11 @@ export default function middleware(request: NextRequest) {
 
   const parts = pathOnly.split("/").filter(Boolean);
 
+  // Platform is global (all venues) — never nest under /r/{slug}/…
+  if (parts[0] === "platform") {
+    return NextResponse.next();
+  }
+
   // Canonical multi-venue: /r/{slug}/… → rewrite to internal app paths
   if (parts[0] === "r") {
     const slug = parts[1]?.trim().toLowerCase();
@@ -64,6 +68,12 @@ export default function middleware(request: NextRequest) {
     }
 
     const restParts = parts.slice(2);
+
+    // Old links like /r/coffee-up/platform → /platform
+    if (restParts[0] === "platform") {
+      const dest = `/${restParts.join("/")}${request.nextUrl.search}`;
+      return NextResponse.redirect(new URL(dest, request.url));
+    }
 
     // Staff board roots: keep /r/{slug}/pickup in the address bar (no bounce to /pickup/live)
     let restPath = `/${restParts.join("/")}`;
