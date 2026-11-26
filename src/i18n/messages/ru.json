@@ -35,6 +35,7 @@
     "extrasAvailable": "Доступно добавок: {count}",
     "takeaway": "С собой",
     "orderAtTable": "Заказать со своего стола",
+    "orderShort": "Заказ",
     "orderAtTableHint": "Введите номер стола, чтобы зарегистрироваться и сделать заказ.",
     "tableNumberLabel": "Номер стола",
     "tableNumberRequired": "Введите номер стола",

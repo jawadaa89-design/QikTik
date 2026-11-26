@@ -200,7 +200,76 @@ export function BrowseMenuClient({
           </span>
         </button>
 
-        {enablePickup ? (
+        {enableOrderAtTable && enablePickup ? (
+          <div
+            className={
+              stage
+                ? "flex min-h-0 w-full flex-1 gap-2.5"
+                : "flex w-full gap-2.5"
+            }
+          >
+            <Link
+              href={venueOrderTablePath(venueSlug, locale)}
+              className={
+                stage
+                  ? `${stageOutlineBtn} flex-col gap-1 px-2 text-center`
+                  : "btn-primary inline-flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-3 py-3 text-center text-sm font-bold"
+              }
+            >
+              {stage ? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden className="text-brass">
+                  <path
+                    d="M4.5 7.5h15"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M6 7.5V18a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 18 18V7.5"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M9 7.5V6a3 3 0 0 1 6 0v1.5"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              ) : null}
+              <span className="leading-tight">
+                {stage ? tMenu("orderShort") : tMenu("orderAtTable")}
+              </span>
+            </Link>
+            <Link
+              href={`${venuePickupPath(venueSlug, locale)}/register`}
+              className={
+                stage
+                  ? `${stageOutlineBtn} flex-col gap-1 px-2 text-center`
+                  : "btn-primary inline-flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-3 py-3 text-center text-sm font-bold"
+              }
+            >
+              {stage ? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden className="text-brass">
+                  <path
+                    d="M7.5 9V7.2A4.5 4.5 0 0 1 12 2.7 4.5 4.5 0 0 1 16.5 7.2V9"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M5.5 9h13l-.7 10.2a2 2 0 0 1-2 1.9H8.2a2 2 0 0 1-2-1.9L5.5 9Z"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              ) : null}
+              <span className="leading-tight">{tPickup("pickupShort")}</span>
+            </Link>
+          </div>
+        ) : enablePickup ? (
           <Link
             href={`${venuePickupPath(venueSlug, locale)}/register`}
             className={
@@ -234,9 +303,7 @@ export function BrowseMenuClient({
               </span>
             ) : null}
           </Link>
-        ) : null}
-
-        {enableOrderAtTable ? (
+        ) : enableOrderAtTable ? (
           <Link
             href={venueOrderTablePath(venueSlug, locale)}
             className={

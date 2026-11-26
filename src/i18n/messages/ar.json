@@ -35,6 +35,7 @@
     "extrasAvailable": "{count} إضافات متاحة",
     "takeaway": "سفري",
     "orderAtTable": "اطلب من طاولتك",
+    "orderShort": "طلب",
     "orderAtTableHint": "أدخل رقم طاولتك للتسجيل وتقديم الطلبات.",
     "tableNumberLabel": "رقم الطاولة",
     "tableNumberRequired": "أدخل رقم الطاولة",

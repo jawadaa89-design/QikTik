@@ -35,6 +35,7 @@
     "extrasAvailable": "{count} add-ons available",
     "takeaway": "Takeaway",
     "orderAtTable": "Order at your table",
+    "orderShort": "Order",
     "orderAtTableHint": "Enter your table number to register and place orders.",
     "tableNumberLabel": "Table number",
     "tableNumberRequired": "Enter your table number",

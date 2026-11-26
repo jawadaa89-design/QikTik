@@ -35,6 +35,7 @@
     "extrasAvailable": "{count} תוספות זמינות",
     "takeaway": "לקחת",
     "orderAtTable": "הזמנה מהשולחן",
+    "orderShort": "הזמנה",
     "orderAtTableHint": "הזינו את מספר השולחן כדי להירשם ולבצע הזמנות.",
     "tableNumberLabel": "מספר שולחן",
     "tableNumberRequired": "הזינו את מספר השולחן",
