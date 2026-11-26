@@ -286,6 +286,7 @@ export default function AdminPage() {
           instagramUrl: brand.instagramUrl?.trim() || null,
           facebookUrl: brand.facebookUrl?.trim() || null,
           tiktokUrl: brand.tiktokUrl?.trim() || null,
+          googleUrl: brand.googleUrl?.trim() || null,
         }),
       });
       if (!res.ok) {
@@ -2177,6 +2178,11 @@ export default function AdminPage() {
                         "tiktokUrl",
                         t.brandingTiktok,
                         t.brandingTiktokPlaceholder,
+                      ],
+                      [
+                        "googleUrl",
+                        t.brandingGoogle,
+                        t.brandingGooglePlaceholder,
                       ],
                     ] as const
                   ).map(([key, label, placeholder]) => (

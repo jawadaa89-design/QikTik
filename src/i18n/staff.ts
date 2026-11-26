@@ -703,6 +703,8 @@ export type AdminMessages = {
   brandingFacebookPlaceholder: string;
   brandingTiktok: string;
   brandingTiktokPlaceholder: string;
+  brandingGoogle: string;
+  brandingGooglePlaceholder: string;
   brandingSave: string;
   brandingSaved: string;
   brandingSaveError: string;
@@ -861,6 +863,8 @@ const adminEn: AdminMessages = {
   brandingFacebookPlaceholder: "https://facebook.com/…",
   brandingTiktok: "TikTok page",
   brandingTiktokPlaceholder: "https://tiktok.com/@… or @handle",
+  brandingGoogle: "Google Maps / Business",
+  brandingGooglePlaceholder: "https://maps.google.com/… or https://g.page/…",
   brandingSave: "Save branding",
   brandingSaved: "Branding saved",
   brandingSaveError: "Could not save branding",
@@ -1042,6 +1046,8 @@ const adminAr: AdminMessages = {
   brandingFacebookPlaceholder: "https://facebook.com/…",
   brandingTiktok: "صفحة تيك توك",
   brandingTiktokPlaceholder: "https://tiktok.com/@… أو @handle",
+  brandingGoogle: "خرائط Google / نشاط تجاري",
+  brandingGooglePlaceholder: "https://maps.google.com/… أو https://g.page/…",
   brandingSave: "حفظ الهوية",
   brandingSaved: "تم حفظ الهوية",
   brandingSaveError: "تعذر حفظ الهوية",
@@ -1223,6 +1229,8 @@ const adminHe: AdminMessages = {
   brandingFacebookPlaceholder: "https://facebook.com/…",
   brandingTiktok: "עמוד טיקטוק",
   brandingTiktokPlaceholder: "https://tiktok.com/@… או @handle",
+  brandingGoogle: "Google Maps / עסק",
+  brandingGooglePlaceholder: "https://maps.google.com/… או https://g.page/…",
   brandingSave: "שמירת מיתוג",
   brandingSaved: "המיתוג נשמר",
   brandingSaveError: "לא ניתן לשמור מיתוג",
@@ -1404,6 +1412,8 @@ const adminRu: AdminMessages = {
   brandingFacebookPlaceholder: "https://facebook.com/…",
   brandingTiktok: "Страница TikTok",
   brandingTiktokPlaceholder: "https://tiktok.com/@… или @handle",
+  brandingGoogle: "Google Maps / бизнес",
+  brandingGooglePlaceholder: "https://maps.google.com/… или https://g.page/…",
   brandingSave: "Сохранить брендинг",
   brandingSaved: "Брендинг сохранён",
   brandingSaveError: "Не удалось сохранить брендинг",

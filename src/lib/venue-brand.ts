@@ -14,6 +14,7 @@ export type VenueBrand = {
   instagramUrl: string | null;
   facebookUrl: string | null;
   tiktokUrl: string | null;
+  googleUrl: string | null;
 };
 
 export const DEFAULT_VENUE_BRAND: VenueBrand = {
@@ -28,6 +29,7 @@ export const DEFAULT_VENUE_BRAND: VenueBrand = {
   instagramUrl: null,
   facebookUrl: null,
   tiktokUrl: null,
+  googleUrl: null,
 };
 
 /** tel: href from a display phone string */
@@ -105,6 +107,7 @@ export function brandFromVenue(
     | "instagramUrl"
     | "facebookUrl"
     | "tiktokUrl"
+    | "googleUrl"
   > | null
     | undefined
 ): VenueBrand {
@@ -130,6 +133,7 @@ export function brandFromVenue(
     instagramUrl: trimOrNull(venue.instagramUrl),
     facebookUrl: trimOrNull(venue.facebookUrl),
     tiktokUrl: trimOrNull(venue.tiktokUrl),
+    googleUrl: trimOrNull(venue.googleUrl),
   };
 }
 

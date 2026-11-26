@@ -41,6 +41,7 @@ const brandingSchema = z.object({
   instagramUrl: optionalContact,
   facebookUrl: optionalContact,
   tiktokUrl: optionalContact,
+  googleUrl: optionalContact,
   logoUrl: z
     .string()
     .trim()
@@ -115,6 +116,7 @@ export async function PATCH(req: NextRequest) {
     instagramUrl?: string | null;
     facebookUrl?: string | null;
     tiktokUrl?: string | null;
+    googleUrl?: string | null;
     logoUrl?: string | null;
     heroImageUrl?: string | null;
   } = {};
@@ -171,6 +173,9 @@ export async function PATCH(req: NextRequest) {
   }
   if (parsed.data.tiktokUrl !== undefined) {
     data.tiktokUrl = parsed.data.tiktokUrl;
+  }
+  if (parsed.data.googleUrl !== undefined) {
+    data.googleUrl = parsed.data.googleUrl;
   }
 
   const updated = await prisma.venue.update({

@@ -151,6 +151,8 @@ model Venue {
   facebookUrl       String?  @map("facebook_url")
   /** TikTok profile URL — guest menu icon when set */
   tiktokUrl         String?  @map("tiktok_url")
+  /** Google Maps / Business profile URL — guest menu icon when set */
+  googleUrl         String?  @map("google_url")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
