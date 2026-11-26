@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
@@ -78,8 +78,30 @@ export function BrowseMenuClient({
     "idle"
   );
   const [callError, setCallError] = useState<string | null>(null);
-  /** Landing first — menu items only after guest taps the Menu box. */
+  /** Landing first — menu items expand below Call waiter after guest taps Menu. */
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuSectionRef = useRef<HTMLDivElement | null>(null);
+
+  function toggleMenu() {
+    setMenuOpen((open) => {
+      const next = !open;
+      if (next) {
+        // Wait for menu DOM, then scroll it into view under the buttons
+        window.setTimeout(() => {
+          menuSectionRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }, 80);
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        document
+          .querySelector(".venue-theme")
+          ?.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      return next;
+    });
+  }
 
   // Count unique guest visits to the restaurant home / digital menu (once per browser per day).
   useEffect(() => {
@@ -266,18 +288,25 @@ export function BrowseMenuClient({
 
   const outlineBtn =
     "inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/20 bg-transparent px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-white/[0.04] disabled:opacity-55";
+  const stageOutlineBtn = `${outlineBtn} flex-1`;
 
   function guestActions(variant: "stage" | "compact") {
     const stage = variant === "stage";
     return (
-      <div className={stage ? "space-y-2" : "space-y-2.5"}>
+      <div
+        className={
+          stage
+            ? "flex h-full min-h-0 flex-1 flex-col gap-2.5"
+            : "space-y-2.5"
+        }
+      >
         <button
           type="button"
-          onClick={() => setMenuOpen((open) => !open)}
+          onClick={toggleMenu}
           aria-expanded={menuOpen}
           className={
             stage
-              ? "inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brass px-4 py-2.5 text-sm font-bold text-[#0c100e] shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:brightness-105"
+              ? "inline-flex w-full flex-1 items-center justify-center gap-2 rounded-2xl bg-brass px-4 py-2.5 text-sm font-bold text-[#0c100e] shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:brightness-105"
               : `guest-panel inline-flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-center transition ${
                   menuOpen ? "border-brass/45 bg-brass/15" : "hover:border-brass/35"
                 }`
@@ -309,7 +338,7 @@ export function BrowseMenuClient({
             href={`${venuePickupPath(venueSlug, locale)}/register`}
             className={
               stage
-                ? outlineBtn
+                ? stageOutlineBtn
                 : "btn-primary inline-flex w-full flex-col items-center justify-center gap-0.5 px-4 py-3.5 text-center"
             }
           >
@@ -347,7 +376,7 @@ export function BrowseMenuClient({
               onClick={openOrderForm}
               className={
                 stage
-                  ? outlineBtn
+                  ? stageOutlineBtn
                   : "btn-primary inline-flex w-full items-center justify-center px-4 py-3 text-sm font-bold"
               }
             >
@@ -411,7 +440,7 @@ export function BrowseMenuClient({
               onClick={openCallForm}
               className={
                 stage
-                  ? outlineBtn
+                  ? stageOutlineBtn
                   : "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-alert/40 bg-alert/15 px-4 py-3 text-sm font-bold text-alert transition hover:bg-alert/25 disabled:opacity-55"
               }
             >
@@ -497,227 +526,224 @@ export function BrowseMenuClient({
   return (
     <div
       className={`guest-shell ${
-        menuOpen ? "pb-4" : "flex min-h-0 flex-1 flex-col pb-0"
+        menuOpen
+          ? "pb-4"
+          : "flex min-h-0 flex-1 flex-col overflow-hidden pb-0"
       }`}
     >
-      {!menuOpen ? (
-        <header className="relative isolate flex min-h-0 flex-1 animate-rise flex-col overflow-hidden">
-          <div className="absolute inset-0">
+      {/* Stage landing always stays; menu opens below Call waiter */}
+      <header
+        className={`relative isolate animate-rise overflow-hidden bg-[#141414] ${
+          menuOpen
+            ? "min-h-[var(--app-height,100svh)]"
+            : "flex h-full min-h-0 flex-1 flex-col"
+        }`}
+      >
+        <div
+          className={`relative z-10 flex flex-col ${
+            menuOpen ? "min-h-[var(--app-height,100svh)]" : "min-h-0 flex-1"
+          }`}
+        >
+          {/* Top ~40% — cafe photo fitted to this band only */}
+          <div className="relative flex min-h-0 basis-0 flex-[2] flex-col overflow-hidden">
             <Image
               src={heroSrc}
               alt=""
               fill
               priority
               sizes="100vw"
-              className="object-cover object-[center_40%]"
+              className="object-cover object-center"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
-            {/* Soft fade: photo stays under branding, goes black around the menu button */}
-            <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-b from-transparent via-black/40 to-black/92" />
-            <div className="absolute inset-x-0 bottom-0 h-[24%] bg-gradient-to-t from-[#0c110f] via-[#0c110f]/80 to-transparent" />
-          </div>
-
-          <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-            {/* venue-theme already applies safe-area — keep this light */}
-            <div className="flex shrink-0 items-center justify-between gap-3 px-4 pb-1.5 pt-2">
+            <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-black/40" />
+            <div className="relative z-10 flex shrink-0 items-center justify-between gap-3 px-4 pt-2">
               <LanguageSwitcher className="shrink-0 [&_select]:h-8 [&_select]:border-white/20 [&_select]:bg-black/40 [&_select]:py-0 [&_select]:backdrop-blur-sm" />
               <QikTikLogo className="!h-6 !w-auto !rounded-md !bg-black/30 !p-1 !backdrop-blur-sm" />
             </div>
-
-            <div className="min-h-[2.5rem] flex-1" aria-hidden />
-
-            {/* Logo + title + contacts sit on the fading photo */}
-            <div className="relative z-10 flex shrink-0 flex-col items-center px-4 pb-2.5 text-center">
-              <VenueLogo
-                alt={venueName}
-                width={112}
-                height={112}
-                className="h-[5.5rem] w-[5.5rem] rounded-full object-cover shadow-[0_14px_36px_rgba(0,0,0,0.5)] ring-[3px] ring-brass/85 sm:h-[6.25rem] sm:w-[6.25rem]"
-                priority
-              />
-              <h1 className="mt-2 font-display text-[1.45rem] font-semibold leading-tight tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.8)] sm:text-[1.65rem]">
-                {venueName}
-              </h1>
-              <p className="mt-0.5 text-xs font-medium text-white/85 drop-shadow-[0_1px_10px_rgba(0,0,0,0.7)] sm:text-[0.8125rem]">
-                {t("homeTagline")}
-              </p>
-              <VenueContactIcons className="mt-2.5" />
-            </div>
-
-            <div className="relative z-10 shrink-0 px-4 pb-2 pt-0.5">
-              {guestActions("stage")}
-            </div>
           </div>
-        </header>
-      ) : (
-        <header className="relative overflow-hidden border-b border-white/5 px-5 pb-5 pt-6">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#141c18] to-transparent" />
-          <div className="relative animate-rise">
-            <div className="relative flex items-center justify-between gap-3">
-              <LanguageSwitcher className="z-10 shrink-0 [&_select]:h-8 [&_select]:py-0" />
-              <QikTikLogo className="z-10 !h-7 !w-auto !rounded-md !p-0" />
-            </div>
-            <div className="mt-4 flex items-center gap-3">
-              <VenueLogo
-                alt={venueName}
-                width={56}
-                height={56}
-                className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-brass/45"
-                priority
-              />
-              <div className="min-w-0">
-                <h1 className="truncate font-display text-xl font-semibold text-ink">
+
+          {/* Bottom ~60% — dark sheet; logo half overlaps the photo */}
+          <div className="relative z-10 -mt-4 flex min-h-0 basis-0 flex-[3] flex-col rounded-t-[1.75rem] bg-[#141414] px-5 pb-2 pt-0 shadow-[0_-20px_40px_rgba(0,0,0,0.45)]">
+            <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-white/25" />
+
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="-mt-[4.75rem] flex shrink-0 flex-col items-center text-center">
+                <VenueLogo
+                  alt={venueName}
+                  width={176}
+                  height={176}
+                  className="relative z-20 h-[9.5rem] w-[9.5rem] rounded-full object-cover shadow-[0_16px_40px_rgba(0,0,0,0.55)] ring-[3px] ring-brass/85 ring-offset-2 ring-offset-[#141414]"
+                  priority
+                />
+                <h1 className="mt-2 font-display text-[1.6rem] font-semibold leading-tight tracking-tight text-ink">
                   {venueName}
                 </h1>
+                <p className="mt-0.5 text-sm font-medium text-ink-soft/70">
+                  {t("homeTagline")}
+                </p>
                 <VenueContactIcons className="mt-2" />
               </div>
-            </div>
-            <div className="mt-5">{guestActions("compact")}</div>
-            {!comingSoon ? (
-              <input
-                type="search"
-                placeholder={t("search")}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="mt-5 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-ink placeholder:text-ink-soft/50 outline-none focus:border-brass/40"
-              />
-            ) : null}
-          </div>
-        </header>
-      )}
 
-      {!menuOpen ? null : comingSoon ? (
-        <section className="flex flex-col items-center px-5 py-16 text-center">
-          <p className="font-display text-2xl font-semibold text-ink animate-rise">
-            {tMenu("comingSoon")}
-          </p>
-          <p className="mt-3 max-w-sm text-sm text-ink-soft/65 animate-rise">
-            {tMenu("comingSoonBody")}
-          </p>
-        </section>
-      ) : (
-        <>
-          {categories.length > 0 ? (
-            <div className="sticky top-0 z-30 border-b border-white/5 bg-[#0c110f]/90 px-4 py-3 backdrop-blur-md">
-              <div className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {categories.map((cat) => {
-                  const on = activeCategory === cat.id;
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => selectCategory(cat.id)}
-                      className={`shrink-0 rounded-xl px-3.5 py-2 text-sm font-semibold transition ${
-                        on
-                          ? "bg-brass text-[#0c100e]"
-                          : "bg-white/[0.05] text-ink-soft hover:bg-white/[0.08]"
-                      }`}
-                    >
-                      {cat.name}
-                    </button>
-                  );
-                })}
+              <div className="mx-auto my-3 h-px w-full max-w-[11rem] shrink-0 bg-white/12" />
+
+              <div className="flex min-h-0 w-full flex-1 flex-col pb-1">
+                {guestActions("stage")}
               </div>
-              {children.length > 0 && (
-                <div className="mt-2 flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  <button
-                    type="button"
-                    onClick={() => setActiveSubId("all")}
-                    className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                      activeSubId === "all"
-                        ? "bg-white/15 text-ink"
-                        : "text-ink-soft/70 hover:text-ink"
-                    }`}
-                  >
-                    {t("all")}
-                  </button>
-                  {current && current.items.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setActiveSubId(current.id)}
-                      className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                        activeSubId === current.id
-                          ? "bg-white/15 text-ink"
-                          : "text-ink-soft/70 hover:text-ink"
-                      }`}
-                    >
-                      {current.name}
-                    </button>
-                  )}
-                  {children.map((sub) => (
-                    <button
-                      key={sub.id}
-                      type="button"
-                      onClick={() => setActiveSubId(sub.id)}
-                      className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                        activeSubId === sub.id
-                          ? "bg-white/15 text-ink"
-                          : "text-ink-soft/70 hover:text-ink"
-                      }`}
-                    >
-                      {sub.name}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
-          ) : null}
+          </div>
+        </div>
+      </header>
 
-          <section className="flex flex-col gap-2.5 px-4 py-5">
-            {sections.map((section) => (
-              <div key={section.id} className="space-y-2.5">
-                <h2 className="pt-1 font-display text-xl font-semibold text-ink animate-rise">
-                  {section.name}
-                </h2>
-                {section.items.map((item) => (
-                  <article
-                    key={item.id}
-                    className="guest-panel flex gap-3 rounded-2xl p-3"
-                  >
-                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-white/5">
-                      {item.imageUrl ? (
-                        <Image
-                          src={item.imageUrl}
-                          alt=""
-                          fill
-                          sizes="80px"
-                          className="object-cover"
-                        />
-                      ) : null}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-ink">{item.name}</h3>
-                      {item.description ? (
-                        <p className="mt-0.5 line-clamp-2 text-xs text-ink-soft/65">
-                          {item.description}
-                        </p>
-                      ) : null}
-                      <div className="mt-2 flex items-center justify-between gap-2">
-                        <span
-                          className={`font-display text-lg font-semibold ${
-                            item.available ? "text-brass" : "text-ink-soft/40"
+      {menuOpen ? (
+        <div
+          ref={menuSectionRef}
+          className="border-t border-white/10 bg-[#0c110f]"
+        >
+          {comingSoon ? (
+            <section className="flex flex-col items-center px-5 py-16 text-center">
+              <p className="font-display text-2xl font-semibold text-ink animate-rise">
+                {tMenu("comingSoon")}
+              </p>
+              <p className="mt-3 max-w-sm text-sm text-ink-soft/65 animate-rise">
+                {tMenu("comingSoonBody")}
+              </p>
+            </section>
+          ) : (
+            <>
+              <div className="px-4 pt-4">
+                <input
+                  type="search"
+                  placeholder={t("search")}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-ink placeholder:text-ink-soft/50 outline-none focus:border-brass/40"
+                />
+              </div>
+
+              {categories.length > 0 ? (
+                <div className="sticky top-0 z-30 border-b border-white/5 bg-[#0c110f]/95 px-4 py-3 backdrop-blur-md">
+                  <div className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {categories.map((cat) => {
+                      const on = activeCategory === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => selectCategory(cat.id)}
+                          className={`shrink-0 rounded-xl px-3.5 py-2 text-sm font-semibold transition ${
+                            on
+                              ? "bg-brass text-[#0c100e]"
+                              : "bg-white/[0.05] text-ink-soft hover:bg-white/[0.08]"
                           }`}
                         >
-                          {formatPrice(item.price)}
-                        </span>
-                        {!item.available ? (
-                          <span className="rounded-lg border border-alert/25 bg-alert/10 px-2.5 py-1.5 text-[11px] font-semibold text-alert">
-                            {tMenu("soldOut")}
-                          </span>
-                        ) : null}
-                      </div>
+                          {cat.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {children.length > 0 && (
+                    <div className="mt-2 flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <button
+                        type="button"
+                        onClick={() => setActiveSubId("all")}
+                        className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                          activeSubId === "all"
+                            ? "bg-white/15 text-ink"
+                            : "text-ink-soft/70 hover:text-ink"
+                        }`}
+                      >
+                        {t("all")}
+                      </button>
+                      {current && current.items.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveSubId(current.id)}
+                          className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                            activeSubId === current.id
+                              ? "bg-white/15 text-ink"
+                              : "text-ink-soft/70 hover:text-ink"
+                          }`}
+                        >
+                          {current.name}
+                        </button>
+                      )}
+                      {children.map((sub) => (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => setActiveSubId(sub.id)}
+                          className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                            activeSubId === sub.id
+                              ? "bg-white/15 text-ink"
+                              : "text-ink-soft/70 hover:text-ink"
+                          }`}
+                        >
+                          {sub.name}
+                        </button>
+                      ))}
                     </div>
-                  </article>
+                  )}
+                </div>
+              ) : null}
+
+              <section className="flex flex-col gap-2.5 px-4 py-5">
+                {sections.map((section) => (
+                  <div key={section.id} className="space-y-2.5">
+                    <h2 className="pt-1 font-display text-xl font-semibold text-ink animate-rise">
+                      {section.name}
+                    </h2>
+                    {section.items.map((item) => (
+                      <article
+                        key={item.id}
+                        className="guest-panel flex gap-3 rounded-2xl p-3"
+                      >
+                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-white/5">
+                          {item.imageUrl ? (
+                            <Image
+                              src={item.imageUrl}
+                              alt=""
+                              fill
+                              sizes="80px"
+                              className="object-cover"
+                            />
+                          ) : null}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-ink">{item.name}</h3>
+                          {item.description ? (
+                            <p className="mt-0.5 line-clamp-2 text-xs text-ink-soft/65">
+                              {item.description}
+                            </p>
+                          ) : null}
+                          <div className="mt-2 flex items-center justify-between gap-2">
+                            <span
+                              className={`font-display text-lg font-semibold ${
+                                item.available
+                                  ? "text-brass"
+                                  : "text-ink-soft/40"
+                              }`}
+                            >
+                              {formatPrice(item.price)}
+                            </span>
+                            {!item.available ? (
+                              <span className="rounded-lg border border-alert/25 bg-alert/10 px-2.5 py-1.5 text-[11px] font-semibold text-alert">
+                                {tMenu("soldOut")}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
                 ))}
-              </div>
-            ))}
-            {(categories.length === 0 ||
-              sections.every((s) => s.items.length === 0)) && (
-              <p className="py-10 text-center text-sm text-ink-soft/50">—</p>
-            )}
-          </section>
-        </>
-      )}
+                {(categories.length === 0 ||
+                  sections.every((s) => s.items.length === 0)) && (
+                  <p className="py-10 text-center text-sm text-ink-soft/50">—</p>
+                )}
+              </section>
+            </>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

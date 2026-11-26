@@ -26,7 +26,7 @@ type VenueThemeContextValue = {
 const VenueThemeContext = createContext<VenueThemeContextValue>({
   brand: DEFAULT_VENUE_BRAND,
   logoSrc: "/logo.png",
-  heroSrc: "/venue-hero-default.jpg?v=c3",
+  heroSrc: "/venue-hero-default.jpg?v=c4",
 });
 
 export function VenueThemeProvider({
@@ -57,11 +57,41 @@ export function VenueThemeProvider({
     };
   }, [brand]);
 
+  // Lock to the *visible* phone viewport so the guest home fits before any tap
+  // (iOS/Android chrome can leave 100dvh wrong until interaction).
+  useEffect(() => {
+    const root = document.documentElement;
+    const sync = () => {
+      const h =
+        window.visualViewport?.height ??
+        window.innerHeight ??
+        root.clientHeight;
+      if (h > 0) root.style.setProperty("--app-height", `${Math.round(h)}px`);
+    };
+    sync();
+    window.addEventListener("resize", sync);
+    window.visualViewport?.addEventListener("resize", sync);
+    window.visualViewport?.addEventListener("scroll", sync);
+    window.addEventListener("orientationchange", sync);
+    // One more pass after paint / browser UI settle
+    const t1 = window.setTimeout(sync, 50);
+    const t2 = window.setTimeout(sync, 300);
+    return () => {
+      window.removeEventListener("resize", sync);
+      window.visualViewport?.removeEventListener("resize", sync);
+      window.visualViewport?.removeEventListener("scroll", sync);
+      window.removeEventListener("orientationchange", sync);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      root.style.removeProperty("--app-height");
+    };
+  }, []);
+
   const style = brandCssVars(brand) as CSSProperties;
 
   return (
     <VenueThemeContext.Provider value={value}>
-      <div className="venue-theme flex min-h-dvh flex-col" style={style}>
+      <div className="venue-theme flex flex-col" style={style}>
         {children}
       </div>
     </VenueThemeContext.Provider>

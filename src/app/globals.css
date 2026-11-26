@@ -29,15 +29,23 @@
 .venue-theme {
   color: var(--brand-text, #f2efe8);
   background-color: var(--brand-bg, #0c110f);
+  /* Prefer live visual viewport; fall back to small viewport (chrome visible) */
+  height: var(--app-height, 100svh);
+  min-height: var(--app-height, 100svh);
+  max-height: var(--app-height, 100svh);
   /* Home Screen / PWA: clear status bar (clock, battery) under translucent chrome */
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 html {
   -webkit-tap-highlight-color: transparent;
   color-scheme: dark;
+  height: 100%;
 }
 
 body {
@@ -51,8 +59,9 @@ body {
     radial-gradient(720px 480px at 96% 8%, color-mix(in oklab, #2a2c32 48%, transparent), transparent 52%),
     radial-gradient(640px 420px at 50% 110%, color-mix(in oklab, #1c1e24 40%, transparent), transparent 58%),
     linear-gradient(180deg, #0e0e10 0%, #0a0a0c 48%, #060607 100%);
-  background-attachment: fixed;
-  min-height: 100dvh;
+  /* fixed backgrounds break mobile viewport height until first touch on some WebKits */
+  background-attachment: scroll;
+  min-height: var(--app-height, 100svh);
 }
 
 body::before {

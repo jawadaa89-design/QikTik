@@ -138,7 +138,7 @@ export function venueLogoSrc(brand: VenueBrand | null | undefined): string {
 }
 
 /** Default Photo Stage atmosphere when a venue has not uploaded its own cafe photo. */
-export const DEFAULT_VENUE_HERO = "/venue-hero-default.jpg?v=c3";
+export const DEFAULT_VENUE_HERO = "/venue-hero-default.jpg?v=c4";
 
 /** Guest home hero photo — venue upload, else shared Photo Stage default. */
 export function venueHeroSrc(brand: VenueBrand | null | undefined): string {
