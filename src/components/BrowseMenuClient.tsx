@@ -212,8 +212,8 @@ export function BrowseMenuClient({
               href={venueOrderTablePath(venueSlug, locale)}
               className={
                 stage
-                  ? `${stageOutlineBtn} flex-col gap-1 px-2 text-center`
-                  : "btn-primary inline-flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-3 py-3 text-center text-sm font-bold"
+                  ? `${stageOutlineBtn} px-2`
+                  : "btn-primary inline-flex min-w-0 flex-1 items-center justify-center gap-2 px-3 py-3 text-sm font-bold"
               }
             >
               {stage ? (
@@ -246,8 +246,8 @@ export function BrowseMenuClient({
               href={`${venuePickupPath(venueSlug, locale)}/register`}
               className={
                 stage
-                  ? `${stageOutlineBtn} flex-col gap-1 px-2 text-center`
-                  : "btn-primary inline-flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-3 py-3 text-center text-sm font-bold"
+                  ? `${stageOutlineBtn} px-2`
+                  : "btn-primary inline-flex min-w-0 flex-1 items-center justify-center gap-2 px-3 py-3 text-sm font-bold"
               }
             >
               {stage ? (
