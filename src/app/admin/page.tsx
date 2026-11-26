@@ -2017,7 +2017,7 @@ export default function AdminPage() {
                   <p className="mt-0.5 text-xs text-ink-soft/50">
                     {t.brandingHeroHint}
                   </p>
-                  <div className="mt-2 overflow-hidden rounded-xl border border-white/10 bg-black/20">
+                  <div className="mt-2 flex flex-wrap items-center gap-4">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={
@@ -2028,60 +2028,63 @@ export default function AdminPage() {
                             DEFAULT_VENUE_HERO
                       }
                       alt=""
-                      className="aspect-[16/9] w-full object-cover"
+                      width={64}
+                      height={64}
+                      className="h-16 w-16 rounded-full object-cover"
+                      style={{ border: `2px solid ${brand.accentColor}` }}
                     />
-                  </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif"
-                      className="text-sm text-ink-soft file:me-3 file:rounded-lg file:border-0 file:bg-brass/20 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brass"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] ?? null;
-                        setBrandHeroFile(file);
-                      }}
-                    />
-                    {(brandHeroPreview ||
-                      brand.heroImageUrl ||
-                      brandHeroFile) && (
-                      <button
-                        type="button"
-                        disabled={brandBusy}
-                        onClick={() => {
-                          void (async () => {
-                            setBrandBusy(true);
-                            setBrandMsg(null);
-                            try {
-                              if (brandHeroFile) {
-                                setBrandHeroFile(null);
-                                setBrandBusy(false);
-                                return;
-                              }
-                              const res = await fetch(
-                                "/api/v1/admin/venue/hero",
-                                { method: "DELETE" }
-                              );
-                              if (!res.ok) {
-                                setBrandMsg(t.brandingHeroUploadError);
-                                return;
-                              }
-                              setBrand((prev) => ({
-                                ...prev,
-                                heroImageUrl: null,
-                              }));
-                              setBrandHeroPreview(null);
-                            } catch {
-                              setBrandMsg(t.brandingHeroUploadError);
-                            } finally {
-                              setBrandBusy(false);
-                            }
-                          })();
+                    <div className="flex flex-wrap items-center gap-2">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="text-sm text-ink-soft file:me-3 file:rounded-lg file:border-0 file:bg-brass/20 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brass"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] ?? null;
+                          setBrandHeroFile(file);
                         }}
-                        className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-ink-soft"
-                      >
-                        {t.brandingHeroClear}
-                      </button>
-                    )}
+                      />
+                      {(brandHeroPreview ||
+                        brand.heroImageUrl ||
+                        brandHeroFile) && (
+                        <button
+                          type="button"
+                          disabled={brandBusy}
+                          onClick={() => {
+                            void (async () => {
+                              setBrandBusy(true);
+                              setBrandMsg(null);
+                              try {
+                                if (brandHeroFile) {
+                                  setBrandHeroFile(null);
+                                  setBrandBusy(false);
+                                  return;
+                                }
+                                const res = await fetch(
+                                  "/api/v1/admin/venue/hero",
+                                  { method: "DELETE" }
+                                );
+                                if (!res.ok) {
+                                  setBrandMsg(t.brandingHeroUploadError);
+                                  return;
+                                }
+                                setBrand((prev) => ({
+                                  ...prev,
+                                  heroImageUrl: null,
+                                }));
+                                setBrandHeroPreview(null);
+                              } catch {
+                                setBrandMsg(t.brandingHeroUploadError);
+                              } finally {
+                                setBrandBusy(false);
+                              }
+                            })();
+                          }}
+                          className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-ink-soft"
+                        >
+                          {t.brandingHeroClear}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </label>
 
