@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { CallWaiterBellIcon } from "@/components/CallWaiterBellIcon";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { MenuItemDetailSheet } from "@/components/MenuItemDetailSheet";
 import { QikTikLogo } from "@/components/QikTikLogo";
 import { VenueLogo } from "@/components/VenueLogo";
 import { VenueContactIcons } from "@/components/VenueContactIcons";
@@ -71,6 +72,7 @@ export function BrowseMenuClient({
   const [search, setSearch] = useState("");
   /** Landing first — menu items expand below Call waiter after guest taps Menu. */
   const [menuOpen, setMenuOpen] = useState(false);
+  const [detailItem, setDetailItem] = useState<MenuItem | null>(null);
   const menuSectionRef = useRef<HTMLDivElement | null>(null);
 
   function toggleMenu() {
@@ -505,48 +507,60 @@ export function BrowseMenuClient({
                     <h2 className="pt-1 font-display text-xl font-semibold text-ink animate-rise">
                       {section.name}
                     </h2>
-                    {section.items.map((item) => (
-                      <article
-                        key={item.id}
-                        className="guest-panel flex gap-3 rounded-2xl p-3"
-                      >
-                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-white/5">
-                          {item.imageUrl ? (
-                            <Image
-                              src={item.imageUrl}
-                              alt=""
-                              fill
-                              sizes="80px"
-                              className="object-cover"
-                            />
-                          ) : null}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold text-ink">{item.name}</h3>
-                          {item.description ? (
-                            <p className="mt-0.5 line-clamp-2 text-xs text-ink-soft/65">
-                              {item.description}
-                            </p>
-                          ) : null}
-                          <div className="mt-2 flex items-center justify-between gap-2">
-                            <span
-                              className={`font-display text-lg font-semibold ${
-                                item.available
-                                  ? "text-brass"
-                                  : "text-ink-soft/40"
-                              }`}
-                            >
-                              {formatPrice(item.price)}
-                            </span>
-                            {!item.available ? (
-                              <span className="rounded-lg border border-alert/25 bg-alert/10 px-2.5 py-1.5 text-[11px] font-semibold text-alert">
-                                {tMenu("soldOut")}
-                              </span>
+                    {section.items.map((item) => {
+                      const extrasCount = item.additionals?.length ?? 0;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setDetailItem(item)}
+                          className="guest-panel flex w-full gap-3 rounded-2xl p-3 text-start transition hover:border-brass/30"
+                        >
+                          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-white/5">
+                            {item.imageUrl ? (
+                              <Image
+                                src={item.imageUrl}
+                                alt=""
+                                fill
+                                sizes="80px"
+                                className={`object-cover ${
+                                  item.available ? "" : "grayscale"
+                                }`}
+                              />
                             ) : null}
                           </div>
-                        </div>
-                      </article>
-                    ))}
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-semibold text-ink">{item.name}</h3>
+                            {item.description ? (
+                              <p className="mt-0.5 line-clamp-2 text-xs text-ink-soft/65">
+                                {item.description}
+                              </p>
+                            ) : null}
+                            {extrasCount > 0 ? (
+                              <p className="mt-1 text-[11px] text-ink-soft/45">
+                                {tMenu("extrasAvailable", { count: extrasCount })}
+                              </p>
+                            ) : null}
+                            <div className="mt-2 flex items-center justify-between gap-2">
+                              <span
+                                className={`font-display text-lg font-semibold ${
+                                  item.available
+                                    ? "text-brass"
+                                    : "text-ink-soft/40"
+                                }`}
+                              >
+                                {formatPrice(item.price)}
+                              </span>
+                              {!item.available ? (
+                                <span className="rounded-lg border border-alert/25 bg-alert/10 px-2.5 py-1.5 text-[11px] font-semibold text-alert">
+                                  {tMenu("soldOut")}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 ))}
                 {(categories.length === 0 ||
@@ -557,6 +571,13 @@ export function BrowseMenuClient({
             </>
           )}
         </div>
+      ) : null}
+
+      {detailItem ? (
+        <MenuItemDetailSheet
+          item={detailItem}
+          onClose={() => setDetailItem(null)}
+        />
       ) : null}
     </div>
   );
