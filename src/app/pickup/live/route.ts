@@ -737,7 +737,12 @@ function renderBoard(
     if (!call || !call.id) return;
     if (!force && wasSeen(call.id)) return;
     markSeen(call.id);
-    var isBill = call.reason === "BILL" || call.kind === "BILL" || /^Bill requested/i.test((call.comment || "").trim());
+    var commentText = (call.comment || "").trim();
+    var isBill = call.reason === "BILL" || call.kind === "BILL" ||
+      /^Bill requested/i.test(commentText) ||
+      commentText.indexOf("تم طلب الفاتورة") === 0 ||
+      commentText.indexOf("החשבון התבקש") === 0 ||
+      commentText.indexOf("Счёт запрошен") === 0;
     var t = pickupMsgs();
     var badgeEl = document.getElementById("call-alert-badge");
     var titleEl = document.getElementById("call-alert-title");

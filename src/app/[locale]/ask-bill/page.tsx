@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { GuestBackHome } from "@/components/GuestBackHome";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
@@ -12,6 +12,7 @@ type CallState = "idle" | "sending" | "sent" | "cooldown";
 
 export default function AskBillPage() {
   const t = useTranslations("pickup");
+  const locale = useLocale();
   const venueSlug = useVenueSlug();
   const venueName = useVenueName();
 
@@ -56,6 +57,7 @@ export default function AskBillPage() {
           customerName: trimmedName,
           comment: comment.trim() || undefined,
           venueSlug,
+          locale,
           reason: "BILL",
         }),
       });

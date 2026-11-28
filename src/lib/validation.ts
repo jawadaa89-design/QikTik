@@ -78,6 +78,8 @@ export const pickupCallWaiterByRefSchema = z.object({
   customerName: z.string().trim().min(1).max(80),
   comment: z.string().trim().max(280).optional(),
   venueSlug: z.string().trim().min(1).max(64).optional(),
+  /** Guest UI locale — used to localize the “bill requested” staff comment. */
+  locale: z.enum(["en", "ar", "he", "ru"]).optional(),
   /** ASSISTANCE = call waiter; BILL = ask for the bill (staff queue + overlay). */
   reason: z.enum(["ASSISTANCE", "BILL"]).optional().default("ASSISTANCE"),
 });

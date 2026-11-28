@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
+import { billRequestedLabel } from "@/lib/bill-request-label";
 import { allocateAssistanceOrderRef } from "@/lib/pickup-refs";
 import { publish, RealtimeEvents } from "@/lib/realtime";
 import { apiError, pickupCallWaiterByRefSchema } from "@/lib/validation";
@@ -61,12 +62,13 @@ export async function POST(req: NextRequest) {
   const customerName = parsed.data.customerName.trim();
   const reason = parsed.data.reason ?? "ASSISTANCE";
   const guestComment = parsed.data.comment?.trim() || "";
-  // Stable English marker so staff boards always show bill intent clearly.
+  // Localized like guest pickup `askBillSent` so staff boards match the guest UI language.
+  const billLabel = billRequestedLabel(parsed.data.locale);
   const comment =
     reason === "BILL"
       ? guestComment
-        ? `Bill requested — ${guestComment}`
-        : "Bill requested"
+        ? `${billLabel} — ${guestComment}`
+        : billLabel
       : guestComment || null;
   if (!customerName) {
     return apiError("NAME_REQUIRED", "Name is required", 400);

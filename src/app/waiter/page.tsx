@@ -25,6 +25,18 @@ type PickupCallWaiterAlertState = {
   kind?: string | null;
 };
 
+function isPickupBillAlert(alert: PickupCallWaiterAlertState): boolean {
+  if (alert.reason === "BILL" || alert.kind === "BILL") return true;
+  const text = (alert.comment || "").trim();
+  if (!text) return false;
+  return (
+    /^Bill requested/i.test(text) ||
+    text.startsWith("تم طلب الفاتورة") ||
+    text.startsWith("החשבון התבקש") ||
+    text.startsWith("Счёт запрошен")
+  );
+}
+
 type Section = "INSIDE" | "OUTSIDE" | "TERRACE" | "ALL";
 type Panel = "main" | "cash" | "card" | "add" | "history" | "closeConfirm";
 
@@ -849,16 +861,12 @@ export default function WaiterPage() {
         <PickupCallWaiterAlert
           pulseKey={pickupCallPulseKey}
           badge={
-            pickupCallAlert.reason === "BILL" ||
-            pickupCallAlert.kind === "BILL" ||
-            /^Bill requested/i.test((pickupCallAlert.comment || "").trim())
+            isPickupBillAlert(pickupCallAlert)
               ? t.pickupAskBillTitle
               : t.pickupCallWaiterBadge
           }
           title={
-            pickupCallAlert.reason === "BILL" ||
-            pickupCallAlert.kind === "BILL" ||
-            /^Bill requested/i.test((pickupCallAlert.comment || "").trim())
+            isPickupBillAlert(pickupCallAlert)
               ? t.pickupAskBillBadge
               : t.pickupCallWaiterTitle
           }
