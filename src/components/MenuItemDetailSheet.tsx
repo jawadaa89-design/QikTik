@@ -36,7 +36,10 @@ export function MenuItemDetailSheet({ item, onClose }: Props) {
   if (!mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[200] flex items-end justify-center sm:items-center">
+    <div
+      data-portal
+      className="fixed inset-0 z-[200] flex items-end justify-center sm:items-center"
+    >
       <button
         type="button"
         aria-label={tCommon("close")}

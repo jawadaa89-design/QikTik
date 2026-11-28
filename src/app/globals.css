@@ -91,7 +91,9 @@ body::after {
   z-index: 0;
 }
 
-body > * {
+/* Stack page content above body::before/::after grain overlays.
+   Portaled modals set data-portal so position:fixed still works. */
+body > *:not([data-portal]) {
   position: relative;
   z-index: 1;
 }

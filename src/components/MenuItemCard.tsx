@@ -212,7 +212,10 @@ export function MenuItemCard({ item, onAdd, index = 0 }: Props) {
         ordering &&
         mounted &&
         createPortal(
-          <div className="fixed inset-0 z-[200] flex items-end justify-center sm:items-center">
+          <div
+            data-portal
+            className="fixed inset-0 z-[200] flex items-end justify-center sm:items-center"
+          >
             <button
               type="button"
               aria-label={tCommon("close")}
