@@ -59,7 +59,15 @@ export async function POST(req: NextRequest) {
   }
 
   const customerName = parsed.data.customerName.trim();
-  const comment = parsed.data.comment?.trim() || null;
+  const reason = parsed.data.reason ?? "ASSISTANCE";
+  const guestComment = parsed.data.comment?.trim() || "";
+  // Stable English marker so staff boards always show bill intent clearly.
+  const comment =
+    reason === "BILL"
+      ? guestComment
+        ? `Bill requested — ${guestComment}`
+        : "Bill requested"
+      : guestComment || null;
   if (!customerName) {
     return apiError("NAME_REQUIRED", "Name is required", 400);
   }
@@ -137,7 +145,8 @@ export async function POST(req: NextRequest) {
     customerName: call.customerName,
     orderRef: call.orderRef,
     comment: call.comment,
-    kind: "ASSISTANCE" as const,
+    kind: (reason === "BILL" ? "BILL" : "ASSISTANCE") as "BILL" | "ASSISTANCE",
+    reason,
     status: call.status,
     at: new Date().toISOString(),
   };

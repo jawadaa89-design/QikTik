@@ -101,6 +101,8 @@ export type WaiterMessages = {
   pickupCallWaiterOrderRef: string;
   pickupCallWaiterComment: string;
   pickupCallWaiterDismiss: string;
+  pickupAskBillBadge: string;
+  pickupAskBillTitle: string;
   featureDisabledTitle: string;
   featureDisabledBody: string;
 };
@@ -207,6 +209,8 @@ const en: WaiterMessages = {
   pickupCallWaiterOrderRef: "Order / table",
   pickupCallWaiterComment: "Comment",
   pickupCallWaiterDismiss: "Got it",
+  pickupAskBillBadge: "Guest asked for the bill",
+  pickupAskBillTitle: "Ask for the bill",
   featureDisabledTitle: "Ordering not in your package",
   featureDisabledBody:
     "Table ordering is turned off. Request it under Admin → Package (email QikTik).",
@@ -314,6 +318,8 @@ const ar: WaiterMessages = {
   pickupCallWaiterOrderRef: "طلب / طاولة",
   pickupCallWaiterComment: "ملاحظة",
   pickupCallWaiterDismiss: "تم",
+  pickupAskBillBadge: "الضيف طلب الفاتورة",
+  pickupAskBillTitle: "طلب الفاتورة",
   featureDisabledTitle: "الطلب غير مفعّل في باقتك",
   featureDisabledBody: "طلب الطاولات متوقف. فعّله من الإدارة ← الباقة.",
 };
@@ -420,6 +426,8 @@ const he: WaiterMessages = {
   pickupCallWaiterOrderRef: "הזמנה / שולחן",
   pickupCallWaiterComment: "הערה",
   pickupCallWaiterDismiss: "הבנתי",
+  pickupAskBillBadge: "האורח ביקש חשבון",
+  pickupAskBillTitle: "בקשת חשבון",
   featureDisabledTitle: "הזמנות אינן כלולות בחבילה",
   featureDisabledBody: "הזמנות שולחן כבויות. הפעילו תחת ניהול ← חבילה.",
 };
@@ -526,6 +534,8 @@ const ru: WaiterMessages = {
   pickupCallWaiterOrderRef: "Заказ / стол",
   pickupCallWaiterComment: "Комментарий",
   pickupCallWaiterDismiss: "Понятно",
+  pickupAskBillBadge: "Гость попросил счёт",
+  pickupAskBillTitle: "Запрос счёта",
   featureDisabledTitle: "Заказы не входят в пакет",
   featureDisabledBody: "Заказы со стола выключены. Включите в Админ → Пакет.",
 };
@@ -1596,6 +1606,8 @@ export type PickupMessages = {
   callWaiterOrderRef: string;
   callWaiterComment: string;
   callWaiterDismiss: string;
+  askBillBadge: string;
+  askBillTitle: string;
   soundEnable: string;
   tapDismiss: string;
   refresh: string;
@@ -1635,6 +1647,8 @@ const pickupEn: PickupMessages = {
   callWaiterOrderRef: "Order / table",
   callWaiterComment: "Comment",
   callWaiterDismiss: "Got it",
+  askBillBadge: "Guest asked for the bill",
+  askBillTitle: "Ask for the bill",
   soundEnable: "Tap here to enable call-waiter sound + alerts",
   tapDismiss: "Tap to dismiss",
   refresh: "Refresh now",
@@ -1675,6 +1689,8 @@ const pickupAr: PickupMessages = {
   callWaiterOrderRef: "طلب / طاولة",
   callWaiterComment: "ملاحظة",
   callWaiterDismiss: "تم",
+  askBillBadge: "الضيف طلب الفاتورة",
+  askBillTitle: "طلب الفاتورة",
   soundEnable: "اضغط هنا لتفعيل صوت استدعاء النادل والتنبيهات",
   tapDismiss: "اضغط للإغلاق",
   refresh: "تحديث الآن",
@@ -1714,6 +1730,8 @@ const pickupHe: PickupMessages = {
   callWaiterOrderRef: "הזמנה / שולחן",
   callWaiterComment: "הערה",
   callWaiterDismiss: "הבנתי",
+  askBillBadge: "האורח ביקש חשבון",
+  askBillTitle: "בקשת חשבון",
   soundEnable: "לחצו כאן להפעלת צליל קריאת מלצר והתראות",
   tapDismiss: "לחצו לסגירה",
   refresh: "רענון עכשיו",
@@ -1753,6 +1771,8 @@ const pickupRu: PickupMessages = {
   callWaiterOrderRef: "Заказ / стол",
   callWaiterComment: "Комментарий",
   callWaiterDismiss: "Понятно",
+  askBillBadge: "Гость попросил счёт",
+  askBillTitle: "Запрос счёта",
   soundEnable: "Нажмите, чтобы включить звук вызова официанта и оповещения",
   tapDismiss: "Нажмите, чтобы закрыть",
   refresh: "Обновить",

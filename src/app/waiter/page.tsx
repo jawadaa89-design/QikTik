@@ -21,6 +21,8 @@ type PickupCallWaiterAlertState = {
   customerName: string;
   orderRef: string | null;
   comment?: string | null;
+  reason?: "ASSISTANCE" | "BILL" | string | null;
+  kind?: string | null;
 };
 
 type Section = "INSIDE" | "OUTSIDE" | "TERRACE" | "ALL";
@@ -274,6 +276,8 @@ export default function WaiterPage() {
         customerName: payload.customerName,
         orderRef: payload.orderRef ?? null,
         comment: payload.comment ?? null,
+        reason: payload.reason ?? null,
+        kind: payload.kind ?? null,
       });
     }
   });
@@ -844,8 +848,20 @@ export default function WaiterPage() {
       {pickupCallAlert && (
         <PickupCallWaiterAlert
           pulseKey={pickupCallPulseKey}
-          badge={t.pickupCallWaiterBadge}
-          title={t.pickupCallWaiterTitle}
+          badge={
+            pickupCallAlert.reason === "BILL" ||
+            pickupCallAlert.kind === "BILL" ||
+            /^Bill requested/i.test((pickupCallAlert.comment || "").trim())
+              ? t.pickupAskBillTitle
+              : t.pickupCallWaiterBadge
+          }
+          title={
+            pickupCallAlert.reason === "BILL" ||
+            pickupCallAlert.kind === "BILL" ||
+            /^Bill requested/i.test((pickupCallAlert.comment || "").trim())
+              ? t.pickupAskBillBadge
+              : t.pickupCallWaiterTitle
+          }
           nameLabel={t.pickupCallWaiterName}
           name={pickupCallAlert.customerName}
           orderRefLabel={t.pickupCallWaiterOrderRef}

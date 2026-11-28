@@ -14,6 +14,7 @@ import { formatPrice } from "@/lib/utils";
 import { useVenueSlug } from "@/components/VenueProvider";
 import { useVenueHeroSrc } from "@/components/VenueThemeProvider";
 import {
+  venueAskBillPath,
   venueCallWaiterPath,
   venueOrderTablePath,
   venuePickupPath,
@@ -319,20 +320,58 @@ export function BrowseMenuClient({
         ) : null}
 
         {enableCallWaiter ? (
-          <Link
-            href={venueCallWaiterPath(venueSlug, locale)}
+          <div
             className={
               stage
-                ? stageOutlineBtn
-                : "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-alert/40 bg-alert/15 px-4 py-3 text-sm font-bold text-alert transition hover:bg-alert/25"
+                ? "flex min-h-0 w-full flex-1 gap-2.5"
+                : "flex w-full flex-col gap-2.5"
             }
           >
-            <CallWaiterBellIcon
-              size={22}
-              className={stage ? "text-brass" : undefined}
-            />
-            {tPickup("callWaiter")}
-          </Link>
+            <Link
+              href={venueCallWaiterPath(venueSlug, locale)}
+              className={
+                stage
+                  ? `${stageOutlineBtn} px-2`
+                  : "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-alert/40 bg-alert/15 px-4 py-3 text-sm font-bold text-alert transition hover:bg-alert/25"
+              }
+            >
+              <CallWaiterBellIcon
+                size={22}
+                className={stage ? "text-brass" : undefined}
+              />
+              <span className="leading-tight">{tPickup("callWaiter")}</span>
+            </Link>
+            <Link
+              href={venueAskBillPath(venueSlug, locale)}
+              className={
+                stage
+                  ? `${stageOutlineBtn} px-2`
+                  : "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-brass/35 bg-brass/10 px-4 py-3 text-sm font-bold text-brass transition hover:bg-brass/20"
+              }
+            >
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden
+                className={stage ? "text-brass" : undefined}
+              >
+                <path
+                  d="M7 3.5h10a1.5 1.5 0 0 1 1.5 1.5v14a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5Z"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                />
+                <path
+                  d="M8.5 8h7M8.5 12h7M8.5 16h4"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="leading-tight">{tPickup("askBill")}</span>
+            </Link>
+          </div>
         ) : null}
       </div>
     );

@@ -197,6 +197,7 @@ function i18nBootScript(mode: "board" | "login") {
     if (sel && sel.value !== loc) sel.value = loc;
     window.__qiktikApplyLocale = apply;
     window.__qiktikLocale = loc;
+    window.__qiktikPickupMsgs = function (l) { return CFG.pickup[l] || CFG.pickup.en; };
   }
   document.addEventListener("DOMContentLoaded", function () {
     var loc = stored();
@@ -209,6 +210,7 @@ function i18nBootScript(mode: "board" | "login") {
   });
   window.__qiktikApplyLocale = apply;
   window.__qiktikGetLocale = stored;
+  window.__qiktikPickupMsgs = function (l) { return CFG.pickup[l] || CFG.pickup.en; };
 })();
 </script>`;
 }
@@ -359,8 +361,8 @@ function renderBoard(
   <div id="sound-banner" data-i18n="soundEnable">Tap here to enable call-waiter sound + alerts</div>
   <div id="call-alert" role="alertdialog" aria-modal="true">
     <button type="button" class="panel" id="call-alert-btn">
-      <div class="badge" data-i18n="callWaiterTitle">Call waiter</div>
-      <h2 data-i18n="callWaiterBadge">Guest needs help</h2>
+      <div class="badge" id="call-alert-badge" data-i18n="callWaiterTitle">Call waiter</div>
+      <h2 id="call-alert-title" data-i18n="callWaiterBadge">Guest needs help</h2>
       <dl>
         <div class="box"><dt data-i18n="callWaiterName">Guest</dt><dd id="call-alert-name">—</dd></div>
         <div class="box"><dt data-i18n="callWaiterOrderRef">Order / table</dt><dd id="call-alert-ref">—</dd></div>
@@ -495,10 +497,32 @@ function renderBoard(
       if (navigator.vibrate) navigator.vibrate([180, 80, 180, 80, 320]);
     } catch (e) {}
   }
+  function pickupMsgs() {
+    try {
+      var loc = (window.__qiktikGetLocale && window.__qiktikGetLocale()) || "ar";
+      return (window.__qiktikPickupMsgs && window.__qiktikPickupMsgs(loc)) || null;
+    } catch (e) { return null; }
+  }
   function showAlert(call, force) {
     if (!call || !call.id) return;
     if (!force && wasSeen(call.id)) return;
     markSeen(call.id);
+    var isBill = call.reason === "BILL" || call.kind === "BILL" || /^Bill requested/i.test((call.comment || "").trim());
+    var t = pickupMsgs();
+    var badgeEl = document.getElementById("call-alert-badge");
+    var titleEl = document.getElementById("call-alert-title");
+    if (badgeEl) {
+      badgeEl.setAttribute("data-i18n", isBill ? "askBillTitle" : "callWaiterTitle");
+      badgeEl.textContent = isBill
+        ? ((t && t.askBillTitle) || "Ask for the bill")
+        : ((t && t.callWaiterTitle) || "Call a waiter");
+    }
+    if (titleEl) {
+      titleEl.setAttribute("data-i18n", isBill ? "askBillBadge" : "callWaiterBadge");
+      titleEl.textContent = isBill
+        ? ((t && t.askBillBadge) || "Guest asked for the bill")
+        : ((t && t.callWaiterBadge) || "Guest needs help");
+    }
     document.getElementById("call-alert-name").textContent = call.customerName || "—";
     document.getElementById("call-alert-ref").textContent = call.orderRef ? ("#" + call.orderRef) : "—";
     var wrap = document.getElementById("call-alert-comment-wrap");

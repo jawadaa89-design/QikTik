@@ -73,11 +73,13 @@ export const pickupLookupSchema = z.object({
   venueSlug: z.string().trim().min(1).max(64).optional(),
 });
 
-/** Guest call-waiter from landing (no food ticket): name + optional comment; orderRef assigned server-side. */
+/** Guest call-waiter / ask-bill from landing (no food ticket): name + optional comment; orderRef assigned server-side. */
 export const pickupCallWaiterByRefSchema = z.object({
   customerName: z.string().trim().min(1).max(80),
   comment: z.string().trim().max(280).optional(),
   venueSlug: z.string().trim().min(1).max(64).optional(),
+  /** ASSISTANCE = call waiter; BILL = ask for the bill (staff queue + overlay). */
+  reason: z.enum(["ASSISTANCE", "BILL"]).optional().default("ASSISTANCE"),
 });
 
 /** Optional comment when calling waiter from an existing ORDER pickup ticket. */

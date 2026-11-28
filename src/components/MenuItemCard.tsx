@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { cn, formatPrice } from "@/lib/utils";
@@ -34,12 +35,17 @@ export function MenuItemCard({ item, onAdd, index = 0 }: Props) {
   const ordering = hasFeature("ordering") && searchParams.get("browse") !== "1";
   const [open, setOpen] = useState(false);
   const [browseOpen, setBrowseOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [notes, setNotes] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [takeaway, setTakeaway] = useState(false);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
 
   const additionals = item.additionals ?? [];
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -202,147 +208,156 @@ export function MenuItemCard({ item, onAdd, index = 0 }: Props) {
         />
       ) : null}
 
-      {open && ordering && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
-          <button
-            type="button"
-            aria-label={tCommon("close")}
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-          />
-          <div className="relative max-h-[90dvh] w-full max-w-md overflow-y-auto animate-rise rounded-t-3xl border border-white/10 bg-[#121816] pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-3xl">
-            <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#1a2420]">
-              {item.imageUrl ? (
-                <Image
-                  src={item.imageUrl}
-                  alt=""
-                  fill
-                  sizes="(max-width: 448px) 100vw, 448px"
-                  className="object-cover"
-                  priority
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <span className="font-display text-6xl font-semibold text-brass/50">
-                    {item.name.trim().charAt(0)}
-                  </span>
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="absolute end-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-xl text-white backdrop-blur-sm"
-                aria-label={tCommon("close")}
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="px-5 pt-4">
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="font-display text-2xl font-semibold leading-tight text-ink">
-                  {item.name}
-                </h3>
-                <p className="shrink-0 font-display text-xl text-brass">
-                  {formatPrice(item.price)}
-                </p>
-              </div>
-              {item.description ? (
-                <p className="mt-3 text-sm leading-relaxed text-ink-soft/75">
-                  {item.description}
-                </p>
-              ) : null}
-              {item.allergens.length > 0 ? (
-                <p className="mt-3 text-xs uppercase tracking-wide text-ink-soft/45">
-                  {t("allergens")}: {item.allergens.join(", ")}
-                </p>
-              ) : null}
-
-              {additionals.length > 0 && (
-                <div className="mt-5 space-y-2">
-                  <p className="text-sm font-semibold text-ink-soft">{t("extras")}</p>
-                  {additionals.map((extra) => (
-                    <label
-                      key={extra.id}
-                      className="guest-panel flex cursor-pointer items-center gap-3 rounded-2xl px-3 py-2.5"
-                    >
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 accent-[#f97316]"
-                        checked={Boolean(selected[extra.id])}
-                        onChange={(e) =>
-                          setSelected((prev) => ({
-                            ...prev,
-                            [extra.id]: e.target.checked,
-                          }))
-                        }
-                      />
-                      <span className="min-w-0 flex-1 text-sm font-medium text-ink">
-                        {extra.name}
-                      </span>
-                      <span className="shrink-0 text-sm font-semibold text-brass">
-                        +{formatPrice(extra.price)}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              )}
-
-              <label className="guest-panel mt-5 flex cursor-pointer items-center gap-3 rounded-2xl px-3 py-2.5">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 accent-[#f97316]"
-                  checked={takeaway}
-                  onChange={(e) => setTakeaway(e.target.checked)}
-                />
-                <span className="text-sm font-medium text-ink">{t("takeaway")}</span>
-              </label>
-
-              <label className="mt-5 block">
-                <span className="text-sm font-semibold text-ink-soft">
-                  {t("specialInstructions")}
-                </span>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value.slice(0, 200))}
-                  rows={3}
-                  maxLength={200}
-                  placeholder={t("notesPlaceholder")}
-                  className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/40 outline-none focus:border-brass/40"
-                />
-                <span className="mt-1 block text-end text-[11px] text-ink-soft/35">
-                  {notes.length}/200
-                </span>
-              </label>
-
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-sm font-semibold text-ink-soft">{t("quantity")}</span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.06] text-lg text-ink"
-                  >
-                    −
-                  </button>
-                  <span className="min-w-6 text-center font-semibold text-ink">{quantity}</span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => Math.min(20, q + 1))}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.06] text-lg text-ink"
-                  >
-                    +
-                  </button>
-                </div>
+      {open &&
+        ordering &&
+        mounted &&
+        createPortal(
+          <div className="fixed inset-0 z-[200] flex items-end justify-center sm:items-center">
+            <button
+              type="button"
+              aria-label={tCommon("close")}
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              onClick={() => setOpen(false)}
+            />
+            <div className="relative flex max-h-[min(92dvh,var(--app-height,100svh))] w-full max-w-md flex-col overflow-hidden animate-rise rounded-t-3xl border border-white/10 bg-[#121816] sm:rounded-3xl">
+              <div className="absolute inset-x-0 top-0 z-20 flex justify-end px-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/70 text-2xl leading-none text-white shadow-lg backdrop-blur-md"
+                  aria-label={tCommon("close")}
+                >
+                  ×
+                </button>
               </div>
 
-              <button type="button" onClick={confirmAdd} className="btn-primary mt-5 w-full">
-                {t("addToCart")} · {formatPrice(unitTotal * quantity)}
-              </button>
+              <div className="min-h-0 flex-1 overflow-y-auto pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#1a2420]">
+                  {item.imageUrl ? (
+                    <Image
+                      src={item.imageUrl}
+                      alt=""
+                      fill
+                      sizes="(max-width: 448px) 100vw, 448px"
+                      className="object-cover"
+                      priority
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <span className="font-display text-6xl font-semibold text-brass/50">
+                        {item.name.trim().charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="px-5 pt-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="font-display text-2xl font-semibold leading-tight text-ink">
+                      {item.name}
+                    </h3>
+                    <p className="shrink-0 font-display text-xl text-brass">
+                      {formatPrice(item.price)}
+                    </p>
+                  </div>
+                  {item.description ? (
+                    <p className="mt-3 text-sm leading-relaxed text-ink-soft/75">
+                      {item.description}
+                    </p>
+                  ) : null}
+                  {item.allergens.length > 0 ? (
+                    <p className="mt-3 text-xs uppercase tracking-wide text-ink-soft/45">
+                      {t("allergens")}: {item.allergens.join(", ")}
+                    </p>
+                  ) : null}
+
+                  {additionals.length > 0 && (
+                    <div className="mt-5 space-y-2">
+                      <p className="text-sm font-semibold text-ink-soft">{t("extras")}</p>
+                      {additionals.map((extra) => (
+                        <label
+                          key={extra.id}
+                          className="guest-panel flex cursor-pointer items-center gap-3 rounded-2xl px-3 py-2.5"
+                        >
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 accent-[#f97316]"
+                            checked={Boolean(selected[extra.id])}
+                            onChange={(e) =>
+                              setSelected((prev) => ({
+                                ...prev,
+                                [extra.id]: e.target.checked,
+                              }))
+                            }
+                          />
+                          <span className="min-w-0 flex-1 text-sm font-medium text-ink">
+                            {extra.name}
+                          </span>
+                          <span className="shrink-0 text-sm font-semibold text-brass">
+                            +{formatPrice(extra.price)}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  <label className="guest-panel mt-5 flex cursor-pointer items-center gap-3 rounded-2xl px-3 py-2.5">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 accent-[#f97316]"
+                      checked={takeaway}
+                      onChange={(e) => setTakeaway(e.target.checked)}
+                    />
+                    <span className="text-sm font-medium text-ink">{t("takeaway")}</span>
+                  </label>
+
+                  <label className="mt-5 block">
+                    <span className="text-sm font-semibold text-ink-soft">
+                      {t("specialInstructions")}
+                    </span>
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value.slice(0, 200))}
+                      rows={3}
+                      maxLength={200}
+                      placeholder={t("notesPlaceholder")}
+                      className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/40 outline-none focus:border-brass/40"
+                    />
+                    <span className="mt-1 block text-end text-[11px] text-ink-soft/35">
+                      {notes.length}/200
+                    </span>
+                  </label>
+
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-ink-soft">{t("quantity")}</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.06] text-lg text-ink"
+                      >
+                        −
+                      </button>
+                      <span className="min-w-6 text-center font-semibold text-ink">{quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => Math.min(20, q + 1))}
+                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.06] text-lg text-ink"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <button type="button" onClick={confirmAdd} className="btn-primary mt-5 w-full">
+                    {t("addToCart")} · {formatPrice(unitTotal * quantity)}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   );
 }
