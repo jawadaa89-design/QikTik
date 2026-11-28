@@ -1,17 +1,21 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { useTranslations } from "next-intl";
+import { FormEvent, useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { GuestBackHome } from "@/components/GuestBackHome";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
 import { VenueLogo } from "@/components/VenueLogo";
 import { useVenueName, useVenueSlug } from "@/components/VenueProvider";
+import { venueMainPath } from "@/lib/venue-paths";
 
 type CallState = "idle" | "sending" | "sent" | "cooldown";
 
 export default function CallWaiterPage() {
   const t = useTranslations("pickup");
+  const locale = useLocale();
+  const router = useRouter();
   const venueSlug = useVenueSlug();
   const venueName = useVenueName();
 
@@ -19,6 +23,14 @@ export default function CallWaiterPage() {
   const [comment, setComment] = useState("");
   const [state, setState] = useState<CallState>("idle");
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (state !== "sent") return;
+    const timer = window.setTimeout(() => {
+      router.replace(venueMainPath(venueSlug, locale));
+    }, 3000);
+    return () => window.clearTimeout(timer);
+  }, [state, router, venueSlug, locale]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -64,13 +76,6 @@ export default function CallWaiterPage() {
       }
       setComment("");
       setState("sent");
-      window.setTimeout(() => {
-        setState("cooldown");
-        window.setTimeout(() => {
-          setState("idle");
-          setError(null);
-        }, 15_000);
-      }, 1500);
     } catch {
       setState("idle");
       setError(t("callWaiterError"));
