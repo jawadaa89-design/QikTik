@@ -30,7 +30,7 @@ export const pickupPushMessages: Record<
     },
     ping: {
       title: "تذكير بالاستلام",
-      body: "{name}، تعال لاستلام طلبك!",
+      body: "{name}، تفضّل لاستلام طلبك!",
     },
     seen: {
       title: "رأى الطاقم طلبك",
