@@ -1,16 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { GuestBackHome } from "@/components/GuestBackHome";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
 import { VenueLogo } from "@/components/VenueLogo";
 import { primeGuestPickupAudio } from "@/lib/guest-pickup-alert-audio";
 import { useVenueName, useVenueSlug } from "@/components/VenueProvider";
-import { venueMainPath, venuePickupPath } from "@/lib/venue-paths";
+import { venuePickupPath } from "@/lib/venue-paths";
 
 type Mode = "register" | "reconnect";
 
@@ -141,6 +141,7 @@ export default function PickupRegisterPage() {
         <LanguageSwitcher className="absolute start-0 top-0 z-10 shrink-0" />
         <QikTikLogo className="absolute end-0 top-0 z-10" />
       </div>
+      <GuestBackHome className="mb-4" />
       <div className="mx-auto mb-6 flex w-full max-w-md flex-col items-center">
         <VenueLogo
           alt={venueName}
@@ -287,11 +288,6 @@ export default function PickupRegisterPage() {
         )}
       </div>
 
-      <p className="mt-8 mb-2 text-center text-sm">
-        <Link href={venueMainPath(venueSlug, locale)} className="text-ink-soft/50 hover:text-brass">
-          {t("backHome")}
-        </Link>
-      </p>
     </main>
   );
 }

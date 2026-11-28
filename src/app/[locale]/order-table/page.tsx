@@ -1,14 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { GuestBackHome } from "@/components/GuestBackHome";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
 import { VenueLogo } from "@/components/VenueLogo";
 import { useVenueName, useVenueSlug } from "@/components/VenueProvider";
-import { venueMainPath } from "@/lib/venue-paths";
 
 export default function OrderTablePage() {
   const tMenu = useTranslations("menu");
@@ -75,6 +74,7 @@ export default function OrderTablePage() {
         <LanguageSwitcher className="absolute start-0 top-0 z-10 shrink-0" />
         <QikTikLogo className="absolute end-0 top-0 z-10" />
       </div>
+      <GuestBackHome className="mb-4" />
 
       <div className="mx-auto mb-6 flex w-full max-w-md flex-col items-center">
         <VenueLogo
@@ -135,14 +135,6 @@ export default function OrderTablePage() {
         </form>
       </div>
 
-      <p className="mt-8 mb-2 text-center text-sm">
-        <Link
-          href={venueMainPath(venueSlug, locale)}
-          className="text-ink-soft/50 hover:text-brass"
-        >
-          {tPickup("backHome")}
-        </Link>
-      </p>
     </main>
   );
 }

@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { CallWaiterBellIcon } from "@/components/CallWaiterBellIcon";
+import { GuestBackHome } from "@/components/GuestBackHome";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { QikTikLogo } from "@/components/QikTikLogo";
 import { VenueLogo } from "@/components/VenueLogo";
@@ -23,8 +23,7 @@ import {
   subscribeGuestPickupPush,
   type GuestPushBlocker,
 } from "@/lib/guest-push";
-import { useVenueName, useVenueSlug } from "@/components/VenueProvider";
-import { venueMainPath } from "@/lib/venue-paths";
+import { useVenueName } from "@/components/VenueProvider";
 
 /** Soft first-visit prompt: dismissed or subscribed for this ticket. */
 const PUSH_PROMPT_LS_PREFIX = "qiktik-push-prompt:";
@@ -97,7 +96,6 @@ function vibratePing() {
 
 export default function PickupWaitingPage() {
   const venueName = useVenueName();
-  const venueSlug = useVenueSlug();
   const t = useTranslations("pickup");
   const tCommon = useTranslations("common");
   const locale = useLocale();
@@ -667,6 +665,7 @@ export default function PickupWaitingPage() {
         <LanguageSwitcher className="absolute start-0 top-0 z-10 shrink-0" />
         <QikTikLogo className="absolute end-0 top-0 z-10" />
       </div>
+      <GuestBackHome className="mb-4" />
       <div className="mx-auto mb-6 flex w-full max-w-md flex-col items-center">
         <VenueLogo
           alt={venueName}
@@ -1028,14 +1027,6 @@ export default function PickupWaitingPage() {
         ) : null}
       </div>
 
-      <p className="mt-8 mb-2 text-center text-sm">
-        <Link
-          href={venueMainPath(venueSlug, locale)}
-          className="text-ink-soft/50 hover:text-brass"
-        >
-          {t("backHome")}
-        </Link>
-      </p>
     </main>
   );
 }
